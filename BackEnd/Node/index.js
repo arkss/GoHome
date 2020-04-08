@@ -1,8 +1,8 @@
+const R = require('./controllers/response'); 
 const express = require('express');
 const session = require('express-session');
 const router = require('./routes');
 const keys = require('./keys.json');
-
 const app = express();
 
 var server = require('http').createServer(app);
@@ -39,15 +39,24 @@ app.use('/', router);
 
 // handle 404
 app.use((req, res, next) => {
-	res.status(404).send('404 file not found');
+	R.status(res, 404);
 });
 
 // handle 500
 app.use((err, req, res, next) => {
 	console.log(`[ERROR] ${err.stack || err}`);
-	res.status(500).send('500 internal server error');
+	R.status(res, 500);
 });
-
+console.log(`
+  /$$$$$$            /$$   /$$                                  
+ /$$__  $$          | $$  | $$                                  
+| $$  \\__/  /$$$$$$ | $$  | $$  /$$$$$$  /$$$$$$/$$$$   /$$$$$$ 
+| $$ /$$$$ /$$__  $$| $$$$$$$$ /$$__  $$| $$_  $$_  $$ /$$__  $$
+| $$|_  $$| $$  \\ $$| $$__  $$| $$  \\ $$| $$ \\ $$ \\ $$| $$$$$$$$
+| $$  \\ $$| $$  | $$| $$  | $$| $$  | $$| $$ | $$ | $$| $$_____/
+|  $$$$$$/|  $$$$$$/| $$  | $$|  $$$$$$/| $$ | $$ | $$|  $$$$$$$
+ \\______/  \\______/ |__/  |__/ \\______/ |__/ |__/ |__/ \\_______/
+`);
 // start server
 server.listen(port, () => {
 	console.log(`listen now with port:${port}`);
