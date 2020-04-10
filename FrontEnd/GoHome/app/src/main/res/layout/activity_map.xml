@@ -1,16 +1,81 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.widget.LinearLayout
+<!-- drawer 사용을 위한 drawer layout -->
+<androidx.drawerlayout.widget.DrawerLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical"
-    tools:context="com.skt.tmapsample.tmapview.MapDraw">
+    android:layout_height="match_parent">
 
-    <LinearLayout
-        android:id="@+id/linearLayoutTmap"
+    <!-- Main view -->
+    <RelativeLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
-    </LinearLayout>
-</android.widget.LinearLayout>
+        android:layout_height="match_parent">
+
+        <!-- Tmap View -->
+        <LinearLayout
+            android:id="@+id/linearLayoutTmap"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_alignParentLeft="true"
+            android:orientation="vertical">
+        </LinearLayout>
+
+        <!-- Search bar -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_alignParentTop="true"
+            android:layout_centerHorizontal="true"
+            android:layout_marginTop="10dp"
+            android:layout_marginHorizontal="10dp"
+            android:background="#CCFFFFFF"
+            android:weightSum="100"
+            >
+            <ImageButton
+                android:id="@+id/searchbar_menu"
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_margin="8dp"
+                android:src="@drawable/searchbar_menu"
+                android:background="@android:color/transparent"
+                android:layout_weight="8"
+                />
+
+            <EditText
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:hint="destination"
+                android:background="@null"
+                android:layout_marginHorizontal="10dp"
+                android:layout_weight="84"
+                />
+
+            <ImageButton
+                android:layout_width="wrap_content"
+                android:layout_height="match_parent"
+                android:layout_margin="8dp"
+                android:src="@drawable/searchbar_nav"
+                android:background="@android:color/transparent"
+                android:layout_weight="8"
+                />
+        </LinearLayout>
+
+        <!-- share button, 위치공유 시스템 작동 버튼 -->
+        <ImageButton
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentRight="true"
+            android:layout_alignParentBottom="true"
+            android:src="@drawable/position_share"
+            android:background="@android:color/transparent"
+            android:layout_margin="16dp"
+            />
+    </RelativeLayout>
+
+    <!-- drawer 동작시 사용되는 map_drawer layout을 include -->
+    <include layout="@layout/map_drawer"/>
+
+</androidx.drawerlayout.widget.DrawerLayout>
+
