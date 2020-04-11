@@ -47,6 +47,8 @@ app.use((err, req, res, next) => {
 	console.log(`[ERROR] ${err.stack || err}`);
 	R.status(res, 500);
 });
+
+// start server
 console.log(`
   /$$$$$$            /$$   /$$                                  
  /$$__  $$          | $$  | $$                                  
@@ -57,7 +59,9 @@ console.log(`
 |  $$$$$$/|  $$$$$$/| $$  | $$|  $$$$$$/| $$ | $$ | $$|  $$$$$$$
  \\______/  \\______/ |__/  |__/ \\______/ |__/ |__/ |__/ \\_______/
 `);
-// start server
 server.listen(port, () => {
 	console.log(`listen now with port:${port}`);
 });
+
+// prevent termination due to uncaughtException
+process.on('uncaughtException', console.log);
