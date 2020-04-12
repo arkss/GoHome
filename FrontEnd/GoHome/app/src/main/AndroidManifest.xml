@@ -20,6 +20,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".MapActivity"></activity>
+        <activity android:name=".RouteActivity"></activity>
     </application>
 
 </manifest>

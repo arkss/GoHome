@@ -31,4 +31,7 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.1'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
     implementation files('libs/com.skt.Tmap_1.64.jar')
+
+    // implementation for sliding view
+    implementation 'com.sothree.slidinguppanel:library:3.4.0'
 }

@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.sothree.slidinguppanel.SlidingUpPanelLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:gravity="bottom"
+    app:umanoDragView="@id/route_sliding_view"
+    app:umanoPanelHeight="30dp"
+    app:umanoShadowHeight="10dp"
+    app:umanoFadeColor="@android:color/transparent"
+    >
+    <!--
+        @ umanoDragView     : 드래그해서 보여줄 뷰
+        @ umanoPanelHeight  : 드래그 전 어느정도 보여주는지
+        @ umanoShadowHeight : 그림자 크기
+        @ umanoFadeColor    : 슬라이딩 패널을 올렸을 때, 화면 어두워지는것 조정
+        -->
+
+    <!-- Main View -->
+    <RelativeLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        >
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolbar"
+            android:layout_width="match_parent"
+            android:layout_height="?attr/actionBarSize"
+            android:layout_alignParentTop="true"
+            android:background="?attr/colorPrimary"
+            android:theme="@style/ThemeOverlay.AppCompat.Dark"
+            app:popupTheme="@style/Theme.AppCompat.Light"
+            />
+
+        <!-- tmap -->
+        <LinearLayout
+            android:id="@+id/route_tmap"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_below="@+id/toolbar"
+            android:orientation="vertical"
+            />
+
+        <!-- camera button -->
+        <ImageButton
+            android:id="@+id/route_camera_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_alignParentRight="true"
+            android:layout_margin="16dp"
+            android:src="@drawable/camera_icon"
+            android:background="@android:color/transparent"
+            />
+        <!-- share button-->
+        <ImageButton
+            android:id="@+id/route_share_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/route_camera_btn"
+            android:layout_alignRight="@+id/route_camera_btn"
+            android:src="@drawable/share_icon"
+            android:background="@android:color/transparent"/>
+    </RelativeLayout>
+
+    <!-- sliding panel -->
+    <LinearLayout
+        android:id="@+id/route_sliding_view"
+        android:layout_width="match_parent"
+        android:layout_height="600dp"
+        android:orientation="vertical"
+        >
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="test"
+            />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="View"
+            android:textSize="50sp"
+            />
+    </LinearLayout>
+
+
+</com.sothree.slidinguppanel.SlidingUpPanelLayout>

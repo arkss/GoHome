@@ -53,6 +53,7 @@
                 />
 
             <ImageButton
+                android:id="@+id/searchbar_search"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_margin="8dp"
@@ -68,7 +69,7 @@
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
             android:layout_alignParentBottom="true"
-            android:src="@drawable/position_share"
+            android:src="@drawable/share_icon"
             android:background="@android:color/transparent"
             android:layout_margin="16dp"
             />
