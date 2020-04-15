@@ -1,4 +1,4 @@
-const R = require('./controllers/response'); 
+const R = require('./controllers/util').res; 
 const express = require('express');
 const session = require('express-session');
 const router = require('./routes');

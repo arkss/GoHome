@@ -1,5 +1,4 @@
-const G = require('./util/geo');
-const R = require('./response');
+const U = require('./util');
 const oapi = require('./oapi');
 
 /*
@@ -44,7 +43,7 @@ exports.get_bikestops = (req, res, next) => {
 			let i, bikestop, len = bikestops.length;
 			for (i = 0; i < len; i++) {
 				bikestop = bikestops[i];
-				bikestop.distance = G.approx_distance(
+				bikestop.distance = U.geo.approx_distance(
 					bikestop.stationLatitude, lat,
 					bikestop.stationLongitude, lon
 					);
@@ -58,7 +57,7 @@ exports.get_bikestops = (req, res, next) => {
 		}
 
 		// response
-		R.response(res, true, `${bikestops.length} found`, {
+		U.res.response(res, true, `${bikestops.length} found`, {
 			n: bikestops.length,
 			bikestops: bikestops
 		});
