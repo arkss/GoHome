@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".RouteSearchActivity">
+
+    <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="120dp"
+        android:theme="@style/AppTheme.AppBarOverlay">
+
+        <ImageButton
+            android:id="@+id/exit_route_search"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:layout_margin="8dp"
+            android:layout_weight="1"
+            android:background="@android:color/transparent"
+            android:layout_gravity="right"
+            android:src="@android:drawable/ic_menu_close_clear_cancel" />
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginHorizontal="40dp"
+            android:layout_weight="1"
+            android:hint="Departure" />
+
+        <EditText
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginHorizontal="40dp"
+            android:layout_weight="1"
+            android:hint="Destination" />
+
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <include layout="@layout/content_route_search" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>
