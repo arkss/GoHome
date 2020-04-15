@@ -38,3 +38,8 @@ Temporary Items
 ### VisualStudioCode Patch ###
 # Ignore all local history of files
 .history
+
+
+### Django ###
+# 민성 가상환경
+myvenv
