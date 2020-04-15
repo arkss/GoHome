@@ -187,6 +187,8 @@ dmypy.json
 
 # minsung's virtual env
 myvenv
+# secrets data json file
+secrets.json
 
 
 ### Node ###
