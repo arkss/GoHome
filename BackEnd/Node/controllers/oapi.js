@@ -57,8 +57,8 @@ exports.load_bikestops = () =>
 		exports.load_nbus_info();
 		// request bikestop list
 		Promise.all([
-			requestAndParseAsJSON(option_1, 'json'),
-			requestAndParseAsJSON(option_2, 'json')
+			requestAndParseAsJSON(option_1),
+			requestAndParseAsJSON(option_2)
 		])
 		.then(([json_1, json_2]) => {
 			/*
@@ -225,6 +225,44 @@ exports.load_nbus_info = () =>
 	})
 	.then(() => JSON.parse(JSON.stringify(exports.nbus_info.list))); // return deep copy
 
+// TODO: edit it
+exports.get_route = () =>
+	new Promise((resolve, reject) => {
+
+		let option = {
+			method: "POST",
+			uri: "https://apis.openapi.sk.com/tmap/routes/pedestrian?version=1&format=json&callback=result",
+			form: {
+				appKey: keys.api_key.tmap,
+				
+				// test data
+				startX: "126.977022",
+				startY: "37.569758",
+				endX: "126.997589",
+				endY: "37.570594",
+				passList: "126.987319,37.565778_126.983072,37.573028",
+				reqCoordType: "WGS84GEO",
+				resCoordType: "EPSG3857",
+				startName: "출발지",
+				endName: "도착지"
+			}
+		};
+
+		let list = [];
+
+		// request pedestrian route
+		requestAndParseAsJSON(option)
+		.then(json => {
+			if (!json.type ||
+				json.type != "FeatureCollection" ||
+				!json.features)
+				return;
+			
+			list = json.features;
+		}, console.log)
+		.then(() => resolve(list));
+	});
+
 /*
 
 	Extract itemList from response json.
@@ -247,7 +285,7 @@ parse_itemList = (json) => {
 	Request and decode the result to UTF8, and return it as JSON.
 
 */
-requestAndParseAsJSON = (option, type) =>
+requestAndParseAsJSON = (option, type = 'json') =>
 	new Promise((resolve, reject) => {
 		console.log(`request to ${option.url || option.uri}`);
 
