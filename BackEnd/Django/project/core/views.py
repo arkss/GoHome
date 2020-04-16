@@ -12,7 +12,6 @@ class CreateProfileView(APIView):
         return Response(serializer.data)
 
     def post(self, request, *args, **kwargs):
-        fields = ['username', 'password', 'email', 'nickname', 'address', 'detail_address']
         """
         {
             "profile": {
