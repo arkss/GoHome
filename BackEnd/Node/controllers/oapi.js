@@ -54,7 +54,7 @@ exports.load_bikestops = () =>
 		};
 
 		let list = [];
-		exports.load_nbus_info();
+
 		// request bikestop list
 		Promise.all([
 			requestAndParseAsJSON(option_1),
@@ -65,15 +65,8 @@ exports.load_bikestops = () =>
 			NOTE: at ES2020, you can use optional chaining operator (?.)
 			and nullish coalescing operator (??) to make it simpler
 			*/
-			if (json_1 &&
-				json_1.rentBikeStatus &&
-				json_1.rentBikeStatus.row)
-				list = list.concat(json_1.rentBikeStatus.row);
-
-			if (json_2 &&
-				json_2.rentBikeStatus &&
-				json_2.rentBikeStatus.row)
-				list = list.concat(json_2.rentBikeStatus.row);
+			list = list.concat(U.json.get_value(json_1, [], "rentBikeStatus", "row"));
+			list = list.concat(U.json.get_value(json_2, [], "rentBikeStatus", "row"));
 		})
 		.catch(console.log)
 		.then(() => {
@@ -170,10 +163,7 @@ exports.load_nbus_info = () =>
 			let i, info;
 			for (i = 0; i < temp_list.length; i++) {
 				info = temp_list[i];
-				if (!info.busRouteNm ||
-					!info.busRouteNm[0] ||
-					info.busRouteNm[0][0] != 'N')
-					continue;
+				if (U.json.get_value(info, null, "busRouteNm", 0, 0) != 'N') continue;
 
 				// beautify: "property:[value]" -> "property:value"
 				info = U.json.unwrap_properties(info);
@@ -268,17 +258,8 @@ exports.get_route = () =>
 	Extract itemList from response json.
 
 */
-parse_itemList = (json) => {
-	if (!json ||
-		!json.ServiceResult ||
-		!json.ServiceResult.msgBody ||
-		!json.ServiceResult.msgBody[0] ||
-		!json.ServiceResult.msgBody[0].itemList) {
-		console.log('itemList not found');
-		return [];
-	}
-	return json.ServiceResult.msgBody[0].itemList;
-};
+parse_itemList = (json) =>
+	U.json.get_value(json, [], "ServiceResult", "msgBody", 0, "itemList");
 
 /*
 
