@@ -8,6 +8,7 @@ import android.media.Image;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 
@@ -40,12 +41,20 @@ public class MapActivity extends AppCompatActivity {
             }
         });
 
-
         ImageButton sSearchBtn = (ImageButton)findViewById(R.id.searchbar_search);
         sSearchBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
                 Intent intent = new Intent(MapActivity.this, RouteActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        EditText sSearchText = (EditText)findViewById(R.id.searchbar_text);
+        sSearchText.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(MapActivity.this, RouteSearchActivity.class);
                 startActivity(intent);
             }
         });

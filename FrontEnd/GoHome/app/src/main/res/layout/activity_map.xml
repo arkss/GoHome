@@ -44,13 +44,13 @@
                 />
 
             <EditText
+                android:id="@+id/searchbar_text"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:hint="destination"
-                android:background="@null"
                 android:layout_marginHorizontal="10dp"
                 android:layout_weight="84"
-                />
+                android:background="@null"
+                android:hint="destination" />
 
             <ImageButton
                 android:id="@+id/searchbar_search"
