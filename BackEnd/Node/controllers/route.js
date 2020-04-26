@@ -4,7 +4,7 @@ const oapi = require('./oapi');
 // TODO: edit it
 exports.route_test = (req, res, next) => {
 	oapi
-	.get_route()
+	.get_pedestrian_route()
 	.then(list => {
 
 		// response

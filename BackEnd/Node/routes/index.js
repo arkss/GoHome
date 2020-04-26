@@ -12,9 +12,10 @@ router.get('/', (req, res, next) => {
 /* RESTful API - GET */
 router.get('/api/:model', (req, res, next) => {
 	switch (req.params.model) {
-		case 'bikeList':  bike.get_bikestops(req, res, next); break;
-		case 'nbus_info': bus.get_nbus_info(req, res, next);  break;
-		default:          R.status(res, 404);             break;
+		case 'bikeList':           bike.get_bikestops(req, res, next);     break;
+		case 'nbus_info':          bus.get_nbus_info(req, res, next);      break;
+		case 'nbus_near_stations': bus.get_near_stations(req, res, next);  break;
+		default:                   R.status(res, 404);                     break;
 	}
 });
 

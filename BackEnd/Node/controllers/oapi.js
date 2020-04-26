@@ -5,16 +5,6 @@ const request = require('request-promise');
 const xml2js = require('xml2js');
 const iconv = require('iconv-lite');
 
-exports.bikestops = {
-	expired: true,
-	list: []
-};
-
-exports.nbus_info = {
-	expired: true,
-	list: []
-};
-
 /*
 
 	Return all bikestops.
@@ -70,17 +60,7 @@ exports.load_bikestops = () =>
 		})
 		.catch(console.log)
 		.then(() => {
-			// update cache
-			exports.bikestops.list = list;
-			exports.bikestops.expired = false;
-
-			// after 200sec, expire cache and fetch new
-			setTimeout(() => {
-				console.log(`bikestops cache expired`);
-				exports.bikestops.expired = true;
-				exports.load_bikestops();
-			}, 200000);
-
+			update_cache(exports.bikestops, list);
 			resolve();
 		});
 	})
@@ -105,6 +85,7 @@ exports.load_bikestops = () =>
 		"routeType": "1",
 		"stStationNm": "관악구청",
 		"term": "55",
+
 		"stations":
 		[
 			{
@@ -128,6 +109,94 @@ exports.load_bikestops = () =>
 				"transYn": "N",
 				"fullSectDist": "473",
 				"trnstnid": "101000003"
+
+				"arriveInfo":
+				{
+					"arrmsg1": ["운행종료"],
+					"arrmsg2": ["운행종료"],
+					"arsId": ["22793"],
+					"avgCf1": ["0"],
+					"avgCf2": ["0"],
+					"brdrde_Num1": ["0"],
+					"brdrde_Num2": ["0"],
+					"brerde_Div1": ["0"],
+					"brerde_Div2": ["0"],
+					"busRouteId": ["115000009"],
+					"busType1": ["0"],
+					"busType2": ["0"],
+					"deTourAt": ["00"],
+					"dir": [" "],
+					"expCf1": ["0"],
+					"expCf2": ["0"],
+					"exps1": ["0"],
+					"exps2": ["0"],
+					"firstTm": ["2020042300"],
+					"full1": ["0"],
+					"full2": ["0"],
+					"goal1": ["0"],
+					"goal2": ["0"],
+					"isArrive1": ["0"],
+					"isArrive2": ["0"],
+					"isLast1": ["0"],
+					"isLast2": ["0"],
+					"kalCf1": ["0"],
+					"kalCf2": ["0"],
+					"kals1": ["0"],
+					"kals2": ["0"],
+					"lastTm": ["2020042300"],
+					"mkTm": ["2020-04-23 13:27:30.0"],
+					"namin2Sec1": ["0"],
+					"namin2Sec2": ["0"],
+					"neuCf1": ["0"],
+					"neuCf2": ["0"],
+					"neus1": ["0"],
+					"neus2": ["0"],
+					"nextBus": ["Y"],
+					"nmain2Ord1": ["0"],
+					"nmain2Ord2": ["0"],
+					"nmain2Stnid1": ["0"],
+					"nmain2Stnid2": ["0"],
+					"nmain3Ord1": ["0"],
+					"nmain3Ord2": ["0"],
+					"nmain3Sec1": ["0"],
+					"nmain3Sec2": ["0"],
+					"nmain3Stnid1": ["0"],
+					"nmain3Stnid2": ["0"],
+					"nmainOrd1": ["0"],
+					"nmainOrd2": ["0"],
+					"nmainSec1": ["0"],
+					"nmainSec2": ["0"],
+					"nmainStnid1": ["0"],
+					"nmainStnid2": ["0"],
+					"nstnId1": ["0"],
+					"nstnId2": ["0"],
+					"nstnOrd1": ["0"],
+					"nstnOrd2": ["0"],
+					"nstnSec1": ["0"],
+					"nstnSec2": ["0"],
+					"nstnSpd1": ["0"],
+					"nstnSpd2": ["0"],
+					"plainNo1": [" "],
+					"plainNo2": [" "],
+					"rerdie_Div1": ["0"],
+					"rerdie_Div2": ["0"],
+					"reride_Num1": ["0"],
+					"reride_Num2": ["0"],
+					"routeType": ["1"],
+					"rtNm": ["N6002"],
+					"sectOrd1": ["0"],
+					"sectOrd2": ["0"],
+					"stId": ["121000977"],
+					"stNm": ["강남고속버스터미널"],
+					"staOrd": ["1"],
+					"term": ["80"],
+					"traSpd1": ["0"],
+					"traSpd2": ["0"],
+					"traTime1": ["0"],
+					"traTime2": ["0"],
+					"vehId1": ["0"],
+					"vehId2": ["0"]
+				}
 			},
 			...
 		]
@@ -145,79 +214,114 @@ exports.load_nbus_info = () =>
 
 		// cache expired, fetch new
 		console.log(`load N-Bus info from fetched`);
-		let option = {
+
+		let nbus_info_list = [];
+
+		// request bus info list
+		requestAndParseAsJSON({
 			uri: `http://ws.bus.go.kr/api/rest/busRouteInfo/getBusRouteList`,
 			qs: {
 				serviceKey: keys.api_key.data_portal
 			}
-		};
+		}, 'xml')
+		.then(parse_itemList)
+		.then(info_list => {
+			// get all N-bus and find stations of each route
 
-		let list = [];
-
-		// request bus info list
-		requestAndParseAsJSON(option, 'xml')
-		.then(json => {
-			// take N-bus only
-			let temp_list = parse_itemList(json);
 			let promises = [];
-			let i, info;
-			for (i = 0; i < temp_list.length; i++) {
-				info = temp_list[i];
+			let i, info, option_getstations, option_arrive_info;
+
+			option_getstations = {
+				uri: `http://ws.bus.go.kr/api/rest/busRouteInfo/getStaionByRoute`,
+				qs: {
+					serviceKey: keys.api_key.data_portal,
+					busRouteId: ''
+				}
+			};
+
+			option_arrive_info = {
+				uri: `http://ws.bus.go.kr/api/rest/arrive/getArrInfoByRouteAll`,
+				qs: {
+					serviceKey: keys.api_key.data_portal,
+					busRouteId: ''
+				}
+			};
+
+			for (i = 0; i < info_list.length; i++) {
+				info = info_list[i];
+
+				// take N-bus only
 				if (U.json.get_value(info, null, "busRouteNm", 0, 0) != 'N') continue;
 
 				// beautify: "property:[value]" -> "property:value"
-				info = U.json.unwrap_properties(info);
-
+				U.json.unwrap_properties(info);
 				info.stations = [];
-				list.push(info);
+				nbus_info_list.push(info);
 
-				// request stations of the bus
-				promises.push(requestAndParseAsJSON({
-					uri: `http://ws.bus.go.kr/api/rest/busRouteInfo/getStaionByRoute`,
-					qs: {
-						serviceKey: keys.api_key.data_portal,
-						busRouteId: info.busRouteId
-					}
-				}, 'xml'));
+				// request to get all stations of the bus
+				option_getstations.qs.busRouteId = info.busRouteId;
+				option_arrive_info.qs.busRouteId = info.busRouteId;
+				promises.push(
+					requestAndParseAsJSON(option_getstations, 'xml')
+					.then(parse_itemList)
+					.then(U.json.unwrap_properties),
+					requestAndParseAsJSON(option_arrive_info, 'xml')
+					.then(parse_itemList)
+					.then(U.json.unwrap_properties)
+				);
 			}
 
-			// request stations of the bus
 			Promise.all(promises)
 			.then(jsons => {
-				let i, itemList;
-				for (i = 0; i < jsons.length; i++) {
-					itemList = parse_itemList(jsons[i]);
+				let i, stations, arriveInfos;
+				for (i = 0; i < jsons.length; i += 2) {
 
-					// beautify
-					for (let info of itemList) {
-						info = U.json.unwrap_properties(info);
+					stations = jsons[i];
+					arriveInfos = jsons[i + 1];
+
+					// TODO: sort arriveInfo for optimization
+					// save every arrive info into its station info
+					for (let station of stations) {
+						let stationNo = station.stationNo;
+						station.arriveInfo = null;
+						for (let arriveInfo of arriveInfos) {
+							if (arriveInfo.arsId == stationNo) {
+								station.arriveInfo = arriveInfo;
+							}
+						}
 					}
 
-					list[i].stations = itemList;
+					nbus_info_list[i / 2].stations = stations;
 				}
 			})
-			.catch(console.log)
 			.then(() => {
-				// update cache
-				exports.nbus_info.list = list;
-				exports.nbus_info.expired = false;
-	
-				// after 200sec, expire cache and fetch new
-				setTimeout(() => {
-					console.log(`N-Bus info cache expired`);
-					exports.nbus_info.expired = true;
-					exports.load_nbus_info();
-				}, 200000);
-	
+				update_cache(exports.nbus_info, nbus_info_list);
 				resolve();
 			});
-		}, console.log);
+		})
+		.catch(err => {
+			console.log(err);
+			update_cache(exports.nbus_info, exports.nbus_info.list);
+			resolve();
+		});
 	})
 	.then(() => JSON.parse(JSON.stringify(exports.nbus_info.list))); // return deep copy
 
 // TODO: edit it
-exports.get_route = () =>
+/*
+	points: array of point
+	each point is array: [longitude, latitude]
+*/
+exports.get_pedestrian_route = (points) =>
 	new Promise((resolve, reject) => {
+
+		// handle exceptions
+		if (points.length < 2)
+			return reject('There should be 2 or more points.');
+		for (let point of points) {
+			if (point.length != 2)
+				return reject(`Invalid point: ${point}`);
+		}
 
 		let option = {
 			method: "POST",
@@ -226,11 +330,15 @@ exports.get_route = () =>
 				appKey: keys.api_key.tmap,
 				
 				// test data
-				startX: "126.977022",
-				startY: "37.569758",
-				endX: "126.997589",
-				endY: "37.570594",
-				passList: "126.987319,37.565778_126.983072,37.573028",
+				// startX: "126.977022",
+				// startY: "37.569758",
+				// endX: "126.997589",
+				// endY: "37.570594",
+				startX: points[0][0], // lon
+				startY: points[0][1], // lat
+				endX: points[1][0], // lon
+				endY: points[1][1], // lat
+				// passList: "126.987319,37.565778_126.983072,37.573028",
 				reqCoordType: "WGS84GEO",
 				resCoordType: "EPSG3857",
 				startName: "출발지",
@@ -252,6 +360,40 @@ exports.get_route = () =>
 		}, console.log)
 		.then(() => resolve(list));
 	});
+
+/*
+
+	update cache
+
+*/
+exports.bikestops = {
+	expired: true,
+	list: [],
+	func_update: exports.load_bikestops,
+	term_update: 200000
+};
+
+exports.nbus_info = {
+	expired: true,
+	list: [],
+	func_update: exports.load_nbus_info,
+	term_update: 200000
+};
+
+update_cache = (cache, list) => {
+	// update cache
+	cache.list = list;
+	cache.expired = false;
+	
+	// after 200sec, expire cache and fetch new
+	console.log(`Cache updated.`);
+	setTimeout(() => {
+		console.log(`Cache expired. Call ${cache.func_update} to fetch new info.`);
+		cache.expired = true;
+		cache.func_update();
+	}, cache.term_update);
+};
+
 
 /*
 
