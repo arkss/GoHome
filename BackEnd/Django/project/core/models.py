@@ -16,7 +16,6 @@ class UserManager(BaseUserManager):
             address = address,
             detail_address = detail_address
         )
-
         user.set_password(password)
         user.status = "0"
         user.role = "0"
@@ -63,8 +62,8 @@ class Profile(AbstractBaseUser, PermissionsMixin):
     detail_address = models.CharField(max_length=30, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    status = models.CharField(max_length=2, choices=STATUS_CHOICES)
-    role = models.CharField(max_length=2, choices=ROLE_CHOICES)
+    status = models.CharField(max_length=2, choices=STATUS_CHOICES, blank=True)
+    role = models.CharField(max_length=2, choices=ROLE_CHOICES, blank=True)
 
     @property
     def is_staff(self):
