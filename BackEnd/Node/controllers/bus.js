@@ -48,6 +48,7 @@ exports.get_nbus_info = (req, res, next) => {
 		stations: 정류장 목록
 
 */
+// CHECK: 환승가능한 정류장의 경우 중복됨
 exports.get_near_stations = (req, res, next) => {
 	let lon = parseFloat(req.query.lon) || 0;
 	let lat = parseFloat(req.query.lat) || 0;

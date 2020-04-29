@@ -388,12 +388,11 @@ update_cache = (cache, list) => {
 	// after 200sec, expire cache and fetch new
 	console.log(`Cache updated.`);
 	setTimeout(() => {
-		console.log(`Cache expired. Call ${cache.func_update} to fetch new info.`);
+		console.log(`Cache expired. Fetch new info.`);
 		cache.expired = true;
 		cache.func_update();
 	}, cache.term_update);
 };
-
 
 /*
 
