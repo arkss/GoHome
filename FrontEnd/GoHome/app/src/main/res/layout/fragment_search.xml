@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".RouteSearchActivity">
+    tools:context="main.SearchFragment">
 
     <com.google.android.material.appbar.AppBarLayout
         android:id="@+id/appBarLayout"
@@ -75,6 +75,6 @@
         </androidx.constraintlayout.widget.ConstraintLayout>
     </com.google.android.material.appbar.AppBarLayout>
 
-    <include layout="@layout/content_route_search" />
+    <include layout="@layout/content_search" />
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

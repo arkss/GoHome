@@ -7,9 +7,9 @@
 
     <fragment
         android:id="@+id/FirstFragment"
-        android:name="com.example.gohome.RouteSearch.FirstFragment"
+        android:name="com.example.gohome.main.search.SearchHistoryFragment"
         android:label="@string/first_fragment_label"
-        tools:layout="@layout/fragment_first">
+        tools:layout="@layout/fragment_search_history">
 
         <action
             android:id="@+id/action_FirstFragment_to_SecondFragment"
@@ -17,9 +17,9 @@
     </fragment>
     <fragment
         android:id="@+id/SecondFragment"
-        android:name="com.example.gohome.RouteSearch.SecondFragment"
+        android:name="com.example.gohome.main.search.SearchResultFragment"
         android:label="@string/second_fragment_label"
-        tools:layout="@layout/fragment_second">
+        tools:layout="@layout/fragment_search_result">
 
         <action
             android:id="@+id/action_SecondFragment_to_FirstFragment"

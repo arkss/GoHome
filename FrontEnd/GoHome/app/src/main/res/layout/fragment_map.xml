@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- drawer 사용을 위한 drawer layout -->
-<androidx.drawerlayout.widget.DrawerLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.drawerlayout.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/drawer_layout"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    tools:context=".main.MapFragment">
 
     <!-- Main view -->
     <RelativeLayout
@@ -50,7 +51,7 @@
                 android:layout_marginHorizontal="10dp"
                 android:layout_weight="84"
                 android:background="@null"
-                android:hint="destination" />
+                android:hint="destination"/>
 
             <ImageButton
                 android:id="@+id/searchbar_search"
@@ -75,8 +76,7 @@
             />
     </RelativeLayout>
 
-    <!-- drawer 동작시 사용되는 map_drawer layout을 include -->
-    <include layout="@layout/map_drawer"/>
+    <!-- drawer 동작시 사용되는 main_drawer layout을 include -->
+    <include layout="@layout/main_drawer"/>
 
 </androidx.drawerlayout.widget.DrawerLayout>
-
