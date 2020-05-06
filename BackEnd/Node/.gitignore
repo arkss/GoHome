@@ -6,3 +6,6 @@ test.js
 
 # Privacy Enhanced Mail
 *.pem
+
+# eslint
+.eslintrc.json
