@@ -24,5 +24,22 @@
         <action
             android:id="@+id/action_SearchFragment_to_MapFragment"
             app:destination="@id/MapFragment" />
+        <action
+            android:id="@+id/action_SearchFragment_to_RouteFragment"
+            app:destination="@id/RouteFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/RouteFragment"
+        android:name="com.example.gohome.main.RouteFragment"
+        android:label="Route Fragment"
+        tools:layout="@layout/fragment_route">
+
+        <action
+            android:id="@+id/action_RouteFragment_to_SearchFragment"
+            app:destination="@id/SearchFragment" />
+        <action
+            android:id="@+id/action_RouteFragment_to_MapFragment"
+            app:destination="@id/MapFragment" />
+
     </fragment>
 </navigation>

@@ -44,14 +44,16 @@
                 android:layout_weight="8"
                 />
 
-            <EditText
+            <TextView
                 android:id="@+id/searchbar_text"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
                 android:layout_marginHorizontal="10dp"
                 android:layout_weight="84"
                 android:background="@null"
-                android:hint="destination"/>
+                android:text="destination"
+                android:textSize="20sp"
+                android:gravity="center_vertical"/>
 
             <ImageButton
                 android:id="@+id/searchbar_search"
