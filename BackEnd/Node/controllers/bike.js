@@ -5,9 +5,9 @@ const oapi = require('./oapi');
 
 	method: GET
 	query:
-		lon: longitude (값 없음: 임의 반환)
-		lat: latitude (값 없음: 임의 반환)
-		n: 검색할 대여소 수. (0이하 또는 값 없음: 제한없음)
+		lon: [Number] longitude (값 없음: 임의 반환)
+		lat: [Number] latitude (값 없음: 임의 반환)
+		n: [Integer] 검색할 대여소 수. (0이하 또는 값 없음: 제한없음)
 
 	주변의 따릉이 대여소 정보를 반환
 
@@ -29,7 +29,7 @@ const oapi = require('./oapi');
 exports.get_bikestops = (req, res, next) => {
 	let lon = parseFloat(req.query.lon) || 0;
 	let lat = parseFloat(req.query.lat) || 0;
-	let n   = parseInt(req.query.n);
+	let n   = parseInt(req.query.n)     || 0;
 
 	// get list to response and sort
 	oapi.
@@ -44,8 +44,8 @@ exports.get_bikestops = (req, res, next) => {
 			for (i = 0; i < len; i++) {
 				bikestop = bikestops[i];
 				bikestop.distance = U.geo.approx_distance(
-					bikestop.stationLatitude, lat,
-					bikestop.stationLongitude, lon
+					bikestop.stationLongitude, lon,
+					bikestop.stationLatitude, lat
 					);
 			}
 			bikestops.sort((a, b) => a.distance - b.distance);
@@ -60,6 +60,41 @@ exports.get_bikestops = (req, res, next) => {
 		U.res.response(res, true, `${bikestops.length} found`, {
 			n: bikestops.length,
 			bikestops: bikestops
+		});
+	});
+};
+
+/*
+
+	method: GET
+	query:
+		(none)
+
+	따릉이 대여소의 자전거 수를 반환
+
+	response:
+		bikestops: 대여소 목록
+			{
+				stationId: 대여소 ID
+				parkingBikeTotCnt: 자전거 수
+			}
+
+*/
+exports.get_bikestop_parked_counts = (req, res, next) => {
+	oapi.
+	load_bikestops()
+	.then(bikestops => {
+		let list = [];
+		for (let bikestop of bikestops) {
+			list.push({
+				stationId: bikestop.stationId,
+				parkingBikeTotCnt: bikestop.parkingBikeTotCnt
+			});
+		}
+		
+		// response
+		U.res.response(res, true, `${list.length} parked counts`, {
+			bikestops: list
 		});
 	});
 };
