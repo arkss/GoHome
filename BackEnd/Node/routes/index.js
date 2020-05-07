@@ -12,18 +12,13 @@ router.get('/', (req, res, next) => {
 /* RESTful API - GET */
 router.get('/api/:model', (req, res, next) => {
 	switch (req.params.model) {
-		case 'bikeList':           bike.get_bikestops(req, res, next);     break;
-		case 'nbus_info':          bus.get_nbus_info(req, res, next);      break;
-		case 'nbus_near_stations': bus.get_near_stations(req, res, next);  break;
-		default:                   R.status(res, 404);                     break;
-	}
-});
+		case 'bikestops':              bike.get_bikestops(req, res, next);              break;
+		case 'bikestop_parked_counts': bike.get_bikestop_parked_counts(req, res, next); break;
+		case 'nbus_info':              bus.get_nbus_info(req, res, next);               break;
+		case 'nbus_near_stations':     bus.get_near_stations(req, res, next);           break;
 
-/* RESTful API - POST */
-router.post('/api/:model', (req, res, next) => {
-	switch (req.params.model) {
-		case 'route_test': route.route_test(req, res, next); break;
-		default:           R.status(res, 404);               break;
+		case 'routes':                 route.get_routes(req, res, next);                break;
+		default:                       R.status(res, 404);                              break;
 	}
 });
 

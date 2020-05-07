@@ -1,6 +1,6 @@
 /*
 
-	Calculate distance(m) between 2 GPS coordinates using haversine.
+	Calculate distance(km) between 2 GPS coordinates using haversine.
 
 */
 exports.distance = (lat_1, lat_2, lon_1, lon_2) => {
@@ -19,7 +19,7 @@ exports.distance = (lat_1, lat_2, lon_1, lon_2) => {
 
 /*
 
-	Calculate distance(m) between 2 GPS coordinates approximately.
+	Calculate distance(km) between 2 GPS coordinates approximately.
 	The distance can be approximated well at Seoul.
 
 	Criteria:
@@ -36,3 +36,14 @@ exports.approx_distance = (lat_1, lat_2, lon_1, lon_2) => {
 
 	return Math.sqrt(d_lat * d_lat + d_lon * d_lon);
 };
+
+/*
+
+	Calculate walking time(min) between 2 GPS coordinates.
+	Walking speed: 4 km/h
+
+	min = h * 60 = km / (km/h) * 60
+
+*/
+exports.walking_time = (lat_1, lat_2, lon_1, lon_2) => exports.distance(lat_1, lat_2, lon_1, lon_2) / 4 * 60;
+exports.approx_walking_time = (lat_1, lat_2, lon_1, lon_2) => exports.approx_distance(lat_1, lat_2, lon_1, lon_2) / 4 * 60;

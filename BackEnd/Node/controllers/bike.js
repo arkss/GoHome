@@ -63,3 +63,38 @@ exports.get_bikestops = (req, res, next) => {
 		});
 	});
 };
+
+/*
+
+	method: GET
+	query:
+		(none)
+
+	따릉이 대여소의 자전거 수를 반환
+
+	response:
+		bikestops: 대여소 목록
+			{
+				stationId: 대여소 ID
+				parkingBikeTotCnt: 자전거 수
+			}
+
+*/
+exports.get_bikestop_parked_counts = (req, res, next) => {
+	oapi.
+	load_bikestops()
+	.then(bikestops => {
+		let list = [];
+		for (let bikestop of bikestops) {
+			list.push({
+				stationId: bikestop.stationId,
+				parkingBikeTotCnt: bikestop.parkingBikeTotCnt
+			});
+		}
+		
+		// response
+		U.res.response(res, true, `${list.length} parked counts`, {
+			bikestops: list
+		});
+	});
+};

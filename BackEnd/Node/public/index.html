@@ -20,6 +20,7 @@
 		// 마커들을 저장할 배열입니다.
 		let bikeMarkers = [];
 		let nbusMarkers = [];
+		let routeMarkers = [];
 
 		// 지도가 생성될 div
 		let map;
@@ -46,6 +47,20 @@
 			.then(res => {
 				console.log(res);
 				showNbusMarkers(res.data.stations);
+			})
+			.catch(console.log);
+		};
+
+		const getRoutes = (lon_start, lat_start, lon_end, lat_end) => {
+			req(`${base_url}/api/routes`, 'GET', {
+				lon_start: lon_start,
+				lat_start: lat_start,
+				lon_end: lon_end,
+				lat_end: lat_end
+			})
+			.then(res => {
+				console.log(res);
+				showRouteMarkers(res.data.routes[0].points);
 			})
 			.catch(console.log);
 		};
@@ -91,6 +106,23 @@
 			}
 		};
 
+		const showRouteMarkers = (route) => {
+			removeMarkers(routeMarkers);
+			routeMarkers = [];
+
+			// Marker 객체 생성.
+			let i, point;
+			for (i = 0; i < route.length; i++) {
+				point = route[i];
+				var marker = new Tmapv2.Marker({
+					position: new Tmapv2.LatLng(point[1], point[0]),
+					label: `R[${i}]`
+				});
+				marker.setMap(map);
+				routeMarkers.push(marker);
+			}
+		};
+
 		// 모든 마커를 제거하는 함수입니다.
 		const removeMarkers = (markers) => {
 			for (let marker of markers) {
@@ -102,8 +134,7 @@
 		window.onload = () => {
 			initTmap();
 			//getBikeList();
-			//setInterval(getBikeList, 10*1000);
-			setInterval(getNearNbusStations, 12*1000);
+			//getNearNbusStations();
 		};
 	</script>
 </body>

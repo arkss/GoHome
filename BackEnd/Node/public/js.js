@@ -16,7 +16,7 @@ req = (url, method = 'GET', data = {}) => {
 	};
 
 	if (method == 'GET')
-		requestInit.qs = data;
+		url += '?' + objectToQueryString(data);
 	else
 		// body data type must match "Content-Type" header
 		requestInit.body = JSON.stringify(data);
@@ -46,3 +46,5 @@ req = (url, method = 'GET', data = {}) => {
 		return json;
 	});
 };
+
+objectToQueryString = (obj) => Object.keys(obj).map(key => `${key}=${obj[key]}`).join('&');

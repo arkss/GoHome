@@ -60,6 +60,8 @@ exports.load_bikestops = () =>
 		})
 		.catch(console.log)
 		.then(() => {
+			// sort by id and update cache
+			list.sort((a, b) => a.stationId.slice(3) - b.stationId.slice(3));
 			update_cache(exports.bikestops, list);
 			resolve();
 		});
@@ -307,58 +309,90 @@ exports.load_nbus_info = () =>
 	})
 	.then(() => JSON.parse(JSON.stringify(exports.nbus_info.list))); // return deep copy
 
-// TODO: edit it
 /*
-	points: array of point
-	each point is array: [longitude, latitude]
+
+	Return a pedestrian route with the time required.
+
+	Example of a route:
+	{
+		time: 868,
+		walking_distance: 1099,
+		points: [
+			[127.05353861565403, 37.5865481484368],
+			...
+		]
+	}
+
 */
 exports.get_pedestrian_route = (points) =>
 	new Promise((resolve, reject) => {
 
+		let i, passList;
+		let result = {
+			time: 0,
+			walking_distance: 0,
+			points: []
+		};
+
 		// handle exceptions
 		if (points.length < 2)
 			return reject('There should be 2 or more points.');
-		for (let point of points) {
-			if (point.length != 2)
-				return reject(`Invalid point: ${point}`);
+		
+		passList = '';
+		for (i = 1; i < points.length - 1; i++) {
+			if (points[i].length == 2) {
+				passList += `_${points[i][0]},${points[i][1]}`;
+			}
 		}
+		passList = passList.slice(1);
 
+		console.log(`points: ${points}`);
 		let option = {
 			method: "POST",
-			uri: "https://apis.openapi.sk.com/tmap/routes/pedestrian?version=1&format=json&callback=result",
+			uri: "https://apis.openapi.sk.com/tmap/routes/pedestrian?version=1",
 			form: {
 				appKey: keys.api_key.tmap,
-				
-				// test data
-				// startX: "126.977022",
-				// startY: "37.569758",
-				// endX: "126.997589",
-				// endY: "37.570594",
 				startX: points[0][0], // lon
 				startY: points[0][1], // lat
-				endX: points[1][0], // lon
-				endY: points[1][1], // lat
-				// passList: "126.987319,37.565778_126.983072,37.573028",
-				reqCoordType: "WGS84GEO",
-				resCoordType: "EPSG3857",
+				endX: points[points.length - 1][0], // lon
+				endY: points[points.length - 1][1], // lat
+				passList: passList,
+				reqCoordType: "WGS84GEO", // WGS84GEO, EPSG3857
+				resCoordType: "WGS84GEO", // WGS84GEO, EPSG3857
 				startName: "출발지",
 				endName: "도착지"
 			}
 		};
 
-		let list = [];
-
 		// request pedestrian route
 		requestAndParseAsJSON(option)
 		.then(json => {
-			if (!json.type ||
-				json.type != "FeatureCollection" ||
-				!json.features)
+			if (json?.type != 'FeatureCollection')
 				return;
 			
-			list = json.features;
+			let i,
+				feature,
+				features = json.features || [];
+
+			for (i = 0; i < features.length; i++) {
+				feature = features[i];
+
+				// handle exception: not a point
+				if (feature?.type != 'Feature' ||
+				feature?.geometry?.type != 'LineString' ||
+				!feature?.geometry?.coordinates ||
+				!feature?.properties?.lineIndex) continue;
+
+				// push the point to the list
+				result.points[feature.properties.lineIndex] = feature.geometry.coordinates;
+				result.time += feature.properties.time ?? 0;
+				result.walking_distance += feature.properties.distance ?? 0;
+			}
+
+			// delete all false-values
+			result.points = result.points.filter(Boolean).flat();
 		}, console.log)
-		.then(() => resolve(list));
+		.then(() => resolve(result));
 	});
 
 /*
@@ -432,10 +466,10 @@ requestAndParseAsJSON = (option, type = 'json') =>
 			}
 
 			// undefined type
-			return result;
+			return decoded;
 		})
 		.catch(err => {
-			console.log('Error on requestAndParseAsJSON: ', err.statusCode);
+			console.log('Error on requestAndParseAsJSON: ', err);
 			resolve({});
 		});
 	});
