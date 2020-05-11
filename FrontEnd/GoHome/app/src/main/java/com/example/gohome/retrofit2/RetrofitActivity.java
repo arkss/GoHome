@@ -1,11 +1,11 @@
-package com.example.gohome;
+package com.example.gohome.retrofit2;
 
 import android.os.Bundle;
 import android.widget.TextView;
 
-import androidx.appcompat.app.AppCompatActivity;
+import com.example.gohome.R;
 
-import org.w3c.dom.Text;
+import androidx.appcompat.app.AppCompatActivity;
 
 import java.util.List;
 

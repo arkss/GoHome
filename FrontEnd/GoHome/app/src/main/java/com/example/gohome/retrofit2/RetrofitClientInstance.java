@@ -1,4 +1,4 @@
-package com.example.gohome;
+package com.example.gohome.retrofit2;
 
 import retrofit2.Retrofit;
 import retrofit2.converter.gson.GsonConverterFactory;
