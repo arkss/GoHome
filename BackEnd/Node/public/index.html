@@ -18,18 +18,18 @@
 		let iconSize = new Tmapv2.Size(10, 20);
 
 		// 마커들을 저장할 배열입니다.
-		let bikeMarkers = [];
+		let bikestopMarkers = [];
 		let nbusMarkers = [];
 		let routeMarkers = [];
 
 		// 지도가 생성될 div
 		let map;
 
-		const getBikeList = () => {
-			req(`${base_url}/api/bikeList`)
+		const getBikestops = (lat = 0, lon = 0, n = 0) => {
+			req(`${base_url}/api/bikestops`, 'GET', { lat: lat, lon: lon, n: n })
 			.then(res => {
 				console.log(res);
-				showBikeMarkers(res.data.bikestops);
+				showBikestopMarkers(res.data.bikestops);
 			})
 			.catch(console.log);
 		};
@@ -42,8 +42,8 @@
 			.catch(console.log);
 		};
 
-		const getNearNbusStations = () => {
-			req(`${base_url}/api/nbus_near_stations`)
+		const getNearNbusStations = (lat = 0, lon = 0, n = 0) => {
+			req(`${base_url}/api/nbus_near_stations`, 'GET', { lat: lat, lon: lon, n: n })
 			.then(res => {
 				console.log(res);
 				showNbusMarkers(res.data.stations);
@@ -51,15 +51,17 @@
 			.catch(console.log);
 		};
 
-		const getRoutes = (lon_start, lat_start, lon_end, lat_end) => {
+		const getRoutes = (lat_start, lon_start, lat_end, lon_end) => {
 			req(`${base_url}/api/routes`, 'GET', {
-				lon_start: lon_start,
 				lat_start: lat_start,
-				lon_end: lon_end,
-				lat_end: lat_end
+				lon_start: lon_start,
+				lat_end: lat_end,
+				lon_end: lon_end
 			})
 			.then(res => {
 				console.log(res);
+				if (res.data.routes.length == 0) return;
+				res.data.routes.sort((a, b) => a.time - b.time);
 				showRouteMarkers(res.data.routes[0].points);
 			})
 			.catch(console.log);
@@ -70,23 +72,28 @@
 			// map 생성
 			// Tmapv2.Map을 이용하여, 지도가 들어갈 div, 넓이, 높이를 설정합니다.
 			map = new Tmapv2.Map("map_div", { 
-				width : "100vw", height : "100vh"
+				width: "100vw",
+				height: "100vh"
+			});
+			map.addListener("click", (evt) => {
+				let lat = evt.latLng._lat;
+				let lon = evt.latLng._lng;
+				console.log(`${lat}, ${lon}`);
 			});
 		};
 
-		const showBikeMarkers = (bikestops) => {
-			removeMarkers(bikeMarkers);
-			bikeMarkers = [];
+		const showBikestopMarkers = (bikestops) => {
+			removeMarkers(bikestopMarkers);
+			bikestopMarkers = [];
 
 			// Marker 객체 생성.
 			for (let bikestop of bikestops) {
 				var marker = new Tmapv2.Marker({
 					position: new Tmapv2.LatLng(bikestop.stationLatitude, bikestop.stationLongitude),
-					label: `${bikestop.stationName} (${bikestop.parkingBikeTotCnt}/${bikestop.rackTotCnt})`,
-					iconSize: iconSize
+					label: `${bikestop.stationName} (${bikestop.parkingBikeTotCnt}/${bikestop.rackTotCnt})`
 				});
 				marker.setMap(map);
-				bikeMarkers.push(marker);
+				bikestopMarkers.push(marker);
 			}
 		};
 
@@ -131,11 +138,7 @@
 			}
 		};
 
-		window.onload = () => {
-			initTmap();
-			//getBikeList();
-			//getNearNbusStations();
-		};
+		window.onload = initTmap;
 	</script>
 </body>
 </html>

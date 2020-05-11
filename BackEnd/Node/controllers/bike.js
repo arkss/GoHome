@@ -5,8 +5,8 @@ const oapi = require('./oapi');
 
 	method: GET
 	query:
-		lon: [Number] longitude (값 없음: 임의 반환)
 		lat: [Number] latitude (값 없음: 임의 반환)
+		lon: [Number] longitude (값 없음: 임의 반환)
 		n: [Integer] 검색할 대여소 수. (0이하 또는 값 없음: 제한없음)
 
 	주변의 따릉이 대여소 정보를 반환
@@ -26,29 +26,44 @@ const oapi = require('./oapi');
 			}
 
 */
-exports.get_bikestops = (req, res, next) => {
-	let lon = parseFloat(req.query.lon) || 0;
+exports.api_get_bikestops = (req, res, next) => {
 	let lat = parseFloat(req.query.lat) || 0;
+	let lon = parseFloat(req.query.lon) || 0;
 	let n   = parseInt(req.query.n)     || 0;
 
-	// get list to response and sort
-	oapi.
-	load_bikestops()
+	exports.get_bikestops(lat, lon, n)
+	.then(bikestops => {
+		U.res.response(res, true, `${bikestops.length} found`, {
+			n: bikestops.length,
+			bikestops: bikestops
+		});
+	})
+	.catch(next);
+};
+
+exports.get_bikestops = (lat, lon, n = 0, d = 0) =>
+	oapi.load_bikestops()
 	.then(bikestops => {
 
 		// sort
-		if (lon && lat) {
+		if (lat && lon) {
 			// calculate straight distance to each bikestop
 			// forEach not used for optimization
 			let i, bikestop, len = bikestops.length;
 			for (i = 0; i < len; i++) {
 				bikestop = bikestops[i];
-				bikestop.distance = U.geo.approx_distance(
-					bikestop.stationLongitude, lon,
-					bikestop.stationLatitude, lat
-					);
+				bikestop.distance = U.geo.distance(
+					bikestop.stationLatitude, bikestop.stationLongitude,
+					lat, lon
+				);
 			}
 			bikestops.sort((a, b) => a.distance - b.distance);
+
+			// slice
+			if (d > 0) {
+				for (i = 0; bikestops[i].distance < d; i++);
+				bikestops = bikestops.slice(0, i);
+			}
 		}
 
 		// slice
@@ -56,13 +71,8 @@ exports.get_bikestops = (req, res, next) => {
 			bikestops = bikestops.slice(0, n);
 		}
 
-		// response
-		U.res.response(res, true, `${bikestops.length} found`, {
-			n: bikestops.length,
-			bikestops: bikestops
-		});
+		return bikestops;
 	});
-};
 
 /*
 
@@ -80,9 +90,18 @@ exports.get_bikestops = (req, res, next) => {
 			}
 
 */
-exports.get_bikestop_parked_counts = (req, res, next) => {
-	oapi.
-	load_bikestops()
+exports.api_get_bikestop_parked_counts = (req, res, next) => {
+	exports.get_bikestop_parked_counts()
+	.then(bikestops => {
+		U.res.response(res, true, `${bikestops.length} parked counts`, {
+			bikestops: bikestops
+		});
+	})
+	.catch(next);
+};
+
+exports.get_bikestop_parked_counts = () =>
+	oapi.load_bikestops()
 	.then(bikestops => {
 		let list = [];
 		for (let bikestop of bikestops) {
@@ -91,10 +110,52 @@ exports.get_bikestop_parked_counts = (req, res, next) => {
 				parkingBikeTotCnt: bikestop.parkingBikeTotCnt
 			});
 		}
-		
-		// response
-		U.res.response(res, true, `${list.length} parked counts`, {
-			bikestops: list
-		});
+
+		return list;
 	});
+
+/*
+
+	bikestop 간 소요시간을 캐시
+	TODO: 적합한 자료구조 선정
+
+	{
+		(stationId): {
+			(stationId): (travel time in sec)
+		},
+		...
+	}
+
+*/
+exports.cache_bikestop_travel_time = {};
+
+/*
+
+	Return travel time between bikestops or null.
+
+*/
+exports.get_cached_travel_time = (stationId_start, stationId_end) =>
+	U.json.get_value(exports.cache_bikestop_travel_time, null, stationId_start, stationId_end);
+
+// TODO: use and test it
+/*
+
+	Cache travel time.
+	If cache already exist, update it to average. (CHECK: this is little dangerous!)
+
+*/
+exports.cache_travel_time = (stationId_start, stationId_end, time) => {
+	let cached = exports.get_cached_travel_time(stationId_start, stationId_end);
+
+	// when cache not found
+	if (!cached)
+		cached = time;
+
+	// when cache not found for stationId_start
+	if (!exports.cache_bikestop_travel_time[stationId_start]) {
+		exports.cache_bikestop_travel_time[stationId_start] = {};
+	}
+
+	// do cache
+	exports.cache_bikestop_travel_time[stationId_start][stationId_end] = (time + cached) / 2;
 };

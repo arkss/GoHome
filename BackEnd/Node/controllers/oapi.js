@@ -312,11 +312,14 @@ exports.load_nbus_info = () =>
 /*
 
 	Return a pedestrian route with the time required.
+	Parameter 'points' is array of [lat, lon] but result is [lon, lat]
 
 	Example of a route:
 	{
 		time: 868,
-		walking_distance: 1099,
+		distance: 1099,
+		section_time: [868],
+		section_distance: [1099],
 		points: [
 			[127.05353861565403, 37.5865481484368],
 			...
@@ -330,7 +333,9 @@ exports.get_pedestrian_route = (points) =>
 		let i, passList;
 		let result = {
 			time: 0,
-			walking_distance: 0,
+			distance: 0,
+			section_time: [],
+			section_distance: [],
 			points: []
 		};
 
@@ -341,21 +346,21 @@ exports.get_pedestrian_route = (points) =>
 		passList = '';
 		for (i = 1; i < points.length - 1; i++) {
 			if (points[i].length == 2) {
-				passList += `_${points[i][0]},${points[i][1]}`;
+				passList += `_${points[i][1]},${points[i][0]}`;
 			}
 		}
 		passList = passList.slice(1);
 
-		console.log(`points: ${points}`);
+		console.log(`get_pedestrian_route([${points}])`);
 		let option = {
 			method: "POST",
 			uri: "https://apis.openapi.sk.com/tmap/routes/pedestrian?version=1",
 			form: {
 				appKey: keys.api_key.tmap,
-				startX: points[0][0], // lon
-				startY: points[0][1], // lat
-				endX: points[points.length - 1][0], // lon
-				endY: points[points.length - 1][1], // lat
+				startX: points[0][1], // lon
+				startY: points[0][0], // lat
+				endX: points[points.length - 1][1], // lon
+				endY: points[points.length - 1][0], // lat
 				passList: passList,
 				reqCoordType: "WGS84GEO", // WGS84GEO, EPSG3857
 				resCoordType: "WGS84GEO", // WGS84GEO, EPSG3857
@@ -369,24 +374,49 @@ exports.get_pedestrian_route = (points) =>
 		.then(json => {
 			if (json?.type != 'FeatureCollection')
 				return;
-			
-			let i,
-				feature,
-				features = json.features || [];
 
+			let i, point_type, time, distance, feature, features;
+
+			time = 0;
+			distance = 0;
+			features = json.features || [];
 			for (i = 0; i < features.length; i++) {
 				feature = features[i];
 
-				// handle exception: not a point
-				if (feature?.type != 'Feature' ||
-				feature?.geometry?.type != 'LineString' ||
-				!feature?.geometry?.coordinates ||
-				!feature?.properties?.lineIndex) continue;
+				// handle exception: unexpected type
+				if (feature?.type != 'Feature') continue;
 
-				// push the point to the list
-				result.points[feature.properties.lineIndex] = feature.geometry.coordinates;
-				result.time += feature.properties.time ?? 0;
-				result.walking_distance += feature.properties.distance ?? 0;
+				// CHECK: Point와 LineString이 반드시 제 순서대로 들어와야 가능함
+				if (feature.geometry.type == 'Point') {
+					// check way point
+					point_type = feature.properties.pointType;
+					switch (point_type) {
+						case 'EP': // 도착지
+						case 'PP': // 경유지
+						case 'PP1': // 경유지1
+						case 'PP2': // 경유지2
+						case 'PP3': // 경유지3
+						case 'PP4': // 경유지4
+						case 'PP5': // 경유지5
+							result.section_time.push(time);
+							result.section_distance.push(distance);
+							result.time += time;
+							result.distance += distance;
+							time = 0;
+							distance = 0;
+							break;
+						//case 'SP': // 출발지
+						//case 'GP': // 일반 안내점
+						//default: // error
+						//	break;
+					}
+				} else {
+					// LineString
+					// push the point to the list in order
+					result.points[feature.properties.lineIndex] = feature.geometry.coordinates;
+					time += feature.properties.time ?? 0;
+					distance += feature.properties.distance ?? 0;
+				}
 			}
 
 			// delete all false-values
@@ -398,6 +428,7 @@ exports.get_pedestrian_route = (points) =>
 /*
 
 	update cache
+	TODO: save it in DB
 
 */
 exports.bikestops = {
@@ -418,7 +449,7 @@ update_cache = (cache, list) => {
 	// update cache
 	cache.list = list;
 	cache.expired = false;
-	
+
 	// after 200sec, expire cache and fetch new
 	console.log(`Cache updated.`);
 	setTimeout(() => {
