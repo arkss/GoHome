@@ -1,3 +1,5 @@
+const Bikestop = require('../models/bikestop');
+
 const U = require('./util');
 const oapi = require('./oapi');
 
@@ -127,15 +129,15 @@ exports.get_bikestop_parked_counts = () =>
 	}
 
 */
-exports.cache_bikestop_travel_time = {};
+exports.cache_bikestop_traveltime = {};
 
 /*
 
 	Return travel time between bikestops or null.
 
 */
-exports.get_cached_travel_time = (stationId_start, stationId_end) =>
-	U.json.get_value(exports.cache_bikestop_travel_time, null, stationId_start, stationId_end);
+exports.get_cached_traveltime = (stationId_start, stationId_end) =>
+	U.json.get_value(exports.cache_bikestop_traveltime, null, stationId_start, stationId_end);
 
 // TODO: use and test it
 /*
@@ -144,18 +146,41 @@ exports.get_cached_travel_time = (stationId_start, stationId_end) =>
 	If cache already exist, update it to average. (CHECK: this is little dangerous!)
 
 */
-exports.cache_travel_time = (stationId_start, stationId_end, time) => {
-	let cached = exports.get_cached_travel_time(stationId_start, stationId_end);
+exports.cache_traveltime = (stationId_start, stationId_end, time) => {
+	let cached = exports.get_cached_traveltime(stationId_start, stationId_end);
 
 	// when cache not found
 	if (!cached)
 		cached = time;
 
 	// when cache not found for stationId_start
-	if (!exports.cache_bikestop_travel_time[stationId_start]) {
-		exports.cache_bikestop_travel_time[stationId_start] = {};
+	if (!exports.cache_bikestop_traveltime[stationId_start]) {
+		exports.cache_bikestop_traveltime[stationId_start] = {};
 	}
 
 	// do cache
-	exports.cache_bikestop_travel_time[stationId_start][stationId_end] = (time + cached) / 2;
+	exports.cache_bikestop_traveltime[stationId_start][stationId_end] = (time + cached) / 2;
+};
+
+exports.load_bikestop_cache_from_db = () => {
+
+};
+
+exports.load_traveltime_cache_from_db = () => {
+
+};
+
+// update one or create if not exist
+const mongodb_update_bikestop = (stationId, stationName, stationLatitude, stationLongitude) => {
+
+};
+
+// return all bikestops 
+const mongodb_get_all_bikestops = () => {
+
+};
+
+// 
+const mongodb_delete_bikestop = (stationId) => {
+
 };

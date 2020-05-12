@@ -87,14 +87,14 @@ exports.get_routes = (lat_start, lon_start, lat_end, lon_end) =>
 
 				// 쌍 매칭하고 예상 시간 계산 및 정렬
 				// 예상시간 짧은 순으로 길찾기 하면서 예상시간 최댓값을 낮춰감
-				let travel_time, candidate_routes = [], searched_results = [];
+				let traveltime, candidate_routes = [], searched_results = [];
 
 				// for every possible pairs
 				for (let bs1 of v1) {
 					for (let bs2 of v2) {
 						// calculate expected riding & walking time (in sec)
-						travel_time = (
-							bike.get_cached_travel_time(bs1.stationId, bs2.stationId) ||
+						traveltime = (
+							bike.get_cached_traveltime(bs1.stationId, bs2.stationId) ||
 							U.geo.riding_time(
 								bs1.stationLatitude, bs1.stationLongitude,
 								bs2.stationLatitude, bs2.stationLongitude
@@ -105,7 +105,7 @@ exports.get_routes = (lat_start, lon_start, lat_end, lon_end) =>
 						// add to the candidates
 						candidate_routes.push({
 							bs: [bs1, bs2],
-							travel_time: travel_time
+							traveltime: traveltime
 						});
 					}
 				}
@@ -114,7 +114,7 @@ exports.get_routes = (lat_start, lon_start, lat_end, lon_end) =>
 				console.log(`${candidate_routes.length} candidate pairs found`);
 
 				// sort pairs out by expected travel time
-				candidate_routes.sort((a, b) => a.travel_time - b.travel_time);
+				candidate_routes.sort((a, b) => a.traveltime - b.traveltime);
 				candidate_routes = candidate_routes.slice(0, MAX_BIKE_ROUTE_SEARCH);
 
 				// search real time: promise-sequentially
@@ -148,13 +148,13 @@ exports.get_routes = (lat_start, lon_start, lat_end, lon_end) =>
 						new Promise((resolve, reject) => {
 
 							// don't have to search longer way
-							if (time_upperbound < candidate.travel_time) {
+							if (time_upperbound < candidate.traveltime) {
 								console.log(`over the upperbound`);
 								return resolve(false);
 							}
 
 							console.log(`search real route ${i}`);
-							console.log(`expected minimum travel time: ${candidate.travel_time}, upperbound: ${time_upperbound}`);
+							console.log(`expected minimum travel time: ${candidate.traveltime}, upperbound: ${time_upperbound}`);
 							//return resolve(true);
 							let bs1 = candidate.bs[0];
 							let bs2 = candidate.bs[1];
@@ -181,7 +181,7 @@ exports.get_routes = (lat_start, lon_start, lat_end, lon_end) =>
 								result.time = result.section_time.reduce((a, c) => a + c, 0);
 
 								// cache the riding time
-								bike.cache_travel_time(bs1.stationId, bs2.stationId, result.section_time[1]);
+								bike.cache_traveltime(bs1.stationId, bs2.stationId, result.section_time[1]);
 
 								// add result to the list
 								searched_results.push(result);

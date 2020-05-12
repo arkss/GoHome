@@ -1,6 +1,7 @@
 const R = require('./controllers/util').res; 
 const express = require('express');
 const session = require('express-session');
+const mongoose = require('mongoose');
 const router = require('./routes');
 const keys = require('./keys.json');
 const app = express();
@@ -8,6 +9,7 @@ const app = express();
 var server = require('http').createServer(app);
 var io = require('socket.io')(server);
 var port = process.env.PORT || keys.port;
+const MONGODB_URL = keys.url_mongodb;
 
 // set middleware
 var sessionMiddleWare = session({
@@ -59,9 +61,22 @@ console.log(`
 |  $$$$$$/|  $$$$$$/| $$  | $$|  $$$$$$/| $$ | $$ | $$|  $$$$$$$
  \\______/  \\______/ |__/  |__/ \\______/ |__/ |__/ |__/ \\_______/
 `);
-server.listen(port, () => {
-	console.log(`listen now with port:${port}`);
-});
+console.log(`Connecting to ${MONGODB_URL}...`);
+mongoose.connect(MONGODB_URL, {
+		useCreateIndex: true,
+		useNewUrlParser: true,
+		useUnifiedTopology: true
+	}, (err, res) => {
+		if (err) {
+			console.log(`ERROR while connecting to ${MONGODB_URL}: ${err}`);
+		} else {
+			console.log(`Succeessfully connected to ${MONGODB_URL}.`);
+			server.listen(port, () => {
+				console.log(`Server listen now with ${port} port.`);
+			});
+		}
+	}
+);
 
 // prevent termination due to uncaughtException
 process.on('uncaughtException', console.log);
