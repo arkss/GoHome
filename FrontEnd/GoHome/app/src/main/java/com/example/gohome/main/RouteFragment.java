@@ -1,17 +1,26 @@
 package com.example.gohome.main;
 
+import android.content.Intent;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
 import android.view.LayoutInflater;
+import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.ImageButton;
+import android.widget.LinearLayout;
+import android.widget.Toast;
 
 import com.example.gohome.R;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.skt.Tmap.TMapView;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -23,6 +32,9 @@ public class RouteFragment extends Fragment {
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
+
+    private FloatingActionButton cameraBtn;
+    private FloatingActionButton shareBtn;
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -57,6 +69,9 @@ public class RouteFragment extends Fragment {
             mParam1 = getArguments().getString(ARG_PARAM1);
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
+
+        // use onOptionsItemSelected in Fragment
+        setHasOptionsMenu(true);
     }
 
     @Override
@@ -66,15 +81,42 @@ public class RouteFragment extends Fragment {
         return inflater.inflate(R.layout.fragment_route, container, false);
     }
 
+    @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        view.findViewById(R.id.route_select_button).setOnClickListener(new View.OnClickListener() {
+        // toolbar 생성
+        Toolbar toolbar = (Toolbar)view.findViewById(R.id.toolbar);
+
+        ((AppCompatActivity)getActivity()).setSupportActionBar(toolbar);
+        ((AppCompatActivity)getActivity()).getSupportActionBar().setDisplayShowTitleEnabled(false); // title 제거
+        ((AppCompatActivity)getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true); // 뒤로가기 버튼 생성
+
+        // tmapview 추가
+        TMapView tMapView = new TMapView(getContext());
+        LinearLayout tMapLayout = (LinearLayout)view.findViewById(R.id.route_tmap);
+        tMapLayout.addView(tMapView);
+
+        cameraBtn = (FloatingActionButton) view.findViewById(R.id.route_camera_btn);
+        cameraBtn.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
-                NavHostFragment.findNavController(RouteFragment.this)
-                        .navigate(R.id.action_RouteFragment_to_MapFragment);
+            public void onClick(View v) {
+                Toast.makeText(getActivity(), "AR Open", Toast.LENGTH_SHORT).show();
             }
         });
+
     }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        switch(item.getItemId()) {
+            case android.R.id.home :
+                NavHostFragment.findNavController(RouteFragment.this)
+                        .navigate(R.id.action_RouteFragment_to_MapFragment);
+                return true;
+            default:
+        }
+        return super.onOptionsItemSelected(item);
+    }
+
 }
