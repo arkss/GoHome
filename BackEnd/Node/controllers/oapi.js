@@ -24,13 +24,6 @@ const iconv = require('iconv-lite');
 */
 exports.load_bikestops = () =>
 	new Promise((resolve, reject) => {
-
-		// load from cache
-		if (exports.bikestops.expired == false) {
-			console.log(`load bikestops from cache`);
-			return resolve();
-		}
-
 		// cache expired, fetch new
 		console.log(`load bikestops from fetched`);
 		let base_url = `http://openapi.seoul.go.kr:8088/${keys.api_key.seoul_opendata}/json/bikeList`;
@@ -61,12 +54,10 @@ exports.load_bikestops = () =>
 		.catch(console.log)
 		.then(() => {
 			// sort by id and update cache
-			list.sort((a, b) => a.stationId.slice(3) - b.stationId.slice(3));
-			update_cache(exports.bikestops, list);
-			resolve();
+			//list.sort((a, b) => a.stationId.slice(3) - b.stationId.slice(3));
+			resolve(list);
 		});
-	})
-	.then(() => JSON.parse(JSON.stringify(exports.bikestops.list))); // return deep copy
+	});
 
 /*
 
@@ -431,13 +422,6 @@ exports.get_pedestrian_route = (points) =>
 	TODO: save it in DB
 
 */
-exports.bikestops = {
-	expired: true,
-	list: [],
-	func_update: exports.load_bikestops,
-	term_update: 200000
-};
-
 exports.nbus_info = {
 	expired: true,
 	list: [],

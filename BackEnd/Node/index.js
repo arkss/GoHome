@@ -1,4 +1,5 @@
-const R = require('./controllers/util').res; 
+const R = require('./controllers/util').res;
+const bike = require('./controllers/bike');
 const express = require('express');
 const session = require('express-session');
 const mongoose = require('mongoose');
@@ -52,31 +53,36 @@ app.use((err, req, res, next) => {
 
 // start server
 console.log(`
-  /$$$$$$            /$$   /$$                                  
- /$$__  $$          | $$  | $$                                  
+/$$$$$$            /$$   /$$                                  
+/$$__  $$          | $$  | $$                                  
 | $$  \\__/  /$$$$$$ | $$  | $$  /$$$$$$  /$$$$$$/$$$$   /$$$$$$ 
 | $$ /$$$$ /$$__  $$| $$$$$$$$ /$$__  $$| $$_  $$_  $$ /$$__  $$
 | $$|_  $$| $$  \\ $$| $$__  $$| $$  \\ $$| $$ \\ $$ \\ $$| $$$$$$$$
 | $$  \\ $$| $$  | $$| $$  | $$| $$  | $$| $$ | $$ | $$| $$_____/
 |  $$$$$$/|  $$$$$$/| $$  | $$|  $$$$$$/| $$ | $$ | $$|  $$$$$$$
- \\______/  \\______/ |__/  |__/ \\______/ |__/ |__/ |__/ \\_______/
+\\______/  \\______/ |__/  |__/ \\______/ |__/ |__/ |__/ \\_______/
 `);
-console.log(`Connecting to ${MONGODB_URL}...`);
+console.log(`Starting server...`);
+mongoose.Promise = global.Promise;
 mongoose.connect(MONGODB_URL, {
-		useCreateIndex: true,
-		useNewUrlParser: true,
-		useUnifiedTopology: true
-	}, (err, res) => {
-		if (err) {
-			console.log(`ERROR while connecting to ${MONGODB_URL}: ${err}`);
-		} else {
-			console.log(`Succeessfully connected to ${MONGODB_URL}.`);
-			server.listen(port, () => {
-				console.log(`Server listen now with ${port} port.`);
-			});
-		}
-	}
-);
+	useCreateIndex: true,
+	useNewUrlParser: true,
+	useUnifiedTopology: true,
+	useFindAndModify: false // https://mongoosejs.com/docs/deprecations.html#findandmodify
+})
+.then(async () => {
+	console.log(`Succeessfully connected to ${MONGODB_URL}.`);
+
+	await bike.load_cache_from_db();
+	console.log(`Succeessfully load biekstop cache.`);
+
+	server.listen(port, () => {
+		console.log(`Server listen now with ${port} port.`);
+	});
+})
+.catch(err => {
+	console.log(`ERROR while starting server: ${err}`);
+});
 
 // prevent termination due to uncaughtException
 process.on('uncaughtException', console.log);

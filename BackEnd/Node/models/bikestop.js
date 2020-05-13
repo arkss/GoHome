@@ -7,11 +7,7 @@ const BikestopSchema = new mongoose.Schema({
 	},
 	stationName: String,
 	stationLatitude: Number,
-	stationLongitude: Number,
-	traveltime: {
-		type: Map,
-		of: Number
-	}
+	stationLongitude: Number
 });
 
 module.exports = mongoose.model('Bikestop', BikestopSchema);
