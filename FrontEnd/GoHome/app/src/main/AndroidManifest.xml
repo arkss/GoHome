@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.example.gohome">
+    <!-- ARCore -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.FLASHLIGHT" />
+    <uses-feature android:name="android.hardware.camera.flash" />
+    <uses-feature android:name="android.hardware.camera.ar" android:required="true"/>
+    <uses-permission-sdk-23 android:name="android.permission.ACCESS_FINE_LOCATION" />
+    <uses-permission-sdk-23 android:name="android.permission.ACCESS_COARSE_LOCATION" />
+    <uses-permission-sdk-23 android:name="android.permission.INTERNET" />
+
     <!-- Add Internet permission -->
     <uses-permission android:name="android.permission.INTERNET" />
 
@@ -20,6 +29,8 @@
         </activity>
         <activity android:name=".MainActivity" />
         <activity android:name="RetrofitActivity" />
+        <activity android:name=".testActivity" />
+        <meta-data android:name='com.google.ar.core' android:value = 'required'/>
     </application>
 
 </manifest>

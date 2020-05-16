@@ -102,6 +102,8 @@ public class RouteFragment extends Fragment {
             @Override
             public void onClick(View v) {
                 Toast.makeText(getActivity(), "AR Open", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(getActivity(), com.example.gohome.testActivity.class);
+                startActivity(intent);
             }
         });
 
