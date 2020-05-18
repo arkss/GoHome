@@ -20,6 +20,7 @@
         </activity>
         <activity android:name=".retrofit2.RetrofitActivity"/>
         <activity android:name=".MainActivity" />
+        <activity android:name=".SignUpActivity" />
     </application>
 
 </manifest>
