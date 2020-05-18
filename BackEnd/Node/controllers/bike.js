@@ -287,7 +287,6 @@ exports.save_cache_to_db = (ignore_traveltime = true) => {
 
 // update one or create if not exist
 const update_bikestop_in_db = (stationId, stationName, stationLatitude, stationLongitude) => {
-	console.log(`Update Bikestop ${stationId}`);
 	Bikestop.findOneAndUpdate({
 		stationId: stationId
 	}, {
@@ -304,7 +303,6 @@ const update_bikestop_in_db = (stationId, stationName, stationLatitude, stationL
 
 // update one or create if not exist
 const update_bikestop_traveltime_in_db = (stationId_start, stationId_end, traveltime) => {
-	console.log(`Update BikestopTraveltime ${stationId_start} - ${stationId_end}`);
 	BikestopTraveltime.findOneAndUpdate({
 		stationId_start: stationId_start,
 		stationId_end: stationId_end

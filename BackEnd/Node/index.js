@@ -10,7 +10,6 @@ const app = express();
 var server = require('http').createServer(app);
 var io = require('socket.io')(server);
 var port = process.env.PORT || keys.port;
-const MONGODB_URL = keys.url_mongodb;
 
 // set middleware
 var sessionMiddleWare = session({
@@ -64,14 +63,15 @@ console.log(`
 `);
 console.log(`Starting server...`);
 mongoose.Promise = global.Promise;
-mongoose.connect(MONGODB_URL, {
+mongoose.connect(keys.url_mongodb, {
+	dbName: keys.db_name,
 	useCreateIndex: true,
 	useNewUrlParser: true,
 	useUnifiedTopology: true,
 	useFindAndModify: false // https://mongoosejs.com/docs/deprecations.html#findandmodify
 })
 .then(async () => {
-	console.log(`Succeessfully connected to ${MONGODB_URL}.`);
+	console.log(`Succeessfully connected to ${keys.url_mongodb}.`);
 
 	await bike.load_cache_from_db();
 	console.log(`Succeessfully load biekstop cache.`);
