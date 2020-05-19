@@ -3,6 +3,7 @@ const bike = require('./controllers/bike');
 const express = require('express');
 const session = require('express-session');
 const mongoose = require('mongoose');
+const cors = require('cors');
 const router = require('./routes');
 const keys = require('./keys.json');
 const app = express();
@@ -21,6 +22,9 @@ app.use(sessionMiddleWare);
 io.use((socket, next) => {
 	sessionMiddleWare(socket.request, socket.request.res, next);
 });
+
+// automatically allow cross-origin requests
+app.use(cors({ origin: true }));
 
 // settings
 app.use(express.static('public'));

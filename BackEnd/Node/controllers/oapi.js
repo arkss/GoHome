@@ -429,7 +429,7 @@ exports.nbus_info = {
 	term_update: 200000
 };
 
-update_cache = (cache, list) => {
+const update_cache = (cache, list) => {
 	// update cache
 	cache.list = list;
 	cache.expired = false;
@@ -448,7 +448,7 @@ update_cache = (cache, list) => {
 	Extract itemList from response json.
 
 */
-parse_itemList = (json) =>
+const parse_itemList = (json) =>
 	U.get_value(json, [], "ServiceResult", "msgBody", 0, "itemList");
 
 /*
@@ -456,7 +456,7 @@ parse_itemList = (json) =>
 	Request and decode the result to UTF8, and return it as JSON.
 
 */
-requestAndParseAsJSON = (option, type = 'json') =>
+const requestAndParseAsJSON = (option, type = 'json') =>
 	new Promise((resolve, reject) => {
 		U.log(`request to ${option.url || option.uri}`);
 
