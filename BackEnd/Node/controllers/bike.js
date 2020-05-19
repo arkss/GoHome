@@ -168,13 +168,13 @@ exports.cache_bikestop = (bikestop) => {
 exports.cache_traveltime = (stationId_start, stationId_end, time) => {
 	// handle exception: station not found
 	if (!CACHE.bikestops[stationId_start] || !CACHE.bikestops[stationId_end]) {
-		U.log(`Unexpected stationId: ${stationId_start}, ${stationId_end}`);
+		U.error(`Unexpected stationId: ${stationId_start}, ${stationId_end}`);
 		return;
 	}
 	
 	// handle exception: invalid time
-	if (time <= 0) {
-		U.log(`Invalid traveltime: ${time}`);
+	if (time <= 0 || isNaN(time)) {
+		U.error(`Invalid traveltime: ${time}`);
 		return;
 	}
 
@@ -227,7 +227,7 @@ exports.load_cache_from_db = async () => {
 				exports.save_cache_to_db();
 			} catch (err) {
 				// TODO: handle unexpected error
-				U.log(err);
+				U.error(err);
 			}
 
 			return;
@@ -299,7 +299,7 @@ const update_bikestop_in_db = (stationId, stationName, stationLatitude, stationL
 		new: true, // if true, it return the updated but takes more time
 		upsert: true // when no matches, insert new one
 	}, (err, res) => {
-		if (err) U.log(err);
+		if (err) U.error(err);
 	});
 };
 
@@ -314,6 +314,6 @@ const update_bikestop_traveltime_in_db = (stationId_start, stationId_end, travel
 		new: true, // if true, it return the updated but takes more time
 		upsert: true // when no matches, insert new one
 	}, (err, res) => {
-		if (err) U.log(err);
+		if (err) U.error(err);
 	});
 };

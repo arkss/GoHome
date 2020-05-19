@@ -51,7 +51,7 @@ exports.load_bikestops = () =>
 			list = list.concat(U.get_value(json_1, [], "rentBikeStatus", "row"));
 			list = list.concat(U.get_value(json_2, [], "rentBikeStatus", "row"));
 		})
-		.catch(U.log)
+		.catch(U.error)
 		.then(() => {
 			// sort by id and update cache
 			//list.sort((a, b) => a.stationId.slice(3) - b.stationId.slice(3));
@@ -293,7 +293,7 @@ exports.load_nbus_info = () =>
 			});
 		})
 		.catch(err => {
-			U.log(err);
+			U.error(err);
 			update_cache(exports.nbus_info, exports.nbus_info.list);
 			resolve();
 		});
@@ -412,7 +412,7 @@ exports.get_pedestrian_route = (points) =>
 
 			// delete all false-values
 			result.points = result.points.filter(Boolean).flat();
-		}, U.log)
+		}, U.error)
 		.then(() => resolve(result));
 	});
 
@@ -475,7 +475,8 @@ const requestAndParseAsJSON = (option, type = 'json') =>
 				.parseStringPromise(decoded)
 				.then(resolve)
 				.catch(err => {
-					U.log('Error on parseStringPromise: ', err);
+					U.error('Error on parseStringPromise: ')
+					U.error(err);
 					resolve({});
 				});
 			}
@@ -484,7 +485,8 @@ const requestAndParseAsJSON = (option, type = 'json') =>
 			return decoded;
 		})
 		.catch(err => {
-			U.log('Error on requestAndParseAsJSON: ', err);
+			U.error('Error on requestAndParseAsJSON: ');
+			U.error(err);
 			resolve({});
 		});
 	});

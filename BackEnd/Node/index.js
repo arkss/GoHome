@@ -50,14 +50,14 @@ app.use((req, res, next) => {
 
 // handle 500
 app.use((err, req, res, next) => {
-	U.log(`[ERROR] ${err.stack || err}`);
+	U.error(err);
 	U.status(res, 500);
 });
 
 // start server
 U.log(`
-/$$$$$$            /$$   /$$                                  
-/$$__  $$          | $$  | $$                                  
+  /$$$$$$            /$$   /$$                                  
+ /$$__  $$          | $$  | $$                                  
 | $$  \\__/  /$$$$$$ | $$  | $$  /$$$$$$  /$$$$$$/$$$$   /$$$$$$ 
 | $$ /$$$$ /$$__  $$| $$$$$$$$ /$$__  $$| $$_  $$_  $$ /$$__  $$
 | $$|_  $$| $$  \\ $$| $$__  $$| $$  \\ $$| $$ \\ $$ \\ $$| $$$$$$$$
@@ -84,9 +84,7 @@ mongoose.connect(keys.url_mongodb, {
 		U.log(`Server listen now with ${port} port.`);
 	});
 })
-.catch(err => {
-	U.log(`ERROR while starting server: ${err}`);
-});
+.catch(U.error);
 
 // prevent termination due to uncaughtException
-process.on('uncaughtException', U.log);
+process.on('uncaughtException', U.error);

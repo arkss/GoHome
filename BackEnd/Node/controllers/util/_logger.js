@@ -27,7 +27,7 @@ const combinedFormat = format.combine(
 	Log the message as info-level.
 
 */
-exports.log = message => {
+exports.log = (message, level = 'info') => {
 	let logger = winston.createLogger({
 		transports: [
 			new winston.transports.Console({
@@ -40,9 +40,23 @@ exports.log = message => {
 		]
 	});
 
+	/*
+
+	level:
+		error: 0, 
+		warn: 1, 
+		info: 2, 
+		verbose: 3, 
+		debug: 4, 
+		silly: 5 
+
+	*/
+
 	try {
-		logger.info(message);
+		logger.log(level, message);
 	} catch (e) {
-		logger.error("ERROR => " + e);
+		logger.error(e);
 	}
 }
+
+exports.error = (err) => exports.log(err.stack || err, 'error');

@@ -167,8 +167,10 @@ exports.get_routes = (lat_start, lon_start, lat_end, lon_end) =>
 							U.log(`real route searched ${i}`);
 
 							// for test: handle exception
-							if (result.section_time.length != 3)
-								U.log(`unexpected section length: ${result.section_time.length}`);
+							if (result.section_time.length != 3) {
+								U.error(`unexpected section length: ${result.section_time.length}`);
+								return resolve(false);
+							}
 
 							// add more info for response
 							result.bs = [bs1, bs2];
