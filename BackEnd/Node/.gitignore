@@ -4,8 +4,8 @@ keys.json
 # test file
 test.js
 
-# Privacy Enhanced Mail
-*.pem
-
 # eslint
 .eslintrc.json
+
+# files to access remote server
+.remote

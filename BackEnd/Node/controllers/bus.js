@@ -1,7 +1,6 @@
 const U = require('./util');
 const oapi = require('./oapi');
 
-// TODO: edit comment
 /*
 
 	method: GET
@@ -15,9 +14,20 @@ const oapi = require('./oapi');
 		nbus_info: 노선 목록
 
 */
-exports.get_nbus_info = (req, res, next) => {
+exports.api_get_nbus_info = (req, res, next) => {
 	let include_stations = req.query.include_stations == 'Y';
 
+	exports.get_nbus_info(include_stations)
+	.then(nbus_info => {
+		U.res.response(res, true, `${nbus_info.length} found`, {
+			n: nbus_info.length,
+			nbus_info: nbus_info
+		});
+	})
+	.catch(next);
+};
+
+exports.get_nbus_info = (include_stations) =>
 	oapi
 	.load_nbus_info()
 	.then(nbus_info => {
@@ -26,19 +36,15 @@ exports.get_nbus_info = (req, res, next) => {
 			U.json.delete_properties(nbus_info, 'stations');
 
 		// response
-		U.res.response(res, true, `${nbus_info.length} found`, {
-			n: nbus_info.length,
-			nbus_info: nbus_info
-		});
+		return nbus_info;
 	});
-};
 
 /*
 
 	method: GET
 	query:
-		lon: [Number] longitude (값 없음: 임의 반환)
 		lat: [Number] latitude (값 없음: 임의 반환)
+		lon: [Number] longitude (값 없음: 임의 반환)
 		n: [Integer] 검색할 정류장 수. (0이하 또는 값 없음: 제한없음)
 
 	(for test) 주변의 N버스 정류장 목록을 반환
@@ -48,14 +54,24 @@ exports.get_nbus_info = (req, res, next) => {
 		stations: 정류장 목록
 
 */
-// CHECK: 환승가능한 정류장의 경우 중복됨
-exports.get_near_stations = (req, res, next) => {
-	let lon = parseFloat(req.query.lon) || 0;
+exports.api_get_near_stations = (req, res, next) => {
 	let lat = parseFloat(req.query.lat) || 0;
+	let lon = parseFloat(req.query.lon) || 0;
 	let n   = parseInt(req.query.n)     || 0;
-	
-	oapi
-	.load_nbus_info()
+
+	exports.get_near_stations(lat, lon, n)
+	.then(stations => {
+		U.res.response(res, true, `${stations.length} found`, {
+			n: stations.length,
+			stations: stations
+		});
+	})
+	.catch(next);
+};
+
+// CHECK: 환승가능한 정류장의 경우 중복됨
+exports.get_near_stations = (lat, lon, n) =>
+	oapi.load_nbus_info()
 	.then(nbus_info => {
 		let i, len, station, stations = [];
 
@@ -73,9 +89,9 @@ exports.get_near_stations = (req, res, next) => {
 			for (i = 0; i < len; i++) {
 				station = stations[i];
 				station.distance = U.geo.approx_distance(
-					station.gpsX, lon,
-					station.gpsY, lat
-					);
+					station.gpsY, station.gpsX,
+					lat, lon
+				);
 			}
 			stations.sort((a, b) => a.distance - b.distance);
 		}
@@ -85,10 +101,5 @@ exports.get_near_stations = (req, res, next) => {
 			stations = stations.slice(0, n);
 		}
 
-		// response
-		U.res.response(res, true, `${stations.length} found`, {
-			n: stations.length,
-			stations: stations
-		});
+		return stations;
 	});
-};
