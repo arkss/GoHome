@@ -83,6 +83,7 @@ exports.get_bikestops = (lat, lon, n = 0, d = 0) => {
 	따릉이 대여소의 자전거 수를 반환
 
 	response:
+		n: 검색된 대여소 수
 		bikestops: 대여소 목록
 			{
 				stationId: 대여소 ID
@@ -94,6 +95,7 @@ exports.api_get_bikestop_parked_counts = (req, res, next) => {
 	let bikestops = exports.get_bikestop_parked_counts();
 
 	U.res.response(res, true, `${bikestops.length} parked counts`, {
+		n: bikestops.length,
 		bikestops: bikestops
 	});
 };
