@@ -1,6 +1,9 @@
 # key file
 keys.json
 
+# log files
+.log/
+
 # test file
 test.js
 
@@ -8,4 +11,4 @@ test.js
 .eslintrc.json
 
 # files to access remote server
-.remote
+.remote/

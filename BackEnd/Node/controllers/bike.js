@@ -36,7 +36,7 @@ exports.api_get_bikestops = (req, res, next) => {
 
 	let bikestops = exports.get_bikestops(lat, lon, n);
 
-	U.res.response(res, true, `${bikestops.length} found`, {
+	U.response(res, true, `${bikestops.length} found`, {
 		n: bikestops.length,
 		bikestops: bikestops
 	});
@@ -52,7 +52,7 @@ exports.get_bikestops = (lat, lon, n = 0, d = 0) => {
 		let i, bikestop, len = bikestops.length;
 		for (i = 0; i < len; i++) {
 			bikestop = bikestops[i];
-			bikestop.distance = U.geo.distance(
+			bikestop.distance = U.distance(
 				bikestop.stationLatitude, bikestop.stationLongitude,
 				lat, lon
 			);
@@ -94,7 +94,7 @@ exports.get_bikestops = (lat, lon, n = 0, d = 0) => {
 exports.api_get_bikestop_parked_counts = (req, res, next) => {
 	let bikestops = exports.get_bikestop_parked_counts();
 
-	U.res.response(res, true, `${bikestops.length} parked counts`, {
+	U.response(res, true, `${bikestops.length} parked counts`, {
 		n: bikestops.length,
 		bikestops: bikestops
 	});
@@ -141,7 +141,7 @@ const CACHE = {
 
 */
 exports.get_cached_traveltime = (stationId_start, stationId_end) =>
-	U.json.get_value(CACHE.bikestops, null, stationId_start, 'traveltime', stationId_end);
+	U.get_value(CACHE.bikestops, null, stationId_start, 'traveltime', stationId_end);
 
 const list_all_cached_bikestop = () => {
 	let list = [];
@@ -168,13 +168,13 @@ exports.cache_bikestop = (bikestop) => {
 exports.cache_traveltime = (stationId_start, stationId_end, time) => {
 	// handle exception: station not found
 	if (!CACHE.bikestops[stationId_start] || !CACHE.bikestops[stationId_end]) {
-		console.log(`Unexpected stationId: ${stationId_start}, ${stationId_end}`);
+		U.log(`Unexpected stationId: ${stationId_start}, ${stationId_end}`);
 		return;
 	}
 	
 	// handle exception: invalid time
 	if (time <= 0) {
-		console.log(`Invalid traveltime: ${time}`);
+		U.log(`Invalid traveltime: ${time}`);
 		return;
 	}
 
@@ -207,7 +207,7 @@ exports.load_cache_from_db = async () => {
 				for (i = 0; i < len; i++) {
 					exports.cache_bikestop(bs[i]);
 				}
-				console.log(`${len} Bikestop found`);
+				U.log(`${len} Bikestop found`);
 
 				// load BikestopTraveltime
 				// use classic for loop for performance
@@ -220,14 +220,14 @@ exports.load_cache_from_db = async () => {
 						bstt[i].traveltime
 					);
 				}
-				console.log(`${len} BikestopTraveltime found`);
+				U.log(`${len} BikestopTraveltime found`);
 
 				// fetch real-time info (ex: count)
 				await exports.update_bikestop_cache_from_fetch();
 				exports.save_cache_to_db();
 			} catch (err) {
 				// TODO: handle unexpected error
-				console.log(err);
+				U.log(err);
 			}
 
 			return;
@@ -260,13 +260,13 @@ exports.update_bikestop_cache_from_fetch = async () => {
 	// reserve next fetching
 	CACHE.fetch_timeout = setTimeout(() => {
 		CACHE.fetch_timeout = null;
-		console.log(`Bikestop cache is old. Fetch news.`);
+		U.log(`Bikestop cache is old. Fetch news.`);
 		exports.update_bikestop_cache_from_fetch();
 	}, CACHE.ms_timeout);
 };
 
 exports.save_cache_to_db = (ignore_traveltime = true) => {
-	console.log(`Start updating bikestops in DB ...`);
+	U.log(`Start updating bikestops in DB ...`);
 	for (let [stationId, bikestop] of Object.entries(CACHE.bikestops)) {
 		update_bikestop_in_db(
 			stationId,
@@ -284,7 +284,7 @@ exports.save_cache_to_db = (ignore_traveltime = true) => {
 			}
 		}
 	}
-	console.log(`DB successfully updated.`);
+	U.log(`DB successfully updated.`);
 };
 
 // update one or create if not exist
@@ -299,7 +299,7 @@ const update_bikestop_in_db = (stationId, stationName, stationLatitude, stationL
 		new: true, // if true, it return the updated but takes more time
 		upsert: true // when no matches, insert new one
 	}, (err, res) => {
-		if (err) console.log(err);
+		if (err) U.log(err);
 	});
 };
 
@@ -314,6 +314,6 @@ const update_bikestop_traveltime_in_db = (stationId_start, stationId_end, travel
 		new: true, // if true, it return the updated but takes more time
 		upsert: true // when no matches, insert new one
 	}, (err, res) => {
-		if (err) console.log(err);
+		if (err) U.log(err);
 	});
 };

@@ -25,7 +25,7 @@ const iconv = require('iconv-lite');
 exports.load_bikestops = () =>
 	new Promise((resolve, reject) => {
 		// cache expired, fetch new
-		console.log(`load bikestops from fetched`);
+		U.log(`load bikestops from fetched`);
 		let base_url = `http://openapi.seoul.go.kr:8088/${keys.api_key.seoul_opendata}/json/bikeList`;
 		let option_1 = {
 			url: `${base_url}/1/1000/`,
@@ -48,10 +48,10 @@ exports.load_bikestops = () =>
 			NOTE: at ES2020, you can use optional chaining operator (?.)
 			and nullish coalescing operator (??) to make it simpler
 			*/
-			list = list.concat(U.json.get_value(json_1, [], "rentBikeStatus", "row"));
-			list = list.concat(U.json.get_value(json_2, [], "rentBikeStatus", "row"));
+			list = list.concat(U.get_value(json_1, [], "rentBikeStatus", "row"));
+			list = list.concat(U.get_value(json_2, [], "rentBikeStatus", "row"));
 		})
-		.catch(console.log)
+		.catch(U.log)
 		.then(() => {
 			// sort by id and update cache
 			//list.sort((a, b) => a.stationId.slice(3) - b.stationId.slice(3));
@@ -201,12 +201,12 @@ exports.load_nbus_info = () =>
 
 		// load from cache
 		if (exports.nbus_info.expired == false) {
-			console.log(`load N-Bus info from cache`);
+			U.log(`load N-Bus info from cache`);
 			return resolve();
 		}
 
 		// cache expired, fetch new
-		console.log(`load N-Bus info from fetched`);
+		U.log(`load N-Bus info from fetched`);
 
 		let nbus_info_list = [];
 
@@ -244,10 +244,10 @@ exports.load_nbus_info = () =>
 				info = info_list[i];
 
 				// take N-bus only
-				if (U.json.get_value(info, null, "busRouteNm", 0, 0) != 'N') continue;
+				if (U.get_value(info, null, "busRouteNm", 0, 0) != 'N') continue;
 
 				// beautify: "property:[value]" -> "property:value"
-				U.json.unwrap_properties(info);
+				U.unwrap_properties(info);
 				info.stations = [];
 				nbus_info_list.push(info);
 
@@ -257,10 +257,10 @@ exports.load_nbus_info = () =>
 				promises.push(
 					requestAndParseAsJSON(option_getstations, 'xml')
 					.then(parse_itemList)
-					.then(U.json.unwrap_properties),
+					.then(U.unwrap_properties),
 					requestAndParseAsJSON(option_arrive_info, 'xml')
 					.then(parse_itemList)
-					.then(U.json.unwrap_properties)
+					.then(U.unwrap_properties)
 				);
 			}
 
@@ -293,7 +293,7 @@ exports.load_nbus_info = () =>
 			});
 		})
 		.catch(err => {
-			console.log(err);
+			U.log(err);
 			update_cache(exports.nbus_info, exports.nbus_info.list);
 			resolve();
 		});
@@ -342,7 +342,7 @@ exports.get_pedestrian_route = (points) =>
 		}
 		passList = passList.slice(1);
 
-		console.log(`get_pedestrian_route([${points}])`);
+		U.log(`get_pedestrian_route([${points}])`);
 		let option = {
 			method: "POST",
 			uri: "https://apis.openapi.sk.com/tmap/routes/pedestrian?version=1",
@@ -412,7 +412,7 @@ exports.get_pedestrian_route = (points) =>
 
 			// delete all false-values
 			result.points = result.points.filter(Boolean).flat();
-		}, console.log)
+		}, U.log)
 		.then(() => resolve(result));
 	});
 
@@ -435,9 +435,9 @@ update_cache = (cache, list) => {
 	cache.expired = false;
 
 	// after 200sec, expire cache and fetch new
-	console.log(`Cache updated.`);
+	U.log(`Cache updated.`);
 	setTimeout(() => {
-		console.log(`Cache expired. Fetch new info.`);
+		U.log(`Cache expired. Fetch new info.`);
 		cache.expired = true;
 		cache.func_update();
 	}, cache.term_update);
@@ -449,7 +449,7 @@ update_cache = (cache, list) => {
 
 */
 parse_itemList = (json) =>
-	U.json.get_value(json, [], "ServiceResult", "msgBody", 0, "itemList");
+	U.get_value(json, [], "ServiceResult", "msgBody", 0, "itemList");
 
 /*
 
@@ -458,7 +458,7 @@ parse_itemList = (json) =>
 */
 requestAndParseAsJSON = (option, type = 'json') =>
 	new Promise((resolve, reject) => {
-		console.log(`request to ${option.url || option.uri}`);
+		U.log(`request to ${option.url || option.uri}`);
 
 		request(option)
 		.then(result => iconv.decode(Buffer.from(result), 'utf8'))
@@ -475,7 +475,7 @@ requestAndParseAsJSON = (option, type = 'json') =>
 				.parseStringPromise(decoded)
 				.then(resolve)
 				.catch(err => {
-					console.log('Error on parseStringPromise: ', err);
+					U.log('Error on parseStringPromise: ', err);
 					resolve({});
 				});
 			}
@@ -484,7 +484,7 @@ requestAndParseAsJSON = (option, type = 'json') =>
 			return decoded;
 		})
 		.catch(err => {
-			console.log('Error on requestAndParseAsJSON: ', err);
+			U.log('Error on requestAndParseAsJSON: ', err);
 			resolve({});
 		});
 	});

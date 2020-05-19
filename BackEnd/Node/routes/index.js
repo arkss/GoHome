@@ -1,4 +1,4 @@
-const R = require('../controllers/util').res;
+const U = require('../controllers/util');
 const bike = require('../controllers/bike');
 const bus = require('../controllers/bus');
 const route = require('../controllers/route');
@@ -18,7 +18,7 @@ router.get('/api/:model', (req, res, next) => {
 		case 'nbus_near_stations':     bus.api_get_near_stations(req, res, next);           break;
 
 		case 'routes':                 route.api_get_routes(req, res, next);                break;
-		default:                       R.status(res, 404);                                  break;
+		default:                       U.status(res, 404);                                  break;
 	}
 });
 

@@ -1,3 +1,6 @@
-exports.geo  = require('./_geo');
-exports.json = require('./_json');
-exports.res  = require('./_response');
+module.exports = {
+	...require('./_geo'),
+	...require('./_json'),
+	...require('./_logger'),
+	...require('./_response')
+};

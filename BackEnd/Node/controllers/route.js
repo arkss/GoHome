@@ -1,11 +1,12 @@
 const U = require('./util');
+
 const oapi = require('./oapi');
 
 const bike = require('./bike');
 
-const CONCALL_BIKE_ROUTE_SEARCH =   1;
-const MAX_BIKE_ROUTE_SEARCH     =  10;
-const MAX_BIKE_ROUTE_RETURN     =   5;
+const CONCALL_BIKE_ROUTE_SEARCH =   3;
+const MAX_BIKE_ROUTE_SEARCH     =  12;
+const MAX_BIKE_ROUTE_RETURN     =   6;
 
 /*
 
@@ -51,10 +52,10 @@ exports.api_get_routes = (req, res, next) => {
 	let include_bus = req.query.include_bus == 'N';
 	
 	// handle exception: invalid query
-	if (U.res.isInvalid(res, lat_start, lon_start, lat_end, lon_end)) return;
+	if (U.isInvalid(res, lat_start, lon_start, lat_end, lon_end)) return;
 	exports.get_routes(lat_start, lon_start, lat_end, lon_end)
 	.then(routes => {
-		U.res.response(res, true, `pedestrian route found`, {
+		U.response(res, true, `pedestrian route found`, {
 			n: routes.length,
 			routes: routes
 		});
@@ -70,7 +71,7 @@ exports.get_routes = (lat_start, lon_start, lat_end, lon_end) =>
 		let linear_distance, bikestops_near_start, bikestops_near_end, nbusstops_near_start, nbusstops_near_end;
 
 		// find near bikestops and search routes
-		linear_distance = U.geo.distance(lat_start, lon_start, lat_end, lon_end);
+		linear_distance = U.distance(lat_start, lon_start, lat_end, lon_end);
 		bikestops_near_start = bike.get_bikestops(lat_start, lon_start, 0, linear_distance / 2);
 		bikestops_near_end = bike.get_bikestops(lat_end, lon_end, 0, linear_distance / 2);
 
@@ -80,7 +81,7 @@ exports.get_routes = (lat_start, lon_start, lat_end, lon_end) =>
 			let v2 = bikestops_near_end;
 
 			// for test
-			console.log(`linear distance: ${linear_distance}, the number of near bikestops: ${v1.length}, ${v2.length}`);
+			U.log(`linear distance: ${linear_distance}, the number of near bikestops: ${v1.length}, ${v2.length}`);
 
 			// 쌍 매칭하고 예상 시간 계산 및 정렬
 			// 예상시간 짧은 순으로 길찾기 하면서 예상시간 최댓값을 낮춰감
@@ -92,13 +93,13 @@ exports.get_routes = (lat_start, lon_start, lat_end, lon_end) =>
 					// calculate expected riding & walking time (in sec)
 					traveltime = (
 						bike.get_cached_traveltime(bs1.stationId, bs2.stationId) ||
-						U.geo.riding_time(
+						U.riding_time(
 							bs1.stationLatitude, bs1.stationLongitude,
 							bs2.stationLatitude, bs2.stationLongitude
 						)
 					)
-					+ U.geo.walking_time(lat_start, lon_start, bs1.stationLatitude, bs1.stationLongitude)
-					+ U.geo.walking_time(bs2.stationLatitude, bs2.stationLongitude, lat_end, lon_end);
+					+ U.walking_time(lat_start, lon_start, bs1.stationLatitude, bs1.stationLongitude)
+					+ U.walking_time(bs2.stationLatitude, bs2.stationLongitude, lat_end, lon_end);
 					// add to the candidates
 					candidate_routes.push({
 						bs: [bs1, bs2],
@@ -108,7 +109,7 @@ exports.get_routes = (lat_start, lon_start, lat_end, lon_end) =>
 			}
 
 			// for test
-			console.log(`${candidate_routes.length} candidate pairs found`);
+			U.log(`${candidate_routes.length} candidate pairs found`);
 
 			// sort pairs out by expected travel time
 			candidate_routes.sort((a, b) => a.traveltime - b.traveltime);
@@ -119,8 +120,8 @@ exports.get_routes = (lat_start, lon_start, lat_end, lon_end) =>
 			let time_upperbound = Infinity;
 
 			const end_searching = () => {
-				console.log(`${searched_results.length} routes are really searched with API call`);
-				console.log(`time upperbound: ${time_upperbound}`);
+				U.log(`${searched_results.length} routes are really searched with API call`);
+				U.log(`time upperbound: ${time_upperbound}`);
 
 				// sort result out by its travel time
 				searched_results.sort((a, b) => a.time - b.time);
@@ -136,7 +137,7 @@ exports.get_routes = (lat_start, lon_start, lat_end, lon_end) =>
 				candidates = candidate_routes.slice(i, i + CONCALL_BIKE_ROUTE_SEARCH);
 				// handle exception: all is searched
 				if (candidates.length == 0) {
-					console.log(`all is searched`);
+					U.log(`all is searched`);
 					end_searching();
 					return;
 				}
@@ -146,12 +147,12 @@ exports.get_routes = (lat_start, lon_start, lat_end, lon_end) =>
 
 						// don't have to search longer way
 						if (time_upperbound < candidate.traveltime) {
-							console.log(`over the upperbound`);
+							U.log(`over the upperbound`);
 							return resolve(false);
 						}
 
-						console.log(`search real route ${i}`);
-						console.log(`expected minimum travel time: ${candidate.traveltime}, upperbound: ${time_upperbound}`);
+						U.log(`search real route ${i}`);
+						U.log(`expected minimum travel time: ${candidate.traveltime}, upperbound: ${time_upperbound}`);
 						//return resolve(true);
 						let bs1 = candidate.bs[0];
 						let bs2 = candidate.bs[1];
@@ -163,18 +164,18 @@ exports.get_routes = (lat_start, lon_start, lat_end, lon_end) =>
 							[lat_end, lon_end],
 						])
 						.then(result => {
-							console.log(`real route searched ${i}`);
+							U.log(`real route searched ${i}`);
 
 							// for test: handle exception
 							if (result.section_time.length != 3)
-								console.log(`unexpected section length: ${result.section_time.length}`);
+								U.log(`unexpected section length: ${result.section_time.length}`);
 
 							// add more info for response
 							result.bs = [bs1, bs2];
 							result.brief_list = ['도보', '자전거', '도보'];
 
 							// re-calculate time since the middle section is for riding, not walking
-							result.section_time[1] = U.geo.walking_time_2_riding_time(result.section_time[1]);
+							result.section_time[1] = U.walking_time_2_riding_time(result.section_time[1]);
 							result.time = result.section_time.reduce((a, c) => a + c, 0);
 
 							// cache the riding time
@@ -223,7 +224,7 @@ exports.get_routes = (lat_start, lon_start, lat_end, lon_end) =>
 		])
 		.then(() => {
 			// end of searching
-			console.log(`All routes are found.`);
+			U.log(`All routes are found.`);
 			resolve(routes);
 		});
 	});

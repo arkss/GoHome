@@ -1,4 +1,4 @@
-const R = require('./controllers/util').res;
+const U = require('./controllers/util');
 const bike = require('./controllers/bike');
 const express = require('express');
 const session = require('express-session');
@@ -32,7 +32,7 @@ app.all('*', (req, res, next) => {
 	let protocol = req.headers['x-forwarded-proto'] || req.protocol;
 	let from = `${protocol}://${req.hostname}${req.url}`;
 
-	console.log(`[${req.method} ${req.ip}] ${from}`);
+	U.log(`[${req.method} ${req.ip}] ${from}`);
 	next();
 });
 
@@ -41,17 +41,17 @@ app.use('/', router);
 
 // handle 404
 app.use((req, res, next) => {
-	R.status(res, 404);
+	U.status(res, 404);
 });
 
 // handle 500
 app.use((err, req, res, next) => {
-	console.log(`[ERROR] ${err.stack || err}`);
-	R.status(res, 500);
+	U.log(`[ERROR] ${err.stack || err}`);
+	U.status(res, 500);
 });
 
 // start server
-console.log(`
+U.log(`
 /$$$$$$            /$$   /$$                                  
 /$$__  $$          | $$  | $$                                  
 | $$  \\__/  /$$$$$$ | $$  | $$  /$$$$$$  /$$$$$$/$$$$   /$$$$$$ 
@@ -61,7 +61,7 @@ console.log(`
 |  $$$$$$/|  $$$$$$/| $$  | $$|  $$$$$$/| $$ | $$ | $$|  $$$$$$$
 \\______/  \\______/ |__/  |__/ \\______/ |__/ |__/ |__/ \\_______/
 `);
-console.log(`Starting server...`);
+U.log(`Starting server...`);
 mongoose.Promise = global.Promise;
 mongoose.connect(keys.url_mongodb, {
 	dbName: keys.db_name,
@@ -71,18 +71,18 @@ mongoose.connect(keys.url_mongodb, {
 	useFindAndModify: false // https://mongoosejs.com/docs/deprecations.html#findandmodify
 })
 .then(async () => {
-	console.log(`Succeessfully connected to ${keys.url_mongodb}.`);
+	U.log(`Succeessfully connected to ${keys.url_mongodb}.`);
 
 	await bike.load_cache_from_db();
-	console.log(`Succeessfully load biekstop cache.`);
+	U.log(`Succeessfully load biekstop cache.`);
 
 	server.listen(port, () => {
-		console.log(`Server listen now with ${port} port.`);
+		U.log(`Server listen now with ${port} port.`);
 	});
 })
 .catch(err => {
-	console.log(`ERROR while starting server: ${err}`);
+	U.log(`ERROR while starting server: ${err}`);
 });
 
 // prevent termination due to uncaughtException
-process.on('uncaughtException', console.log);
+process.on('uncaughtException', U.log);

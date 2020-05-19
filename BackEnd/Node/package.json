@@ -16,10 +16,14 @@
     "express": "^4.17.1",
     "express-session": "^1.17.0",
     "iconv-lite": "^0.5.1",
+    "logform": "^2.1.2",
+    "moment": "^2.25.3",
+    "moment-timezone": "^0.5.31",
     "mongoose": "^5.9.13",
     "request": "^2.88.2",
     "request-promise": "^4.2.5",
     "socket.io": "^2.3.0",
+    "winston": "^3.2.1",
     "xml2js": "^0.4.23"
   },
   "devDependencies": {

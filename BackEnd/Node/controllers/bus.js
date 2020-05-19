@@ -19,7 +19,7 @@ exports.api_get_nbus_info = (req, res, next) => {
 
 	exports.get_nbus_info(include_stations)
 	.then(nbus_info => {
-		U.res.response(res, true, `${nbus_info.length} found`, {
+		U.response(res, true, `${nbus_info.length} found`, {
 			n: nbus_info.length,
 			nbus_info: nbus_info
 		});
@@ -33,7 +33,7 @@ exports.get_nbus_info = (include_stations) =>
 	.then(nbus_info => {
 
 		if (!include_stations)
-			U.json.delete_properties(nbus_info, 'stations');
+			U.delete_properties(nbus_info, 'stations');
 
 		// response
 		return nbus_info;
@@ -61,7 +61,7 @@ exports.api_get_near_stations = (req, res, next) => {
 
 	exports.get_near_stations(lat, lon, n)
 	.then(stations => {
-		U.res.response(res, true, `${stations.length} found`, {
+		U.response(res, true, `${stations.length} found`, {
 			n: stations.length,
 			stations: stations
 		});
@@ -88,7 +88,7 @@ exports.get_near_stations = (lat, lon, n) =>
 			len = stations.length;
 			for (i = 0; i < len; i++) {
 				station = stations[i];
-				station.distance = U.geo.approx_distance(
+				station.distance = U.approx_distance(
 					station.gpsY, station.gpsX,
 					lat, lon
 				);
