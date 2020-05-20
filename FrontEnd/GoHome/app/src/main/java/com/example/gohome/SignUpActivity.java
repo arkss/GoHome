@@ -21,6 +21,8 @@ public class SignUpActivity extends AppCompatActivity {
         super.onCreate(saveInstanceState);
         setContentView(R.layout.activity_signup);
 
+        // TODO: IMPLEMENT SIGN UP USING RETROFIT
+
         // toolbar 생성
         Toolbar toolbar = (Toolbar)findViewById(R.id.signup_toolbar);
         setSupportActionBar(toolbar);
