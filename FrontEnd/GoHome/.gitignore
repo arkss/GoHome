@@ -323,6 +323,9 @@ out/
 # Gradle files
 .gradle
 .gradle/
+app/gradle/
+app/gradlew
+app/gradlew.bat
 build/
 
 # Signing files
@@ -385,7 +388,8 @@ obj/
 .idea/dynamic.xml
 .idea/uiDesigner.xml
 .idea/assetWizardSettings.xml
-.idea/gradle.xml
+.idea/
+app/.idea/
 
 # OS-specific files
 .DS_Store
