@@ -156,3 +156,13 @@ JWT_AUTH = {
     # refresh token
     'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(days=2),
 }
+
+# email
+# 이메일
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_USE_TLS = True
+EMAIL_HOST = get_secret('EMAIL_HOST')
+EMAIL_HOST_USER = get_secret('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = get_secret('EMAIL_HOST_PASSWORD')
+EMAIL_PORT = get_secret('EMAIL_PORT')
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
