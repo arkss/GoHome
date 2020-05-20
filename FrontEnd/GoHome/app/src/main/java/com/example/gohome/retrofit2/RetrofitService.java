@@ -1,18 +1,29 @@
 package com.example.gohome.retrofit2;
 
 import com.example.gohome.retrofit2.RetrofitData;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 
 import java.util.List;
 
 import retrofit2.Call;
+import retrofit2.http.Body;
 import retrofit2.http.GET;
+import retrofit2.http.Header;
+import retrofit2.http.POST;
 import retrofit2.http.Query;
 
 public interface RetrofitService {
 
-    @GET("/posts")
-    Call<List<RetrofitData>> getPosts();
+    @GET("/")
+    Call<JsonObject> loginConfirm(@Header("Authorization") String token);
 
-    @GET("/posts")
-    Call<List<RetrofitData>> getPost(@Query("id") Integer id);
+    @POST("login/")
+    Call<JsonObject> login(@Body LoginData data);
+
+    @POST("signup/")
+    Call<JsonObject> signup(@Body SignupData data);
+
+    @GET("signup/")
+    Call<JsonArray> allSignup();
 }
