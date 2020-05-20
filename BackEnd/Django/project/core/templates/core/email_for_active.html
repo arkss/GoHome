@@ -1,0 +1,13 @@
+{% autoescape off %}
+
+<!-- TODO: 프론트 링크 동적으로 생성해서 연결해주기. -->
+<!-- ex) 프론트 도메인/profile_id/token/ -->
+
+안녕하세요 GoHome입니다.
+
+회원가입 인증 : http://{{domain}}{% url 'user_active' uid64=profile_id token=token %}
+
+
+
+{% endautoescape %}
+
