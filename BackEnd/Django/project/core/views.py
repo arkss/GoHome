@@ -52,5 +52,5 @@ class CreateProfileView(APIView):
 
 
 @api_view(['GET'])
-def is_login(request):
+def login_test(request):
     return Response({'message': '로그인 성공'})
