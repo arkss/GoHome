@@ -1,3 +1,7 @@
+const Busstop = require('../models/busstop');
+const BusstopTraveltime = require('../models/busstoptraveltime');
+const BusRoute = require('../models/busroute');
+
 const U = require('./util');
 const oapi = require('./oapi');
 
@@ -103,3 +107,43 @@ exports.get_near_stations = (lat, lon, n) =>
 
 		return stations;
 	});
+
+/*
+
+	busstop 간 소요시간을 캐시
+
+	bikestops: {
+		(stationId): {
+			stationId: String
+			stationName: String,
+			stationLatitude: Number,
+			stationLongitude: Number
+			traveltime: {
+				(stationId): (travel time in sec)
+			}
+		},
+		...
+	}
+
+*/
+
+
+const CACHE = {
+	busstops: {},
+	promise_loading: null,
+	timeout_handler: null,
+	ms_timeout: 1000000
+};
+
+const get_all_busstops = () => {};
+const cache_busstops = () => {};
+
+exports.get_traveltime = () => {};
+exports.cache_traveltime = () => {};
+
+exports.fetch_and_update_busstop = async () => {};
+
+exports.load_cache_from_db = async () => {};
+exports.save_cache_to_db = (ignore_traveltime = true) => {};
+const update_busstop_in_db = (stationId, stationName, stationLatitude, stationLongitude) => {};
+const update_traveltime_in_db = (stationId_start, stationId_end, traveltime) => {};
