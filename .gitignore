@@ -63,7 +63,8 @@ $RECYCLE.BIN/
 # Ignore all local history of files
 .history
 
-
+# Created by https://www.gitignore.io/api/androidstudio
+# Edit at https://www.gitignore.io/?templates=androidstudio
 
 # Created by https://www.gitignore.io/api/django
 # Edit at https://www.gitignore.io/?templates=django
@@ -301,7 +302,6 @@ dist/
 tmp/
 temp/
 
-
 ### AndroidStudio ###
 # Covers files to be ignored for android development using Android Studio.
 
@@ -385,6 +385,7 @@ obj/
 .idea/dynamic.xml
 .idea/uiDesigner.xml
 .idea/assetWizardSettings.xml
+.idea/gradle.xml
 
 # OS-specific files
 .DS_Store
@@ -431,3 +432,5 @@ fabric.properties
 ### AndroidStudio Patch ###
 
 !/gradle/wrapper/gradle-wrapper.jar
+
+# End of https://www.gitignore.io/api/androidstudio

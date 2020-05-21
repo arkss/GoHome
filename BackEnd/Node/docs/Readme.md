@@ -4,6 +4,130 @@
 - 위치 기반 자전거 대여소 검색
 - 도보/공공자전거/N버스 중 일부를 포함하는 경로 탐색
 
+
+
+## 제공하는 OAPI
+
+### 목록
+
+#### 테스트
+
+테스트를 위해 제공됨
+
+- path: /
+
+- method: GET
+
+- request parameter
+
+  - 없음
+
+- response field
+  
+  - | Name    | Type   | Mandatory | Default | Example | Description |
+    | ------- | ------ | --------- | ------- | ------- | ----------- |
+    | message | String | Y         | hi      | hi      | Test        |
+
+
+
+#### 자전거 대여소 목록 조회
+
+주변의 따릉이 대여소 정보를 반환
+
+- path: /api/bikestops
+
+- method: GET
+
+- request parameter
+
+  - | Name | Type   | Mandatory | Default | Example            | Description             |
+    | ---- | ------ | --------- | ------- | ------------------ | ----------------------- |
+    | lat  | Number |           | 0       | 37.58396981971035  | 위도                    |
+    | lon  | Number |           | 0       | 127.05907344818158 | 경도                    |
+    | n    | Number |           | MAX     | 5                  | 검색할 대여소의 최대 수 |
+
+- response field
+  
+  - | Name                               | Type   | Mandatory | Default   | Example    | Description                  |
+    | ---------------------------------- | ------ | --------- | --------- | ---------- | ---------------------------- |
+    | result                             | Number | Y         | 1         | 1          | 1: 정상 처리됨<br />-1: 오류 |
+    | message                            | String | Y         | 'success' | '13 found' | 요청 처리 결과               |
+    | data                               | Object | Y         |           |            |                              |
+    | data.n                             | Number |           |           | 1          | 검색된 대여소 수             |
+    | data.bikestops                     | Array  |           |           |            | 검색된 대여소 목록           |
+    | data.bikestops[].rackTotCnt        | Number |           |           |            | 거치대 개수                  |
+    | data.bikestops[].stationName       | String |           |           |            | 대여소 이름                  |
+    | data.bikestops[].parkingBikeTotCnt | Number |           |           |            | 자전거 수                    |
+    | data.bikestops[].shared            | Number |           |           |            | 거치율                       |
+    | data.bikestops[].stationLatitude   | Number |           |           |            | 위도                         |
+    | data.bikestops[].stationLongitude  | Number |           |           |            | 경도                         |
+    | data.bikestops[].stationId         | String |           |           |            | 대여소 ID                    |
+    | data.bikestops[].distance          | Number |           |           |            | 대여소까지의 직선 거리       |
+
+
+
+#### 자전거 거치 수 조회
+
+- path: /api/bikestop_parked_counts
+
+- method: GET
+
+- request parameter
+
+  - 없음
+- response field
+  
+  - | Name                               | Type   | Mandatory | Default   | Example    | Description                  |
+    | ---------------------------------- | ------ | --------- | --------- | ---------- | ---------------------------- |
+    | result                             | Number | Y         | 1         | 1          | 1: 정상 처리됨<br />-1: 오류 |
+    | message                            | String | Y         | 'success' | '13 found' | 요청 처리 결과               |
+    | data                               | Object | Y         |           |            |                              |
+    | data.n                             | Number |           |           | 1          | 검색된 대여소 수             |
+    | data.bikestops                     | Array  |           |           |            | 검색된 대여소 목록           |
+    | data.bikestops[].stationId         | String |           |           |            | 대여소 ID                    |
+    | data.bikestops[].parkingBikeTotCnt | Number |           |           |            | 자전거 수                    |
+
+
+
+
+
+#### 경로탐색
+
+- path: /routes
+
+- method: GET
+
+- request parameter
+
+  - | Name         | Type   | Mandatory | Default | Example    | Description      |
+    | ------------ | ------ | --------- | ------- | ---------- | ---------------- |
+    | lat_start    | Number | Y         |         | 37.586759  | 출발지 위도      |
+    | lon_start    | Number | Y         |         | 127.053907 | 출발지 경도      |
+    | lat_end      | Number | Y         |         | 37.582931  | 도착지 위도      |
+    | lon_end      | Number | Y         |         | 127.060980 | 도착지 경도      |
+    | include_bike | String |           | Y       | N          | 저전거 포함 여부 |
+    | include_bus  | String |           | Y       | N          | 버스 포함 여부   |
+
+
+- response field
+  
+  - | Name                           | Type   | Mandatory | Default   | Example                                         | Description                    |
+    | ------------------------------ | ------ | --------- | --------- | ----------------------------------------------- | ------------------------------ |
+    | result                         | Number | Y         | 1         | 1                                               | 1: 정상 처리됨<br />-1: 오류   |
+    | message                        | String | Y         | 'success' | '13 found'                                      | 요청 처리 결과                 |
+    | data                           | Object | Y         |           |                                                 |                                |
+    | data.n                         | Number |           |           | 1                                               | 검색된 경로 수                 |
+    | data.routes                    | Array  |           |           |                                                 | 검색된 경로 목록               |
+    | data.routes[].time             | Number |           |           | 2428                                            | 소요시간                       |
+    | data.routes[].distance         | Number |           |           | 9900                                            | 이동 거리                      |
+    | data.routes[].brief_list       | Array  |           |           | ['도보']                                        | 간단한 경로 내용               |
+    | data.routes[].section_time     | Array  |           |           | [641, 1341, 446]                                | 구간 별 소요시간               |
+    | data.routes[].section_distance | Array  |           |           | [857, 8441, 602]                                | 구간 별 이동 거리              |
+    | data.routes[].points           | Array  |           |           | [[126.99430937255515, 37.534636452132624], ...] | 경로 체크포인트(경도, 위도 순) |
+
+
+
+
 ## 사용하는 OAPI
 본 서버는 기능 제공을 위해 외부 기관에서 제공하는 Open API를 사용한다.
 - API 인증키는 서버의 별도 파일(keys.json)에 저장되며, 이를 외부에 공유하지 않는다.
@@ -64,7 +188,10 @@
 - [T map API](http://tmapapi.sktelecom.com/index.html)
 	- [보행자 경로안내](http://tmapapi.sktelecom.com/main.html#webservice/docs/tmapRoutePedestrianDoc)
 
+
+
 ## 참고
+
 - 위치정보
 	- 모든 위치정보는 GPS(WGS84) 좌표계를 기준으로 한다.
 - 대중교통 길찾기
