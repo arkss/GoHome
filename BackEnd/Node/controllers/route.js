@@ -113,7 +113,7 @@ exports.get_routes = (lat_start, lon_start, lat_end, lon_end, include_bike, incl
 				for (let bs2 of v2) {
 					// calculate expected riding & walking time (in sec)
 					traveltime = (
-						bike.get_cached_traveltime(bs1.stationId, bs2.stationId) ||
+						bike.get_traveltime(bs1.stationId, bs2.stationId) ||
 						U.riding_time(
 							bs1.stationLatitude, bs1.stationLongitude,
 							bs2.stationLatitude, bs2.stationLongitude
