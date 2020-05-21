@@ -7,7 +7,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.decorators import api_view
 from .serializers import ProfileSeriallizer
 
-from config.permissions import CustomIsAuthenticated
+#from config.permissions import CustomIsAuthenticated
 
 # email
 from django.contrib.sites.shortcuts import get_current_site
@@ -125,8 +125,7 @@ def user_active(request, uid64, token):
     except:
         is_successed = False
 
-    if account_activation_token.check_token(profile, token)
-    :
+    if account_activation_token.check_token(profile, token):
         profile.status = '1'
         profile.save()
     else:
