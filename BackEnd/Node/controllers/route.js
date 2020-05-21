@@ -1,12 +1,12 @@
+const keys = require('../keys.json');
 const U = require('./util');
-
 const oapi = require('./oapi');
-
 const bike = require('./bike');
 
-const CONCALL_BIKE_ROUTE_SEARCH =   3;
-const MAX_BIKE_ROUTE_SEARCH     =  12;
-const MAX_BIKE_ROUTE_RETURN     =   6;
+const CONCALL_BIKE_ROUTE_SEARCH   = keys.settings.concall_bike_route_search || 1;
+const MAX_BIKE_ROUTE_SEARCH       = keys.settings.max_bike_route_search || 10;
+const MAX_BIKE_ROUTE_RETURN       = keys.settings.max_bike_route_return || 5;
+const BIKESTOP_CANDIDATE_DISTANCE = keys.settings.bikestop_candidate_distance || 0.5;
 
 /*
 
@@ -53,9 +53,9 @@ exports.api_get_routes = (req, res, next) => {
 	
 	// handle exception: invalid query
 	if (U.isInvalid(res, lat_start, lon_start, lat_end, lon_end)) return;
-	exports.get_routes(lat_start, lon_start, lat_end, lon_end)
+	exports.get_routes(lat_start, lon_start, lat_end, lon_end, include_bike, include_bus)
 	.then(routes => {
-		U.response(res, true, `pedestrian route found`, {
+		U.response(res, true, `${routes.length} route found`, {
 			n: routes.length,
 			routes: routes
 		});
@@ -63,20 +63,41 @@ exports.api_get_routes = (req, res, next) => {
 	.catch(next);
 };
 
-exports.get_routes = (lat_start, lon_start, lat_end, lon_end) =>
+exports.get_routes = (lat_start, lon_start, lat_end, lon_end, include_bike, include_bus) =>
 	new Promise((resolve, reject) => {
 		let routes = [];
 
 		// *stops are sorted by distance
 		let linear_distance, bikestops_near_start, bikestops_near_end, nbusstops_near_start, nbusstops_near_end;
+		let time_upperbound = Infinity;
 
 		// find near bikestops and search routes
 		linear_distance = U.distance(lat_start, lon_start, lat_end, lon_end);
-		bikestops_near_start = bike.get_bikestops(lat_start, lon_start, 0, linear_distance / 2);
-		bikestops_near_end = bike.get_bikestops(lat_end, lon_end, 0, linear_distance / 2);
+		bikestops_near_start = bike.get_bikestops(lat_start, lon_start, 0, linear_distance * BIKESTOP_CANDIDATE_DISTANCE);
+		bikestops_near_end = bike.get_bikestops(lat_end, lon_end, 0, linear_distance * BIKESTOP_CANDIDATE_DISTANCE);
 
-		let promise_bikestop = new Promise((resolve, reject) => {
-		
+		/*
+
+			search pedestran route
+
+		*/
+		let search_pedestrian_route = oapi.get_pedestrian_route([[lat_start, lon_start], [lat_end, lon_end]])
+		.then(result => {
+			// update upperbound for searching routes
+			time_upperbound = Math.min(time_upperbound, result.time);
+
+			result.brief_list = ['도보'];
+			routes.push(result);
+			return;
+		});
+
+		/*
+
+			search bike-included route
+
+		*/
+		let search_bike_route = new Promise((resolve, reject) => {
+
 			let v1 = bikestops_near_start;
 			let v2 = bikestops_near_end;
 
@@ -117,7 +138,6 @@ exports.get_routes = (lat_start, lon_start, lat_end, lon_end) =>
 
 			// search real time: promise-sequentially
 			// it may takes really long time but able to reduce the number of API call.
-			let time_upperbound = Infinity;
 
 			const end_searching = () => {
 				U.log(`${searched_results.length} routes are really searched with API call`);
@@ -211,18 +231,20 @@ exports.get_routes = (lat_start, lon_start, lat_end, lon_end) =>
 			search_candidate_routes(0);
 		});
 
-		// search pedestran route
-		let promise_pedestrian = oapi.get_pedestrian_route([[lat_start, lon_start], [lat_end, lon_end]])
-		.then(result => {
-			result.brief_list = ['도보'];
-			routes.push(result);
-			return;
+		/*
+
+			search bus-included route
+
+		*/
+		let search_bus_route = new Promise((resolve, reject) => {
+			return resolve();
 		});
 
 		// search all routes
 		Promise.all([
-			promise_bikestop,
-			promise_pedestrian
+			search_pedestrian_route,
+			(include_bike ? search_bike_route : Promise.resolve),
+			(include_bus ? search_bus_route : Promise.resolve)
 		])
 		.then(() => {
 			// end of searching
