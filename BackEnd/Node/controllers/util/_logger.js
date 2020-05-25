@@ -60,3 +60,4 @@ exports.log = (message, level = 'info') => {
 }
 
 exports.error = (err) => exports.log(err.stack || err, 'error');
+exports.debug = (message) => exports.log(message, 'debug');
