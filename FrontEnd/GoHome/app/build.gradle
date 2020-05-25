@@ -52,3 +52,13 @@ dependencies {
     // implementation for ARCore
     implementation 'com.google.ar.sceneform.ux:sceneform-ux:1.15.0'
 }
+
+sceneform.asset('sampledata/arrow4.obj',
+        'default',
+        'sampledata/arrow4.sfa',
+        'src/main/assets/arrow4')
+
+sceneform.asset('sampledata/circle.obj',
+        'default',
+        'sampledata/circle.sfa',
+        'src/main/assets/circle')

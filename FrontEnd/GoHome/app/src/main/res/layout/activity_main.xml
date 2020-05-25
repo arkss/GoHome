@@ -52,10 +52,9 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:textColor="@android:color/holo_red_light"
             android:gravity="center"
             android:id="@+id/anchorPose"
-            android:textSize="20sp"
+            android:textSize="25sp"
             android:text = "hello, world!"
             />
         <TextView
@@ -63,17 +62,10 @@
             android:layout_height="wrap_content"
             android:gravity="center"
             android:id="@+id/text3"
-            android:textSize="20sp"
+            android:textSize="40sp"
             android:text = "hello, world!"
             />
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:id="@+id/text4"
-            android:textSize="20sp"
-            android:text = "hello, world!"
-            />
+
     </LinearLayout>
     <RelativeLayout
         android:layout_width="200dp"
