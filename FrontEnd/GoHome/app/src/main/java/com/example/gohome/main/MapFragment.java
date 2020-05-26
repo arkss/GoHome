@@ -1,5 +1,9 @@
 package com.example.gohome.main;
 
+import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.location.Location;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -13,8 +17,13 @@ import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
+import com.example.gohome.GpsTracker;
+import com.example.gohome.OnGpsEventListener;
 import com.example.gohome.R;
+import com.skt.Tmap.TMapMarkerItem;
+import com.skt.Tmap.TMapPoint;
 import com.skt.Tmap.TMapView;
 
 import java.util.Objects;
@@ -24,7 +33,8 @@ import java.util.Objects;
  * Use the {@link MapFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class MapFragment extends Fragment {
+
+public class MapFragment extends Fragment implements OnGpsEventListener {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -37,6 +47,8 @@ public class MapFragment extends Fragment {
     DrawerLayout drawerLayout;
     View drawerView;
     TMapView tMapView;
+
+    GpsTracker gpsTracker;
 
     public MapFragment() {
         // Required empty public constructor
@@ -87,6 +99,8 @@ public class MapFragment extends Fragment {
         tMapView = new TMapView(getContext());
         tMapView.setSKTMapApiKey("l7xx7574967eec1847a08c21f9d5c78980d4"); // 찬표 api key
 
+        tMapView.setIconVisibility(true);
+
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_map, container, false);
     }
@@ -105,5 +119,21 @@ public class MapFragment extends Fragment {
                         .navigate(R.id.action_MapFragment_to_SearchFragment);
             }
         });
+
+        // GPS init
+        gpsTracker = new GpsTracker(this.getContext(), this);
+    }
+
+    @Override
+    public void onGpsEvent(Location location)
+    {
+        if(location != null) {
+            double lat = location.getLatitude(), lon = location.getLongitude();
+            Toast.makeText(this.getContext(), "latitude: " + Double.toString(lat) + ", longitude: " + Double.toString(lon), Toast.LENGTH_SHORT).show();
+
+            // 내 위치로 이동
+            tMapView.setLocationPoint(lon, lat);
+            tMapView.setCenterPoint(lon, lat);
+        }
     }
 }
