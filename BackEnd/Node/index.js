@@ -1,5 +1,6 @@
 const U = require('./controllers/util');
 const bike = require('./controllers/bike');
+const bus = require('./controllers/bus');
 const express = require('express');
 const session = require('express-session');
 const mongoose = require('mongoose');
@@ -78,6 +79,7 @@ mongoose.connect(keys.url_mongodb, {
 	U.log(`Succeessfully connected to ${keys.url_mongodb}.`);
 
 	await bike.load_cache_from_db();
+	await bus.load_cache_from_db();
 	U.log(`Succeessfully load biekstop cache.`);
 
 	server.listen(port, () => {

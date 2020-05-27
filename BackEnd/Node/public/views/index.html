@@ -104,7 +104,7 @@
 			// Marker 객체 생성.
 			for (let station of stations) {
 				var marker = new Tmapv2.Marker({
-					position: new Tmapv2.LatLng(station.gpsY, station.gpsX),
+					position: new Tmapv2.LatLng(station.stationLatitude, station.stationLongitude),
 					label: `N[${station.stationNm}]`,
 					iconSize: iconSize
 				});

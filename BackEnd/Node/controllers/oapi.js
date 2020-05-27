@@ -22,42 +22,35 @@ const iconv = require('iconv-lite');
 	}
 
 */
-exports.load_bikestops = () =>
-	new Promise((resolve, reject) => {
-		// cache expired, fetch new
-		U.log(`load bikestops from fetched`);
-		let base_url = `http://openapi.seoul.go.kr:8088/${keys.api_key.seoul_opendata}/json/bikeList`;
-		let option_1 = {
-			url: `${base_url}/1/1000/`,
-			encoding: null
-		};
-		let option_2 = {
-			url: `${base_url}/1001/2000/`,
-			encoding: null
-		};
+exports.load_bikestops = async () => {
+	U.log(`load bikestops from fetched`);
+	let base_url = `http://openapi.seoul.go.kr:8088/${keys.api_key.seoul_opendata}/json/bikeList`;
+	let option_1 = {
+		url: `${base_url}/1/1000/`,
+		encoding: null
+	};
+	let option_2 = {
+		url: `${base_url}/1001/2000/`,
+		encoding: null
+	};
 
-		let list = [];
+	// request bikestop list
+	let list = [];
+	try {
+		let [json_1, json_2] = await Promise.all([
+			requestAndParseJSON(option_1),
+			requestAndParseJSON(option_2)
+		]);
+		list = list.concat(
+			U.get_value(json_1, [], "rentBikeStatus", "row"),
+			U.get_value(json_2, [], "rentBikeStatus", "row")
+		);
+	} catch (err) {
+		U.error(err);
+	}
 
-		// request bikestop list
-		Promise.all([
-			requestAndParseAsJSON(option_1),
-			requestAndParseAsJSON(option_2)
-		])
-		.then(([json_1, json_2]) => {
-			/*
-			NOTE: at ES2020, you can use optional chaining operator (?.)
-			and nullish coalescing operator (??) to make it simpler
-			*/
-			list = list.concat(U.get_value(json_1, [], "rentBikeStatus", "row"));
-			list = list.concat(U.get_value(json_2, [], "rentBikeStatus", "row"));
-		})
-		.catch(U.error)
-		.then(() => {
-			// sort by id and update cache
-			//list.sort((a, b) => a.stationId.slice(3) - b.stationId.slice(3));
-			resolve(list);
-		});
-	});
+	return list;
+};
 
 /*
 
@@ -196,109 +189,154 @@ exports.load_bikestops = () =>
 	}
 
 */
-exports.load_nbus_info = () =>
-	new Promise((resolve, reject) => {
+exports.load_nbus_info = async () => {
+	U.log(`load N-Bus info from fetched`);
 
-		// load from cache
-		if (exports.nbus_info.expired == false) {
-			U.log(`load N-Bus info from cache`);
-			return resolve();
+	let option_routelist = {
+		uri: `http://ws.bus.go.kr/api/rest/busRouteInfo/getBusRouteList`,
+		qs: {
+			serviceKey: keys.api_key.data_portal
+		}
+	},
+	option_getstations = {
+		uri: `http://ws.bus.go.kr/api/rest/busRouteInfo/getStaionByRoute`,
+		qs: {
+			serviceKey: keys.api_key.data_portal,
+		}
+	},
+	option_arrive_info = {
+		uri: `http://ws.bus.go.kr/api/rest/arrive/getArrInfoByRouteAll`,
+		qs: {
+			serviceKey: keys.api_key.data_portal,
+		}
+	};
+
+	let i, len;
+	let nbus_info_list = [];
+	let route, routes, promise_stations = [], promise_arrive_infos = [];
+
+	// get all bus routes
+	try {
+		routes = await requestAndParseJSON(option_routelist, 'xml').then(parse_itemList);
+
+		// get all N-bus and find stations of each route
+		promise_stations = [];
+		promise_arrive_infos = [];
+		for (i = 0, len = routes.length; i < len; i++) {
+			route = routes[i];
+
+			// take N-bus only
+			if (U.get_value(route, null, "busRouteNm", 0, 0) != 'N') continue;
+
+			// beautify: "property:[value]" -> "property:value"
+			U.unwrap_properties(route);
+			nbus_info_list.push(route);
+
+			// request to get all stations of the bus
+			option_getstations.qs.busRouteId = route.busRouteId;
+			promise_stations.push(
+				requestAndParseJSON(option_getstations, 'xml')
+				.then(parse_itemList)
+				.then(U.unwrap_properties)
+			);
+			option_arrive_info.qs.busRouteId = route.busRouteId;
+			promise_arrive_infos.push(
+				requestAndParseJSON(option_arrive_info, 'xml')
+				.then(parse_itemList)
+				.then(U.unwrap_properties)
+			);
 		}
 
-		// cache expired, fetch new
-		U.log(`load N-Bus info from fetched`);
+		// CHECK: use Promise.allSettled
+		let [json_stations, json_arrive_infos] = await Promise.all([
+			Promise.all(promise_stations),
+			Promise.all(promise_arrive_infos)
+		]);
 
-		let nbus_info_list = [];
+		let stations, arrive_infos;
+		for (i = 0, len = nbus_info_list.length; i < len; i++) {
 
-		// request bus info list
-		requestAndParseAsJSON({
-			uri: `http://ws.bus.go.kr/api/rest/busRouteInfo/getBusRouteList`,
-			qs: {
-				serviceKey: keys.api_key.data_portal
-			}
-		}, 'xml')
-		.then(parse_itemList)
-		.then(info_list => {
-			// get all N-bus and find stations of each route
+			stations = json_stations[i];
+			arrive_infos = json_arrive_infos[i];
 
-			let promises = [];
-			let i, info, option_getstations, option_arrive_info;
-
-			option_getstations = {
-				uri: `http://ws.bus.go.kr/api/rest/busRouteInfo/getStaionByRoute`,
-				qs: {
-					serviceKey: keys.api_key.data_portal,
-					busRouteId: ''
-				}
-			};
-
-			option_arrive_info = {
-				uri: `http://ws.bus.go.kr/api/rest/arrive/getArrInfoByRouteAll`,
-				qs: {
-					serviceKey: keys.api_key.data_portal,
-					busRouteId: ''
-				}
-			};
-
-			for (i = 0; i < info_list.length; i++) {
-				info = info_list[i];
-
-				// take N-bus only
-				if (U.get_value(info, null, "busRouteNm", 0, 0) != 'N') continue;
-
-				// beautify: "property:[value]" -> "property:value"
-				U.unwrap_properties(info);
-				info.stations = [];
-				nbus_info_list.push(info);
-
-				// request to get all stations of the bus
-				option_getstations.qs.busRouteId = info.busRouteId;
-				option_arrive_info.qs.busRouteId = info.busRouteId;
-				promises.push(
-					requestAndParseAsJSON(option_getstations, 'xml')
-					.then(parse_itemList)
-					.then(U.unwrap_properties),
-					requestAndParseAsJSON(option_arrive_info, 'xml')
-					.then(parse_itemList)
-					.then(U.unwrap_properties)
-				);
-			}
-
-			Promise.all(promises)
-			.then(jsons => {
-				let i, stations, arriveInfos;
-				for (i = 0; i < jsons.length; i += 2) {
-
-					stations = jsons[i];
-					arriveInfos = jsons[i + 1];
-
-					// TODO: sort arriveInfo for optimization
-					// save every arrive info into its station info
-					for (let station of stations) {
-						let stationNo = station.stationNo;
-						station.arriveInfo = null;
-						for (let arriveInfo of arriveInfos) {
-							if (arriveInfo.arsId == stationNo) {
-								station.arriveInfo = arriveInfo;
-							}
-						}
+			// TODO: sort arriveInfo for optimization
+			// save every arrive info into its station info
+			for (let station of stations) {
+				let stationNo = station.stationNo;
+				station.arriveInfo = null;
+				for (let arriveInfo of arrive_infos) {
+					if (arriveInfo.arsId == stationNo) {
+						station.arriveInfo = arriveInfo;
 					}
-
-					nbus_info_list[i / 2].stations = stations;
 				}
-			})
-			.then(() => {
-				update_cache(exports.nbus_info, nbus_info_list);
-				resolve();
-			});
-		})
-		.catch(err => {
-			U.error(err);
-			update_cache(exports.nbus_info, exports.nbus_info.list);
-			resolve();
-		});
-	})
-	.then(() => JSON.parse(JSON.stringify(exports.nbus_info.list))); // return deep copy
+			}
+
+			nbus_info_list[i].stations = stations;
+		}
+	} catch (err) {
+		U.error(err);
+		return [];
+	}
+
+	U.log(`${nbus_info_list.length} nbus_info fetched`);
+	return nbus_info_list;
+};
+
+
+/*
+
+	Return informations of a busstop.
+
+*/
+// TODO: test it
+exports.load_buspaths = async (lat_start, lon_start, lat_end, lon_end) => {
+	let info = [];
+	let temp = [];
+	let option = {
+		uri: `http://ws.bus.go.kr/api/rest/pathinfo/getPathInfoByBus`,
+		qs: {
+			serviceKey: keys.api_key.data_portal,
+			startX: lon_start,
+			startY: lat_start,
+			endX: lon_end,
+			endY: lat_end,
+		}
+	};
+
+	U.log(`load_buspaths(${lat_start}, ${lon_start}, ${lat_end}, ${lon_end})`);
+
+	try {
+		info = await requestAndParseJSON(option, 'xml').then(parse_itemList);
+
+		if (!info) info = [];
+		for (let path of info) {
+			if (path.pathList) {
+				if (path.pathList.every(path => {
+					console.log(path.routeNm[0]);
+					return path.routeNm[0][0] == 'N'
+				})) {
+					temp.push(path);
+				}
+			}
+		}
+
+		info = [];
+		for (let path of temp) {
+			let unwraped = U.unwrap_properties(path);
+			unwraped.distance = parseInt(unwraped.distance);
+			unwraped.time = parseInt(unwraped.time);
+			unwraped.fx = parseInt(unwraped.fx);
+			unwraped.fy = parseInt(unwraped.fy);
+			unwraped.tx = parseInt(unwraped.tx);
+			unwraped.ty = parseInt(unwraped.ty);
+			info.push(unwraped);
+		}
+	} catch (err) {
+		U.error(err);
+	}
+
+	return info;
+};
 
 /*
 
@@ -361,7 +399,7 @@ exports.get_pedestrian_route = (points) =>
 		};
 
 		// request pedestrian route
-		requestAndParseAsJSON(option)
+		requestAndParseJSON(option)
 		.then(json => {
 			if (json?.type != 'FeatureCollection')
 				return;
@@ -456,7 +494,7 @@ const parse_itemList = (json) =>
 	Request and decode the result to UTF8, and return it as JSON.
 
 */
-const requestAndParseAsJSON = (option, type = 'json') =>
+const requestAndParseJSON = (option, type = 'json') =>
 	new Promise((resolve, reject) => {
 		U.log(`request to ${option.url || option.uri}`);
 

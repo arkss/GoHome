@@ -2,11 +2,13 @@ const keys = require('../keys.json');
 const U = require('./util');
 const oapi = require('./oapi');
 const bike = require('./bike');
+const bus = require('./bus');
 
 const CONCALL_BIKE_ROUTE_SEARCH   = keys.settings.concall_bike_route_search || 1;
-const MAX_BIKE_ROUTE_SEARCH       = keys.settings.max_bike_route_search || 10;
-const MAX_BIKE_ROUTE_RETURN       = keys.settings.max_bike_route_return || 5;
+const MAX_BIKE_ROUTE_SEARCH       = keys.settings.max_bike_route_search || 8;
+const MAX_BIKE_ROUTE_RETURN       = keys.settings.max_bike_route_return || 6;
 const BIKESTOP_CANDIDATE_DISTANCE = keys.settings.bikestop_candidate_distance || 0.5;
+const MAX_BUSSTOP_SEARCH          = keys.settings.max_busstop_search || 6;
 
 /*
 
@@ -237,14 +239,43 @@ exports.get_routes = (lat_start, lon_start, lat_end, lon_end, include_bike, incl
 
 		*/
 		let search_bus_route = new Promise((resolve, reject) => {
-			return resolve();
+			let busstops_start = bus.get_near_stations(lat_start, lon_start, MAX_BUSSTOP_SEARCH);
+			let busstops_end = bus.get_near_stations(lat_end, lon_end, MAX_BUSSTOP_SEARCH);
+			let buspaths_promises = [];
+
+			for (let bs1 of busstops_start) {
+				for (let bs2 of busstops_end) {
+					buspaths_promises.push(oapi.load_buspaths(
+						bs1.stationLatitude,
+						bs1.stationLongitude,
+						bs2.stationLatitude,
+						bs2.stationLongitude
+						)
+					);
+				}
+			}
+
+			Promise.all(buspaths_promises)
+			.then(pathss => {
+				let buspaths = [];
+				for (let paths of pathss) {
+					U.log(`${paths.length} paths`);
+					buspaths = buspaths.concat(paths);
+				}
+				buspaths.sort((a, b) => a.time - b.time);
+				//console.log(buspaths);
+
+				U.log(`${buspaths.length} buspaths`);
+				routes.push(buspaths);
+				resolve();
+			});
 		});
 
 		// search all routes
 		Promise.all([
 			search_pedestrian_route,
-			(include_bike ? search_bike_route : Promise.resolve),
-			(include_bus ? search_bus_route : Promise.resolve)
+			search_bike_route, // (include_bike ? search_bike_route : Promise.resolve),
+			search_bus_route // (include_bus ? search_bus_route : Promise.resolve)
 		])
 		.then(() => {
 			// end of searching
@@ -252,3 +283,14 @@ exports.get_routes = (lat_start, lon_start, lat_end, lon_end, include_bike, incl
 			resolve(routes);
 		});
 	});
+
+/*
+버스 이용한 길찾기에 대한 고찰
+
+버스정류장 A에서 B에 간다고 하자. 이때 편의를 위해, 일단은
+같은 정류장에서만 환승이 발생한다고 가정한다.
+
+1. 현재 시각, 현재 버스정류장에서, 각 버스노선에 대해
+	1. 버스 탑승을 위한 대기시간을 계산한다.
+	2. 
+*/

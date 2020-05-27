@@ -136,25 +136,19 @@ exports.get_bikestop_parked_counts = () => {
 const CACHE = {
 	bikestops: {},
 	promise_loading: null,
-	timeout_handler: null,
+	fetch_timeout_handler: null,
 	ms_timeout: 200000
 };
 
-const get_all_bikestops = () => {
-	let list = [];
-	for (let [stationId, bikestop] of Object.entries(CACHE.bikestops)) {
-		list.push(bikestop);
-	}
-
-	return JSON.parse(JSON.stringify(list));
-};
+const get_all_bikestops = () => U.get_values_copied(CACHE.bikestops);
 
 const cache_bikestops = (bikestops) => {
-	let traveltime;
+	let stationId;
+	// use classic for loop for performance
 	for (let bikestop of bikestops) {
-		traveltime = CACHE.bikestops[bikestop.stationId]?.traveltime || {};
-		CACHE.bikestops[bikestop.stationId] = bikestop;
-		CACHE.bikestops[bikestop.stationId].traveltime = traveltime;
+		stationId = bikestop.stationId;
+		bikestop.traveltime = CACHE.bikestops[stationId]?.traveltime || {};
+		CACHE.bikestops[stationId] = bikestop;
 	}
 };
 
@@ -196,18 +190,17 @@ exports.cache_traveltime = (stationId_start, stationId_end, time) => {
 
 exports.fetch_and_update_bikestop = async () => {
 	// cancel the reservated
-	if (CACHE.fetch_timeout != null) {
-		clearTimeout(CACHE.fetch_timeout);
-		CACHE.fetch_timeout = null;
+	if (CACHE.fetch_timeout_handler != null) {
+		clearTimeout(CACHE.fetch_timeout_handler);
+		CACHE.fetch_timeout_handler = null;
 	}
 
 	// fetch
-	// use classic for loop for performance
 	cache_bikestops(await oapi.load_bikestops());
 
 	// reserve next fetching
-	CACHE.fetch_timeout = setTimeout(() => {
-		CACHE.fetch_timeout = null;
+	CACHE.fetch_timeout_handler = setTimeout(() => {
+		CACHE.fetch_timeout_handler = null;
 		U.log(`Bikestop cache is old. Fetch news.`);
 		exports.fetch_and_update_bikestop();
 	}, CACHE.ms_timeout);
@@ -216,18 +209,19 @@ exports.fetch_and_update_bikestop = async () => {
 exports.load_cache_from_db = async () => {
 	if (CACHE.promise_loading == null) {
 		// cancel fetching
-		if (CACHE.fetch_timeout != null) {
-			clearTimeout(CACHE.fetch_timeout);
-			CACHE.fetch_timeout = null;
+		if (CACHE.fetch_timeout_handler != null) {
+			clearTimeout(CACHE.fetch_timeout_handler);
+			CACHE.fetch_timeout_handler = null;
 		}
 
 		// load
-		CACHE.promise_loading = async () => {
+		let promise_loading = async () => {
 			try {
 				let i, len;
 
+				// TODO: perform these in parallel
+
 				// load Bikestop
-				// use classic for loop for performance
 				let bs = await Bikestop.find();
 				len = bs.length;
 				cache_bikestops(bs);
@@ -256,7 +250,9 @@ exports.load_cache_from_db = async () => {
 
 			return;
 		};
-		CACHE.promise_loading();
+
+		U.log(`Load bike cache from DB ...`);
+		CACHE.promise_loading = promise_loading();
 	}
 
 	// wait for loading
