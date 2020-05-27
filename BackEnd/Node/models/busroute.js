@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const BusRouteSchema = new mongoose.Schema({
-	routeId: {
+	busRouteId: {
 		type: String,
 		unique: true
 	},
