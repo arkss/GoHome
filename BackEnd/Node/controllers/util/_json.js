@@ -39,3 +39,13 @@ exports.get_value = (json, default_value, ...properties) => {
 	}
 	return v;
 };
+
+exports.get_values_copied = (json) => {
+	let list = [];
+
+	for (let [property, value] of Object.entries(json)) {
+		list.push(value);
+	}
+
+	return JSON.parse(JSON.stringify(list));
+};
