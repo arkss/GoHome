@@ -2,6 +2,7 @@ from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 
+
 class UserManager(BaseUserManager):
     user_in_migrations = True
 
@@ -10,11 +11,11 @@ class UserManager(BaseUserManager):
             raise ValueError('must have user email')
         user = self.model(
             # kwargs 처리해주면 되긴하는데 가독성 생각해서 직접 나열
-            username = username,
-            email = self.normalize_email(email),
-            nickname = nickname,
-            address = address,
-            detail_address = detail_address
+            username=username,
+            email=self.normalize_email(email),
+            nickname=nickname,
+            address=address,
+            detail_address=detail_address
         )
         user.set_password(password)
         user.status = "0"
@@ -27,17 +28,14 @@ class UserManager(BaseUserManager):
             username=username,
             password=password,
             email=email,
-            nickname = nickname,
-            address = address,
-            detail_address = detail_address
+            nickname=nickname,
+            address=address,
+            detail_address=detail_address
         )
         user.status = "1"
-        user.role = "10"    
+        user.role = "10"
         user.save(using=self._db)
         return user
-
-    
-        
 
 
 class Profile(AbstractBaseUser, PermissionsMixin):
@@ -73,6 +71,9 @@ class Profile(AbstractBaseUser, PermissionsMixin):
     def is_superuser(self):
         return self.role == "10"
 
+    @property
+    def is_active(self):
+        return self.status == '1'
+
     USERNAME_FIELD = "username"
     REQUIRED_FIELDS = ['email']
-
