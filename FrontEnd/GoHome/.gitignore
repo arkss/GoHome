@@ -327,8 +327,6 @@ app/gradle/
 app/gradlew
 app/gradlew.bat
 build/
-build.gradle
-gradle
 
 # Signing files
 .signing/
