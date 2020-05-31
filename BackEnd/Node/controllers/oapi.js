@@ -454,31 +454,17 @@ exports.get_pedestrian_route = (points) =>
 		.then(() => resolve(result));
 	});
 
-/*
+exports.odsay_get_nbus_info = async () => {
+	U.log(`get N-Bus info from odsay`);
 
-	update cache
-	TODO: save it in DB
-
-*/
-exports.nbus_info = {
-	expired: true,
-	list: [],
-	func_update: exports.load_nbus_info,
-	term_update: 200000
-};
-
-const update_cache = (cache, list) => {
-	// update cache
-	cache.list = list;
-	cache.expired = false;
-
-	// after 200sec, expire cache and fetch new
-	U.log(`Cache updated.`);
-	setTimeout(() => {
-		U.log(`Cache expired. Fetch new info.`);
-		cache.expired = true;
-		cache.func_update();
-	}, cache.term_update);
+	let option_routelist = {
+		uri: `https://api.odsay.com/v1/api/searchBusLane`,
+		qs: {
+			apiKey: keys.api_key.odsay,
+			busNo: 'N', // N bus only
+			CID: 1000   // seoul
+		}
+	};
 };
 
 /*
