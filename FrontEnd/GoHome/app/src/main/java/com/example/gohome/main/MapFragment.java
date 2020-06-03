@@ -80,17 +80,6 @@ public class MapFragment extends Fragment implements OnGpsEventListener {
 //            mParam1 = getArguments().getString(ARG_PARAM1);
 //            mParam2 = getArguments().getString(ARG_PARAM2);
 //        }
-
-//        drawerLayout = (DrawerLayout)getView().findViewById(R.id.drawer_layout);
-//        drawerView = (View)getView().findViewById(R.id.drawer);
-//        // search bar의 menu버튼 클릭시 main_drawer 레이아웃 열림
-//        ImageButton sMenuBtn = (ImageButton)getView().findViewById(R.id.searchbar_menu);
-//        sMenuBtn.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v) {
-//                drawerLayout.openDrawer(drawerView, true);
-//            }
-//        });
     }
 
     @Override
@@ -117,6 +106,17 @@ public class MapFragment extends Fragment implements OnGpsEventListener {
             public void onClick(View view) {
                 NavHostFragment.findNavController(MapFragment.this)
                         .navigate(R.id.action_MapFragment_to_SearchFragment);
+            }
+        });
+
+        // Drawer
+        drawerLayout = (DrawerLayout)getView().findViewById(R.id.drawer_layout);
+        drawerView = (View)getView().findViewById(R.id.drawer);
+        ImageButton sMenuBtn = (ImageButton)getView().findViewById(R.id.searchbar_menu);
+        sMenuBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                drawerLayout.openDrawer(drawerView, true);
             }
         });
 
