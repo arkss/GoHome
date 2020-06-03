@@ -14,6 +14,12 @@ import android.widget.Toast;
 
 import com.example.gohome.main.MapFragment;
 
+import android.view.View;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
+
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
+
 public class MainActivity extends AppCompatActivity {
     GpsTracker gpsTracker;
     private static final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 10;

@@ -1,6 +1,8 @@
-const R = require('./controllers/util').res; 
+const R = require('./controllers/util').res;
+const bike = require('./controllers/bike');
 const express = require('express');
 const session = require('express-session');
+const mongoose = require('mongoose');
 const router = require('./routes');
 const keys = require('./keys.json');
 const app = express();
@@ -50,17 +52,36 @@ app.use((err, req, res, next) => {
 
 // start server
 console.log(`
-  /$$$$$$            /$$   /$$                                  
- /$$__  $$          | $$  | $$                                  
+/$$$$$$            /$$   /$$                                  
+/$$__  $$          | $$  | $$                                  
 | $$  \\__/  /$$$$$$ | $$  | $$  /$$$$$$  /$$$$$$/$$$$   /$$$$$$ 
 | $$ /$$$$ /$$__  $$| $$$$$$$$ /$$__  $$| $$_  $$_  $$ /$$__  $$
 | $$|_  $$| $$  \\ $$| $$__  $$| $$  \\ $$| $$ \\ $$ \\ $$| $$$$$$$$
 | $$  \\ $$| $$  | $$| $$  | $$| $$  | $$| $$ | $$ | $$| $$_____/
 |  $$$$$$/|  $$$$$$/| $$  | $$|  $$$$$$/| $$ | $$ | $$|  $$$$$$$
- \\______/  \\______/ |__/  |__/ \\______/ |__/ |__/ |__/ \\_______/
+\\______/  \\______/ |__/  |__/ \\______/ |__/ |__/ |__/ \\_______/
 `);
-server.listen(port, () => {
-	console.log(`listen now with port:${port}`);
+console.log(`Starting server...`);
+mongoose.Promise = global.Promise;
+mongoose.connect(keys.url_mongodb, {
+	dbName: keys.db_name,
+	useCreateIndex: true,
+	useNewUrlParser: true,
+	useUnifiedTopology: true,
+	useFindAndModify: false // https://mongoosejs.com/docs/deprecations.html#findandmodify
+})
+.then(async () => {
+	console.log(`Succeessfully connected to ${keys.url_mongodb}.`);
+
+	await bike.load_cache_from_db();
+	console.log(`Succeessfully load biekstop cache.`);
+
+	server.listen(port, () => {
+		console.log(`Server listen now with ${port} port.`);
+	});
+})
+.catch(err => {
+	console.log(`ERROR while starting server: ${err}`);
 });
 
 // prevent termination due to uncaughtException

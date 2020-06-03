@@ -14,6 +14,8 @@ import androidx.navigation.fragment.NavHostFragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
@@ -24,6 +26,8 @@ import com.example.gohome.OnGpsEventListener;
 import com.example.gohome.R;
 import com.skt.Tmap.TMapMarkerItem;
 import com.skt.Tmap.TMapPoint;
+import com.example.gohome.SharePositionDialog;
+import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.skt.Tmap.TMapView;
 
 import java.util.Objects;
@@ -39,6 +43,8 @@ public class MapFragment extends Fragment implements OnGpsEventListener {
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
+
+    private FloatingActionButton shareBtn;
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -74,6 +80,7 @@ public class MapFragment extends Fragment implements OnGpsEventListener {
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        // Fragment가 생성될 때 호출
         super.onCreate(savedInstanceState);
 
 //        if (getArguments() != null) {
@@ -85,6 +92,7 @@ public class MapFragment extends Fragment implements OnGpsEventListener {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
+        // onCreate 후 View를 구성
         tMapView = new TMapView(getContext());
         tMapView.setSKTMapApiKey("l7xx7574967eec1847a08c21f9d5c78980d4"); // 찬표 api key
 
@@ -94,12 +102,22 @@ public class MapFragment extends Fragment implements OnGpsEventListener {
         return inflater.inflate(R.layout.fragment_map, container, false);
     }
 
+    @Override
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
         // 티맵 view 생성
         LinearLayout linearLayoutTmap = getView().findViewById(R.id.linearLayoutTmap);
         linearLayoutTmap.addView(tMapView);
+
+        shareBtn = (FloatingActionButton) view.findViewById(R.id.position_share_btn);
+        shareBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                SharePositionDialog dialog = SharePositionDialog.newInstance("url here");
+                dialog.show(getActivity().getSupportFragmentManager(), "share dialog");
+            }
+        });
 
         view.findViewById(R.id.searchbar_text).setOnClickListener(new View.OnClickListener() {
             @Override

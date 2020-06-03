@@ -1,4 +1,4 @@
-package com.example.gohome;
+package com.example.gohome.retrofit2;
 
 import com.google.gson.annotations.SerializedName;
 
