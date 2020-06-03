@@ -434,5 +434,4 @@ fabric.properties
 !/gradle/wrapper/gradle-wrapper.jar
 
 # End of https://www.gitignore.io/api/androidstudio
-FrontEnd/GoHome/build.gradle
 FrontEnd/GoHome/gradle/wrapper/gradle-wrapper.properties
