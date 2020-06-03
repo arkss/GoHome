@@ -41,13 +41,15 @@ exports.approx_distance = (lat_1, lon_1, lat_2, lon_2) => {
 
 	Calculate travel time(sec) between 2 GPS coordinates.
 	Walking speed: 4 km/h
-	Riding speed: 20 km/h
+	Riding speed: 16 km/h ~
+	Driving speed: 32 km/h ~
 
 	sec = h * 3600 = km / (km/h) * 3600
 
 */
-exports.walking_time_2_riding_time = (time) => time / 5;
+exports.walking_time_2_riding_time = (time) => time / 4;
 exports.walking_time = (lat_1, lon_1, lat_2, lon_2) => exports.distance(lat_1, lon_1, lat_2, lon_2) / 4 * 3600;
-exports.riding_time = (lat_1, lon_1, lat_2, lon_2) => exports.walking_time_2_riding_time(exports.distance(lat_1, lon_1, lat_2, lon_2));
+exports.riding_time = (lat_1, lon_1, lat_2, lon_2) => exports.walking_time_2_riding_time(exports.walking_time(lat_1, lon_1, lat_2, lon_2));
+exports.driving_time = (lat_1, lon_1, lat_2, lon_2) => exports.distance(lat_1, lon_1, lat_2, lon_2) / 32 * 3600;
 exports.approx_walking_time = (lat_1, lon_1, lat_2, lon_2) => exports.approx_distance(lat_1, lon_1, lat_2, lon_2) / 4 * 3600;
 exports.approx_riding_time = (lat_1, lon_1, lat_2, lon_2) => exports.walking_time_2_riding_time(exports.approx_distance(lat_1, lon_1, lat_2, lon_2));
