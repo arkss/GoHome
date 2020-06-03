@@ -34,9 +34,10 @@
         <activity android:name=".retrofit2.RetrofitActivity"/>
         -->
         <activity android:name=".MainActivity" />
-        <activity android:name="RetrofitActivity" />
         <activity android:name=".testActivity" />
-        <meta-data android:name='com.google.ar.core' android:value = 'required'/>
+        <meta-data
+            android:name="com.google.ar.core"
+            android:value="required" />
         <activity android:name=".SignUpActivity" />
     </application>
 
