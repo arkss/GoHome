@@ -347,11 +347,15 @@ exports.load_buspaths = async (lat_start, lon_start, lat_end, lon_end) => {
 	{
 		time: 868,
 		distance: 1099,
-		section_time: [868],
-		section_distance: [1099],
-		points: [
-			[127.05353861565403, 37.5865481484368],
-			...
+		sections: [
+			{
+				time: 868
+				distance: 1099
+				points: [
+					[127.05353861565403, 37.5865481484368],
+					...
+				]
+			}
 		]
 	}
 
@@ -363,9 +367,7 @@ exports.get_pedestrian_route = (points) =>
 		let result = {
 			time: 0,
 			distance: 0,
-			section_time: [],
-			section_distance: [],
-			points: []
+			sections: []
 		};
 
 		// handle exceptions
@@ -404,10 +406,11 @@ exports.get_pedestrian_route = (points) =>
 			if (json?.type != 'FeatureCollection')
 				return;
 
-			let i, point_type, time, distance, feature, features;
+			let i, points, point_type, time, distance, feature, features;
 
 			time = 0;
 			distance = 0;
+			points = [];
 			features = json.features || [];
 			for (i = 0; i < features.length; i++) {
 				feature = features[i];
@@ -427,12 +430,14 @@ exports.get_pedestrian_route = (points) =>
 						case 'PP3': // 경유지3
 						case 'PP4': // 경유지4
 						case 'PP5': // 경유지5
-							result.section_time.push(time);
-							result.section_distance.push(distance);
-							result.time += time;
-							result.distance += distance;
+							result.sections.push({
+								time: time,
+								distance: distance,
+								points: points.filter(Boolean).flat() // delete all false-values
+							});
 							time = 0;
 							distance = 0;
+							points = [];
 							break;
 						//case 'SP': // 출발지
 						//case 'GP': // 일반 안내점
@@ -442,14 +447,11 @@ exports.get_pedestrian_route = (points) =>
 				} else {
 					// LineString
 					// push the point to the list in order
-					result.points[feature.properties.lineIndex] = feature.geometry.coordinates;
+					points[feature.properties.lineIndex] = feature.geometry.coordinates;
 					time += feature.properties.time ?? 0;
 					distance += feature.properties.distance ?? 0;
 				}
 			}
-
-			// delete all false-values
-			result.points = result.points.filter(Boolean).flat();
 		}, U.error)
 		.then(() => resolve(result));
 	});
@@ -465,6 +467,90 @@ exports.odsay_get_nbus_info = async () => {
 			CID: 1000   // seoul
 		}
 	};
+};
+/*
+
+time: 예상 소요시간
+transit_count: 환승횟수
+payment: 예상요금
+station_start: 첫 정류장
+station_end: 마지막 정류장
+number_of_stations: 총 정류장 수
+sub_paths: 상세 경로 {
+	busNo: 버스 번호
+	lat_start: 탑승 정류장 위도
+	lon_start: 탑승 정류장 경도
+	lat_end: 하차 정류장 위도
+	lon_end: 하차 정류장 경도
+	station_start: 탑승 정류장 이름
+	station_end: 하차 정류장 이름
+}
+
+*/
+exports.odsay_get_nbus_routes = async (lat_start, lon_start, lat_end, lon_end) => {
+	U.log(`get N-Bus routes from odsay`);
+
+	let option = {
+		uri: `https://api.odsay.com/v1/api/searchPubTransPathR`,
+		qs: {
+			apiKey: keys.api_key.odsay, // api key
+			output: 'json',             // output format
+			SX: lon_start,              // longitude
+			SY: lat_start,              // latitude
+			EX: lon_end,                // longitude
+			EY: lat_end,                // latitude
+			OPT: 0,                     // sort by distance
+			SearchPathType: 2           // bus only
+		}
+	};
+
+	let results = [];
+	let paths = await requestAndParseJSON(option);
+	paths = paths?.result?.path || [];
+
+	for (let path of paths) {
+		let info = path.info;
+		let subPaths = path.subPath;
+
+		// handle exceptions
+		if (path.pathType != 2 || !info || !subPaths) continue;
+
+		let p = {
+			time: info.totalTime,
+			transit_count: info.busTransitCount,
+			payment: info.payment,
+			station_start: info.firstStartStation,
+			station_end: info.lastEndStation,
+			number_of_stations: info.busStationCount,
+			sub_paths: []
+		};
+
+		// pop subPath(bus)
+		for (let subPath of subPaths) {
+			// take only N-bus path
+			if (subPath.trafficType != 2) continue;
+			/*if (subPath.lane.busNo[0] != 'N') {
+				p.sub_paths = [];
+				break;
+			}*/
+
+			p.sub_paths.push({
+				busNo: subPath.lane.busNo,
+				lat_start: subPath.startY,
+				lon_start: subPath.startX,
+				lat_end: subPath.endY,
+				lon_end: subPath.endX,
+				station_start: subPath.startName,
+				station_end: subPath.endName
+			})
+		}
+
+		if (p.sub_paths.length > 0) continue;
+
+		results.push(p);
+	}
+
+	return results;
 };
 
 /*

@@ -172,7 +172,7 @@ exports.cache_traveltime = (stationId_start, stationId_end, time) => {
 		U.error(`Unexpected stationId: ${stationId_start}, ${stationId_end}`);
 		return;
 	}
-	
+
 	// handle exception: invalid time
 	if (time <= 0 || isNaN(time)) {
 		U.error(`Invalid traveltime: ${time}`);

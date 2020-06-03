@@ -111,19 +111,22 @@
 
 - response field
   
-  - | Name                           | Type   | Mandatory | Default   | Example                                         | Description                    |
-    | ------------------------------ | ------ | --------- | --------- | ----------------------------------------------- | ------------------------------ |
-    | result                         | Number | Y         | 1         | 1                                               | 1: 정상 처리됨<br />-1: 오류   |
-    | message                        | String | Y         | 'success' | '13 found'                                      | 요청 처리 결과                 |
-    | data                           | Object | Y         |           |                                                 |                                |
-    | data.n                         | Number |           |           | 1                                               | 검색된 경로 수                 |
-    | data.routes                    | Array  |           |           |                                                 | 검색된 경로 목록               |
-    | data.routes[].time             | Number |           |           | 2428                                            | 소요시간                       |
-    | data.routes[].distance         | Number |           |           | 9900                                            | 이동 거리                      |
-    | data.routes[].brief_list       | Array  |           |           | ['도보']                                        | 간단한 경로 내용               |
-    | data.routes[].section_time     | Array  |           |           | [641, 1341, 446]                                | 구간 별 소요시간               |
-    | data.routes[].section_distance | Array  |           |           | [857, 8441, 602]                                | 구간 별 이동 거리              |
-    | data.routes[].points           | Array  |           |           | [[126.99430937255515, 37.534636452132624], ...] | 경로 체크포인트(경도, 위도 순) |
+  - | Name                              | Type   | Mandatory | Default   | Example                                         | Description                                               |
+    | --------------------------------- | ------ | --------- | --------- | ----------------------------------------------- | --------------------------------------------------------- |
+    | result                            | Number | Y         | 1         | 1                                               | 1: 정상 처리됨<br />-1: 오류                              |
+    | message                           | String | Y         | 'success' | '13 found'                                      | 요청 처리 결과                                            |
+    | data                              | Object | Y         |           |                                                 |                                                           |
+    | data.n                            | Number |           |           | 1                                               | 검색된 경로 수                                            |
+    | data.routes                       | Array  |           |           |                                                 | 검색된 경로 목록                                          |
+    | data.routes[].time                | Number |           |           | 2428                                            | 소요시간                                                  |
+    | data.routes[].distance            | Number |           |           | 9900                                            | 이동 거리                                                 |
+    | data.routes[].brief_list          | Array  |           |           | [1]                                             | 간단한 경로 내용<br />1: 도보<br />2: 자전거<br />3: 버스 |
+    | data.routes[].sections            | Array  |           |           |                                                 | 경로의 구간 목록                                          |
+    | data.routes[].sections[].time     | Array  |           |           | [641, 1341, 446]                                | 구간 별 소요시간                                          |
+    | data.routes[].sections[].distance | Array  |           |           | [857, 8441, 602]                                | 구간 별 이동 거리                                         |
+    | data.routes[].sections[].points   | Array  |           |           | [[126.99430937255515, 37.534636452132624], ...] | 경로 체크포인트(경도, 위도 순)                            |
+    | data.routes[].sections[].type     | Number |           |           | 1                                               | 구간 타입<br />1: 도보<br />2: 자전거<br />3: 버스        |
+    |                                   |        |           |           |                                                 |                                                           |
 
 
 
@@ -196,4 +199,4 @@
 	- 모든 위치정보는 GPS(WGS84) 좌표계를 기준으로 한다.
 - 대중교통 길찾기
 	- [ODSay LAB](https://lab.odsay.com/)에서 대중교통 길찾기 API를 무료 제공하지만 일 최대 1,000건까지만 요청 가능하다. 유료 요금제 유형은 일 최대 100,000건 요청할 수 있지만 가격이 월 300만원이다. 따라서 ODSay LAB 대중교통 길찾기 API는 실질적 이용이 어렵다고 판단해 사용하지 않는다.
-- https://www.data.go.kr/useCase/1001467/exam.do
+- https://www.data.go.kr/useCase/1001467/exam.dow

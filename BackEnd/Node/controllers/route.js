@@ -5,10 +5,13 @@ const bike = require('./bike');
 const bus = require('./bus');
 
 const CONCALL_BIKE_ROUTE_SEARCH   = keys.settings.concall_bike_route_search || 1;
+const CONCALL_BUS_ROUTE_SEARCH    = keys.settings.concall_bike_route_search || 1;
 const MAX_BIKE_ROUTE_SEARCH       = keys.settings.max_bike_route_search || 8;
 const MAX_BIKE_ROUTE_RETURN       = keys.settings.max_bike_route_return || 6;
+const MAX_BUS_ROUTE_SEARCH        = keys.settings.max_bus_route_search || 1;
+const MAX_BUS_ROUTE_RETURN        = keys.settings.max_bus_route_return || 1;
 const BIKESTOP_CANDIDATE_DISTANCE = keys.settings.bikestop_candidate_distance || 0.5;
-const MAX_BUSSTOP_SEARCH          = keys.settings.max_busstop_search || 6;
+const MAX_BUSSTOP_SEARCH          = keys.settings.max_busstop_search || 12;
 
 /*
 
@@ -72,6 +75,7 @@ exports.get_routes = (lat_start, lon_start, lat_end, lon_end, include_bike, incl
 		// *stops are sorted by distance
 		let linear_distance, bikestops_near_start, bikestops_near_end, nbusstops_near_start, nbusstops_near_end;
 		let time_upperbound = Infinity;
+		let time_upperbound_bus = Infinity;
 
 		// find near bikestops and search routes
 		linear_distance = U.distance(lat_start, lon_start, lat_end, lon_end);
@@ -87,8 +91,10 @@ exports.get_routes = (lat_start, lon_start, lat_end, lon_end, include_bike, incl
 		.then(result => {
 			// update upperbound for searching routes
 			time_upperbound = Math.min(time_upperbound, result.time);
+			time_upperbound_bus = Math.min(time_upperbound_bus, result.time);
 
-			result.brief_list = ['도보'];
+			result.brief_list = [1];
+			result.sections[0].type = 1;
 			routes.push(result);
 			return;
 		});
@@ -175,7 +181,7 @@ exports.get_routes = (lat_start, lon_start, lat_end, lon_end, include_bike, incl
 
 						U.log(`search real route ${i}`);
 						U.log(`expected minimum travel time: ${candidate.traveltime}, upperbound: ${time_upperbound}`);
-						//return resolve(true);
+
 						let bs1 = candidate.bs[0];
 						let bs2 = candidate.bs[1];
 
@@ -189,21 +195,22 @@ exports.get_routes = (lat_start, lon_start, lat_end, lon_end, include_bike, incl
 							U.log(`real route searched ${i}`);
 
 							// for test: handle exception
-							if (result.section_time.length != 3) {
-								U.error(`unexpected section length: ${result.section_time.length}`);
+							// TODO: make it available
+							if (result.sections.length != 3) {
+								U.error(`unexpected section length: ${result.sections.length}`);
 								return resolve(false);
 							}
 
 							// add more info for response
 							result.bs = [bs1, bs2];
-							result.brief_list = ['도보', '자전거', '도보'];
+							result.brief_list = [1, 2, 1];
 
 							// re-calculate time since the middle section is for riding, not walking
-							result.section_time[1] = U.walking_time_2_riding_time(result.section_time[1]);
-							result.time = result.section_time.reduce((a, c) => a + c, 0);
+							result.sections[1].time = U.walking_time_2_riding_time(result.sections[1].time);
+							result.time = result.sections[0].time + result.sections[1].time + result.sections[2].time;
 
 							// cache the riding time
-							bike.cache_traveltime(bs1.stationId, bs2.stationId, result.section_time[1]);
+							bike.cache_traveltime(bs1.stationId, bs2.stationId, result.sections[1].time);
 
 							// add result to the list
 							searched_results.push(result);
@@ -271,11 +278,151 @@ exports.get_routes = (lat_start, lon_start, lat_end, lon_end, include_bike, incl
 			});
 		});
 
+		let search_bus_route_odsay = new Promise((resolve, reject) => {
+			let busstops_start = bus.get_near_stations(lat_start, lon_start, MAX_BUSSTOP_SEARCH);
+			let busstops_end = bus.get_near_stations(lat_end, lon_end, MAX_BUSSTOP_SEARCH);
+			let buspaths_promises = [];
+
+			// 쌍 매칭하고 예상 시간 계산 및 정렬
+			// 예상시간 짧은 순으로 길찾기 하면서 예상시간 최댓값을 낮춰감
+			let traveltime, candidate_routes = [], searched_results = [];
+
+			for (let bs1 of busstops_start) {
+				for (let bs2 of busstops_end) {
+					// TODO: 도보경로 및 자전거 포함 경로를 모두 어림해서 계산하기
+					traveltime = U.walking_time_2_riding_time(
+							bus.get_traveltime(bs1.stationId, bs2.stationId) ||
+							U.walking_time(
+								bs1.stationLatitude, bs1.stationLongitude,
+								bs2.stationLatitude, bs2.stationLongitude
+							)
+						)
+						+ U.walking_time(lat_start, lon_start, bs1.stationLatitude, bs1.stationLongitude)
+						+ U.walking_time(bs2.stationLatitude, bs2.stationLongitude, lat_end, lon_end);
+
+					candidate_routes.push({
+						bs: [bs1, bs2],
+						traveltime: traveltime
+					});
+					// buspaths_promises.push(oapi.load_buspaths(
+					// 	bs1.stationLatitude,
+					// 	bs1.stationLongitude,
+					// 	bs2.stationLatitude,
+					// 	bs2.stationLongitude
+					// 	)
+					// );
+				}
+			}
+
+			// for test
+			U.log(`${candidate_routes.length} candidate pairs found`);
+
+			// sort pairs out by expected travel time
+			candidate_routes.sort((a, b) => a.traveltime - b.traveltime);
+			candidate_routes = candidate_routes.slice(0, MAX_BUS_ROUTE_SEARCH);
+
+			// search real time: promise-sequentially
+			// it may takes really long time but able to reduce the number of API call.
+
+			const end_searching = () => {
+				U.log(`${searched_results.length} routes are really searched with API call`);
+				U.log(`time upperbound: ${time_upperbound_bus}`);
+
+				// sort result out by its travel time
+				searched_results.sort((a, b) => a.time - b.time);
+				searched_results = searched_results.slice(0, MAX_BUS_ROUTE_RETURN);
+				routes = routes.concat(searched_results);
+
+				return resolve();
+			};
+
+			const search_candidate_routes = (i) => {
+				let promises, candidates;
+
+				candidates = candidate_routes.slice(i, i + CONCALL_BUS_ROUTE_SEARCH);
+				// handle exception: all is searched
+				if (candidates.length == 0) {
+					U.log(`all is searched`);
+					end_searching();
+					return;
+				}
+
+				const search_candidate_route = (candidate) =>
+					new Promise((resolve, reject) => {
+
+						// don't have to search longer way
+						if (time_upperbound_bus < candidate.traveltime) {
+							U.log(`over the upperbound`);
+							return resolve(false);
+						}
+
+						U.log(`search real route ${i}`);
+						U.log(`expected minimum travel time: ${candidate.traveltime}, upperbound: ${time_upperbound_bus}`);
+
+						let bs1 = candidate.bs[0];
+						let bs2 = candidate.bs[1];
+
+						oapi.odsay_get_nbus_routes([
+							bs1.stationLatitude, bs1.stationLongitude,
+							bs2.stationLatitude, bs2.stationLongitude
+						])
+						.then(results => {
+							U.log(`real route searched ${i}`);
+
+							// for test: handle exception
+							if (results.length == 0) {
+								U.log(`bus route not found for ${bs1.stationId} ~ ${bs2.stationId}`);
+								return resolve(false);
+							}
+
+							for (let result of results) {
+								// add more info for response
+								result.bs = [bs1, bs2];
+								result.brief_list = [3];
+								result.sections = [];
+
+								//result.sections[0] = result;
+
+								// cache the riding time
+								bus.cache_traveltime(bs1.stationId, bs2.stationId, result.time);
+
+								// add result to the list
+								searched_results.push(result);
+
+								// update time_upperbound
+								if (result.time < time_upperbound_bus)
+									time_upperbound_bus = result.time;
+							}
+
+							return resolve(true);
+						});
+					});
+
+				promises = [];
+				for (let candidate of candidates)
+					promises.push(search_candidate_route(candidate));
+				Promise.all(promises)
+				.then(results => {
+					if (results.some(e => e)) {
+						// more search needed
+						search_candidate_routes(i + CONCALL_BUS_ROUTE_SEARCH);
+					} else {
+						end_searching();
+					}
+				});
+			};
+
+			search_candidate_routes(0);
+
+			// oapi.odsay_get_nbus_routes(lat_start, lon_start, lat_end, lon_end);
+		});
+
 		// search all routes
 		Promise.all([
 			search_pedestrian_route,
 			search_bike_route, // (include_bike ? search_bike_route : Promise.resolve),
-			search_bus_route // (include_bus ? search_bus_route : Promise.resolve)
+			//search_bus_route // (include_bus ? search_bus_route : Promise.resolve)
+			search_bus_route_odsay
 		])
 		.then(() => {
 			// end of searching

@@ -226,8 +226,14 @@ const cache_bus_info = (bus_info) => {
 	}
 };
 
-exports.get_traveltime = () => {};
-exports.cache_traveltime = () => {};
+// TODO: edit these
+// TODO: use cache
+exports.get_traveltime = (stationId_start, stationId_end) => {
+	return null;
+};
+exports.cache_traveltime = (stationId_start, stationId_end, time) => {
+	return null;
+};
 
 exports.fetch_and_update_busstop = async () => {
 	// cancel the reservated
