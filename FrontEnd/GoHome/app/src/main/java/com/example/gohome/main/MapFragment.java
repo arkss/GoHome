@@ -60,6 +60,9 @@ public class MapFragment extends Fragment implements OnGpsEventListener {
 
     GpsTracker gpsTracker;
 
+    double minLat = 37.423930, maxLat = 37.704151;
+    double minLon = 126.761920, maxLon = 127.186964;
+
     public MapFragment() {
         // Required empty public constructor
     }
@@ -167,6 +170,11 @@ public class MapFragment extends Fragment implements OnGpsEventListener {
     {
         if(location != null) {
             double lat = location.getLatitude(), lon = location.getLongitude();
+            if(lat < minLat || lat > maxLat || lon < minLon || lon > maxLon) {
+                Toast.makeText(this.getContext(), "Not in Seoul", Toast.LENGTH_SHORT).show();
+                return;
+            }
+
             Toast.makeText(this.getContext(), "latitude: " + Double.toString(lat) + ", longitude: " + Double.toString(lon), Toast.LENGTH_SHORT).show();
 
             // 내 위치로 이동
