@@ -5,12 +5,19 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.example.gohome.R;
+import com.example.gohome.data.InnerData;
+import com.example.gohome.data.SearchData;
+import com.example.gohome.data.SearchRecyclerAdapter;
+
+import java.util.ArrayList;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -75,5 +82,32 @@ public class SearchFragment extends Fragment {
                         .navigate(R.id.action_SearchFragment_to_RouteFragment);
             }
         });
+
+        /* Test code */
+        ArrayList<SearchData> dataList = new ArrayList<>();
+        dataList.add(new SearchData("17분"));
+        dataList.add(new SearchData("21분"));
+
+        ArrayList<InnerData> dataInnerList1 = new ArrayList<>();
+        dataInnerList1.add(new InnerData(R.drawable.bicycle_icon, "따릉이 정류소 1"));
+        dataInnerList1.add(new InnerData(R.drawable.bus_icon, "N버스 정류소 1"));
+
+        ArrayList<InnerData> dataInnerList2 = new ArrayList<>();
+        dataInnerList2.add(new InnerData(R.drawable.bicycle_icon, "따릉이 정류소 2"));
+        dataInnerList2.add(new InnerData(R.drawable.bus_icon, "N버스 정류소 2"));
+        dataInnerList2.add(new InnerData(R.drawable.taxi_icon, "택시"));
+
+
+        ArrayList<ArrayList<InnerData>> allInnerData = new ArrayList<>();
+        allInnerData.add(dataInnerList1);
+        allInnerData.add(dataInnerList2);
+        /* test code */
+
+        // init recycler view
+        RecyclerView recyclerView = view.findViewById(R.id.search_recycler);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+
+        SearchRecyclerAdapter adapter = new SearchRecyclerAdapter(getActivity(), dataList, allInnerData, this);
+        recyclerView.setAdapter(adapter);
     }
 }

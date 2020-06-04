@@ -11,6 +11,7 @@ import androidx.drawerlayout.widget.DrawerLayout;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -24,12 +25,15 @@ import android.widget.Toast;
 import com.example.gohome.GpsTracker;
 import com.example.gohome.OnGpsEventListener;
 import com.example.gohome.R;
+import com.skt.Tmap.TMapData;
 import com.skt.Tmap.TMapMarkerItem;
 import com.skt.Tmap.TMapPoint;
 import com.example.gohome.SharePositionDialog;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.skt.Tmap.TMapPolyLine;
 import com.skt.Tmap.TMapView;
 
+import java.util.ArrayList;
 import java.util.Objects;
 
 /**
@@ -109,6 +113,22 @@ public class MapFragment extends Fragment implements OnGpsEventListener {
         // 티맵 view 생성
         LinearLayout linearLayoutTmap = getView().findViewById(R.id.linearLayoutTmap);
         linearLayoutTmap.addView(tMapView);
+
+        TMapPoint point1 = new TMapPoint(37.583, 127.054);
+        TMapPoint point2 = new TMapPoint(37.580, 127.047);
+        ArrayList<TMapPoint> list = new ArrayList<>();
+        TMapData tmapdata = new TMapData();
+        tmapdata.findPathDataWithType(TMapData.TMapPathType.CAR_PATH, point1, point2, new TMapData.FindPathDataListenerCallback() {
+            @Override
+            public void onFindPathData(TMapPolyLine polyLine) {
+                tMapView.addTMapPath(polyLine);
+                ArrayList<TMapPoint> t_list = polyLine.getLinePoint();
+                for(TMapPoint point : t_list) {
+                    Log.d("MapFragment", "l: "+point.getLongitude() + ", l: "+point.getLatitude());
+                }
+            }
+        });
+
 
         shareBtn = (FloatingActionButton) view.findViewById(R.id.position_share_btn);
         shareBtn.setOnClickListener(new View.OnClickListener() {
