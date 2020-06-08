@@ -78,6 +78,20 @@
             android:layout_margin="16dp"
             app:fabSize="normal"
             />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/current_location"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentBottom="true"
+
+            android:src="@drawable/aim_icon"
+            app:fabSize="normal"
+            />
+
     </RelativeLayout>
 
     <!-- drawer 동작시 사용되는 main_drawer layout을 include -->

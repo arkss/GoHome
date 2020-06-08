@@ -1,7 +1,5 @@
 package com.example.gohome.main;
 
-import android.content.Context;
-import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.location.Location;
 import android.os.Bundle;
@@ -15,9 +13,6 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.animation.Animation;
-import android.view.animation.AnimationUtils;
-import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.Toast;
@@ -26,7 +21,6 @@ import com.example.gohome.GpsTracker;
 import com.example.gohome.OnGpsEventListener;
 import com.example.gohome.R;
 import com.skt.Tmap.TMapData;
-import com.skt.Tmap.TMapMarkerItem;
 import com.skt.Tmap.TMapPoint;
 import com.example.gohome.SharePositionDialog;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
@@ -34,7 +28,6 @@ import com.skt.Tmap.TMapPolyLine;
 import com.skt.Tmap.TMapView;
 
 import java.util.ArrayList;
-import java.util.Objects;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -42,13 +35,14 @@ import java.util.Objects;
  * create an instance of this fragment.
  */
 
-public class MapFragment extends Fragment implements OnGpsEventListener {
+public class MapFragment extends Fragment implements OnGpsEventListener, View.OnClickListener {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
 
     private FloatingActionButton shareBtn;
+    private FloatingActionButton locationBtn;
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -102,8 +96,8 @@ public class MapFragment extends Fragment implements OnGpsEventListener {
         // onCreate 후 View를 구성
         tMapView = new TMapView(getContext());
         tMapView.setSKTMapApiKey("l7xx7574967eec1847a08c21f9d5c78980d4"); // 찬표 api key
-
         tMapView.setIconVisibility(true);
+        tMapView.setIcon(BitmapFactory.decodeResource(getContext().getResources(), R.drawable.dot));
 
         // Inflate the layout for this fragment
         return inflater.inflate(R.layout.fragment_map, container, false);
@@ -134,13 +128,10 @@ public class MapFragment extends Fragment implements OnGpsEventListener {
 
 
         shareBtn = (FloatingActionButton) view.findViewById(R.id.position_share_btn);
-        shareBtn.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                SharePositionDialog dialog = SharePositionDialog.newInstance("url here");
-                dialog.show(getActivity().getSupportFragmentManager(), "share dialog");
-            }
-        });
+        shareBtn.setOnClickListener(this);
+
+        locationBtn = (FloatingActionButton)view.findViewById(R.id.current_location);
+        locationBtn.setOnClickListener(this);
 
         view.findViewById(R.id.searchbar_text).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -180,6 +171,23 @@ public class MapFragment extends Fragment implements OnGpsEventListener {
             // 내 위치로 이동
             tMapView.setLocationPoint(lon, lat);
             tMapView.setCenterPoint(lon, lat);
+        }
+    }
+
+    @Override
+    public void onClick(View view) {
+        switch(view.getId()) {
+            // position share btn clicked
+            case R.id.position_share_btn:
+                SharePositionDialog dialog = SharePositionDialog.newInstance("url here");
+                dialog.show(getActivity().getSupportFragmentManager(), "share dialog");
+                break;
+
+            // current location btn clicked
+            case R.id.current_location:
+                Location location = gpsTracker.getLocation();
+                tMapView.setCenterPoint(location.getLongitude(), location.getLatitude());
+                break;
         }
     }
 }
