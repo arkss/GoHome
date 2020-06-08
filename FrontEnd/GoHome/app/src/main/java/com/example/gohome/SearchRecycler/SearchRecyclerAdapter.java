@@ -1,9 +1,12 @@
 package com.example.gohome.SearchRecycler;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.accessibility.AccessibilityManager;
+import android.widget.Button;
 import android.widget.TextView;
 
 import com.example.gohome.R;
@@ -30,20 +33,23 @@ public class SearchRecyclerAdapter extends RecyclerView.Adapter<SearchRecyclerAd
     public class ViewHolder extends RecyclerView.ViewHolder {
         TextView textView; // search_item의 textview
         RecyclerView innerRecyclerView; // search_item의 recycler view
+        Button startBtn;
 
         public ViewHolder(View item, Fragment fragment) {
             super(item);
 
             // Item click event 처리
-            item.setOnClickListener(new View.OnClickListener() {
-                @Override
-                public void onClick(View v) {
-                    int pos = getAdapterPosition(); // 클린된 item의 position
-                    NavHostFragment.findNavController(fragment)
-                            .navigate(R.id.action_SearchFragment_to_RouteFragment);
-                }
-            });
+//            item.setOnClickListener(new View.OnClickListener() {
+//                @Override
+//                public void onClick(View v) {
+//                    int pos = getAdapterPosition(); // 클린된 item의 position
+//                    Log.d("RECYCLER VIEW", "ITEM CLICKED, pos : "+pos);
+//                    NavHostFragment.findNavController(fragment)
+//                            .navigate(R.id.action_SearchFragment_to_RouteFragment);
+//                }
+//            });
 
+            startBtn = item.findViewById(R.id.start_guide);
             textView = item.findViewById(R.id.required_time);
             innerRecyclerView = item.findViewById(R.id.search_inner_recycler);
         }
@@ -76,8 +82,19 @@ public class SearchRecyclerAdapter extends RecyclerView.Adapter<SearchRecyclerAd
         InnerRecyclerAdapter innerAdapter = new InnerRecyclerAdapter(sInData.get(position));
 
         holder.textView.setText(time);
-        holder.innerRecyclerView.setLayoutManager(new LinearLayoutManager(context));
+        // orientation: horizontal
+        holder.innerRecyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false));
         holder.innerRecyclerView.setAdapter(innerAdapter);
+
+        // TEST
+        holder.startBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                Log.d("RECYCLER VIEW", "pos = "+position);
+                NavHostFragment.findNavController(fragment)
+                        .navigate(R.id.action_SearchFragment_to_RouteFragment);
+            }
+        });
     }
 
     /* 리턴값에 따라 표시할 수 있는 갯수가 정해진다 */

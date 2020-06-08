@@ -1,9 +1,11 @@
 package com.example.gohome.SearchRecycler;
 
 import android.content.Context;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -59,6 +61,7 @@ public class InnerRecyclerAdapter extends RecyclerView.Adapter<InnerRecyclerAdap
         // - replace the contents of the view with that element
         holder.imageView.setImageResource(img);
         holder.textView.setText(name);
+
     }
 
     // Return the size of your dataset (invoked by the layout manager)

@@ -1,13 +1,6 @@
 package com.example.gohome.main;
 
 import android.os.Bundle;
-
-import androidx.annotation.NonNull;
-import androidx.fragment.app.Fragment;
-import androidx.navigation.fragment.NavHostFragment;
-import androidx.recyclerview.widget.LinearLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
-
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,6 +11,13 @@ import com.example.gohome.SearchRecycler.SearchData;
 import com.example.gohome.SearchRecycler.SearchRecyclerAdapter;
 
 import java.util.ArrayList;
+
+import androidx.annotation.NonNull;
+import androidx.fragment.app.Fragment;
+import androidx.navigation.fragment.NavHostFragment;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -89,14 +89,20 @@ public class SearchFragment extends Fragment {
         dataList.add(new SearchData("21분"));
 
         ArrayList<InnerData> dataInnerList1 = new ArrayList<>();
-        dataInnerList1.add(new InnerData(R.drawable.bicycle_icon, "따릉이 정류소 1"));
-        dataInnerList1.add(new InnerData(R.drawable.bus_icon, "N버스 정류소 1"));
+//        dataInnerList1.add(new InnerData(R.drawable.bicycle_icon, "따릉이 정류소 1"));
+//        dataInnerList1.add(new InnerData(R.drawable.bus_icon, "N버스 정류소 1"));
+        dataInnerList1.add(new InnerData(R.drawable.bicycle_icon));
+        dataInnerList1.add(new InnerData(R.drawable.bus_icon));
+
 
         ArrayList<InnerData> dataInnerList2 = new ArrayList<>();
-        dataInnerList2.add(new InnerData(R.drawable.bicycle_icon, "따릉이 정류소 2"));
-        dataInnerList2.add(new InnerData(R.drawable.bus_icon, "N버스 정류소 2"));
-        dataInnerList2.add(new InnerData(R.drawable.taxi_icon, "택시"));
+//        dataInnerList2.add(new InnerData(R.drawable.bicycle_icon, "따릉이 정류소 2"));
+//        dataInnerList2.add(new InnerData(R.drawable.bus_icon, "N버스 정류소 2"));
+//        dataInnerList2.add(new InnerData(R.drawable.taxi_icon, "택시"));
 
+        dataInnerList2.add(new InnerData(R.drawable.bicycle_icon));
+        dataInnerList2.add(new InnerData(R.drawable.bus_icon));
+        dataInnerList2.add(new InnerData(R.drawable.taxi_icon));
 
         ArrayList<ArrayList<InnerData>> allInnerData = new ArrayList<>();
         allInnerData.add(dataInnerList1);
@@ -106,7 +112,8 @@ public class SearchFragment extends Fragment {
         // init recycler view
         RecyclerView recyclerView = view.findViewById(R.id.search_recycler);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
-
+        // add divider line
+        recyclerView.addItemDecoration(new DividerItemDecoration(recyclerView.getContext(), DividerItemDecoration.VERTICAL));
         SearchRecyclerAdapter adapter = new SearchRecyclerAdapter(getActivity(), dataList, allInnerData, this);
         recyclerView.setAdapter(adapter);
     }
