@@ -1,4 +1,4 @@
-package com.example.gohome.data;
+package com.example.gohome.SearchRecycler;
 
 /* data class */
 public class InnerData {

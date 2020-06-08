@@ -20,7 +20,10 @@ import android.widget.Toast;
 
 import com.example.gohome.R;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.skt.Tmap.TMapPoint;
 import com.skt.Tmap.TMapView;
+
+import java.util.ArrayList;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -35,6 +38,8 @@ public class RouteFragment extends Fragment {
 
     private FloatingActionButton cameraBtn;
     private FloatingActionButton shareBtn;
+
+    private TMapPoint points[];
 
     // TODO: Rename and change types of parameters
     private String mParam1;
@@ -70,6 +75,8 @@ public class RouteFragment extends Fragment {
             mParam2 = getArguments().getString(ARG_PARAM2);
         }
 
+        // init variable
+
         // use onOptionsItemSelected in Fragment
         setHasOptionsMenu(true);
     }
@@ -87,17 +94,22 @@ public class RouteFragment extends Fragment {
 
         // toolbar 생성
         Toolbar toolbar = (Toolbar)view.findViewById(R.id.toolbar);
-
         ((AppCompatActivity)getActivity()).setSupportActionBar(toolbar);
         ((AppCompatActivity)getActivity()).getSupportActionBar().setDisplayShowTitleEnabled(false); // title 제거
         ((AppCompatActivity)getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true); // 뒤로가기 버튼 생성
+
 
         // tmapview 추가
         TMapView tMapView = new TMapView(getContext());
         LinearLayout tMapLayout = (LinearLayout)view.findViewById(R.id.route_tmap);
         tMapLayout.addView(tMapView);
 
+
+        // find view by id
         cameraBtn = (FloatingActionButton) view.findViewById(R.id.route_camera_btn);
+
+
+        // event
         cameraBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -107,11 +119,13 @@ public class RouteFragment extends Fragment {
             }
         });
 
+
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch(item.getItemId()) {
+            // click back btn
             case android.R.id.home :
                 NavHostFragment.findNavController(RouteFragment.this)
                         .navigate(R.id.action_RouteFragment_to_MapFragment);

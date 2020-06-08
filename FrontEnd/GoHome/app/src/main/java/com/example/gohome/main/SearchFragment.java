@@ -13,9 +13,9 @@ import android.view.View;
 import android.view.ViewGroup;
 
 import com.example.gohome.R;
-import com.example.gohome.data.InnerData;
-import com.example.gohome.data.SearchData;
-import com.example.gohome.data.SearchRecyclerAdapter;
+import com.example.gohome.SearchRecycler.InnerData;
+import com.example.gohome.SearchRecycler.SearchData;
+import com.example.gohome.SearchRecycler.SearchRecyclerAdapter;
 
 import java.util.ArrayList;
 
