@@ -49,7 +49,7 @@ def bikestop_parked_counts(request):
 def routes(request, lat_start, lon_start, lat_end, lon_end, include_bike, include_bus):
     params = {
         'lat_start': lat_start,
-        'lon_start'lon_start,
+        'lon_start': lon_start,
         'lat_end': lat_end,
         'lon_end': lon_end,
         'include_bike': include_bike,
