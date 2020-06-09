@@ -4,14 +4,16 @@ const oapi = require('./oapi');
 const bike = require('./bike');
 const bus = require('./bus');
 
-const CONCALL_BIKE_ROUTE_SEARCH   = keys.settings.concall_bike_route_search || 1;
-const CONCALL_BUS_ROUTE_SEARCH    = keys.settings.concall_bus_route_search || 1;
-const MAX_BIKE_ROUTE_SEARCH       = keys.settings.max_bike_route_search || 8;
-const MAX_BIKE_ROUTE_RETURN       = keys.settings.max_bike_route_return || 6;
-const MAX_BUS_ROUTE_SEARCH        = keys.settings.max_bus_route_search || 1;
-const MAX_BUS_ROUTE_RETURN        = keys.settings.max_bus_route_return || 1;
-const BIKESTOP_CANDIDATE_DISTANCE = keys.settings.bikestop_candidate_distance || 0.5;
-const MAX_BUSSTOP_SEARCH          = keys.settings.max_busstop_search || 12;
+const CONCALL_BIKE_ROUTE_SEARCH   = keys.settings.concall_bike_route_search;
+const CONCALL_BUS_ROUTE_SEARCH    = keys.settings.concall_bus_route_search;
+const MAX_BIKE_ROUTE_SEARCH       = keys.settings.max_bike_route_search;
+const MAX_BIKE_ROUTE_RETURN       = keys.settings.max_bike_route_return;
+const MAX_BUS_ROUTE_SEARCH        = keys.settings.max_bus_route_search;
+const MAX_BUS_ROUTE_RETURN        = keys.settings.max_bus_route_return;
+const BIKESTOP_CANDIDATE_DISTANCE = keys.settings.bikestop_candidate_distance;
+const MAX_BUSSTOP_SEARCH          = keys.settings.max_busstop_search;
+const MAX_BIKE_SUBROUTE_SEARCH    = keys.settings.max_bike_subroute_search;
+const MAX_BIKE_SUBROUTE_RETURN    = keys.settings.max_bike_subroute_return;
 
 /*
 
@@ -70,25 +72,7 @@ exports.api_get_routes = (req, res, next) => {
 
 exports.get_routes = (lat_start, lon_start, lat_end, lon_end, include_bike, include_bus) =>
 	new Promise((resolve, reject) => {
-		let o = {
-			lat_start: lat_start,
-			lon_start: lon_start,
-			lat_end: lat_end,
-			lon_end: lon_end,
-			routes: [],
-			time_upperbound_bike: Infinity,
-			time_upperbound_bus: Infinity,
-			linear_distance: U.distance(lat_start, lon_start, lat_end, lon_end),
-			bikestops_near_start: null,
-			bikestops_near_end: null,
-			busstops_near_start: null,
-			busstops_near_end: null
-		}
-
-		o.bikestops_near_start = bike.get_bikestops(o.lat_start, o.lon_start, 0, o.linear_distance * BIKESTOP_CANDIDATE_DISTANCE);
-		o.bikestops_near_end = bike.get_bikestops(o.lat_end, o.lon_end, 0, o.linear_distance * BIKESTOP_CANDIDATE_DISTANCE);
-		o.busstops_near_start = bus.get_near_stations(o.lat_start, o.lon_start, MAX_BUSSTOP_SEARCH);
-		o.busstops_near_end = bus.get_near_stations(o.lat_end, o.lon_end, MAX_BUSSTOP_SEARCH);
+		let o = make_o(lat_start, lon_start, lat_end, lon_end);
 
 		// search all routes
 		Promise.all([
@@ -130,6 +114,9 @@ const search_bikebus_route = async (o, type) => {
 	} else if (type == 'bus') {
 		CONCALL_ROUTE_SEARCH = CONCALL_BUS_ROUTE_SEARCH;
 		MAX_ROUTE_RETURN     = MAX_BUS_ROUTE_RETURN;
+	} else if (type == 'subbike') {
+		CONCALL_ROUTE_SEARCH = CONCALL_BIKE_ROUTE_SEARCH;
+		MAX_ROUTE_RETURN     = MAX_BIKE_SUBROUTE_RETURN;
 	}
 
 	let candidate_routes = find_candidate_pairs(o, type);
@@ -187,6 +174,12 @@ const find_candidate_pairs = (o, type) => {
 		f_cached_time = bus.get_traveltime;
 		f_approx_time = U.driving_time;
 		max_num       = MAX_BUS_ROUTE_SEARCH;
+	} else if (type == 'subbike') {
+		ar_start      = o.bikestops_near_start;
+		ar_end        = o.bikestops_near_end;
+		f_cached_time = bike.get_traveltime;
+		f_approx_time = U.riding_time;
+		max_num       = MAX_BIKE_SUBROUTE_SEARCH;
 	}
 
 	let traveltime, candidate_routes = [];
@@ -227,7 +220,7 @@ const search_candidate_route = async (o, type, candidate) => {
 
 	let time_upperbound;
 
-	if (type == 'bike') {
+	if (type == 'bike' || type == 'subbike') {
 		time_upperbound = o.time_upperbound_bike;
 	} else if (type == 'bus') {
 		time_upperbound = o.time_upperbound_bus;
@@ -260,33 +253,61 @@ const search_candidate_route = async (o, type, candidate) => {
 
 	// add more info for response
 	result.bs = [bs1, bs2];
-	if (type == 'bike') {
+	if (type == 'bike' || type == 'subbike') {
 		result.brief_list = [1, 2, 1];
 	} else if (type == 'bus') {
 		result.brief_list = [1, 3, 1];
 	}
 
 	// re-calculate time since the middle section is for riding, not walking
-	if (type == 'bike') {
+	if (type == 'bike' || type == 'subbike') {
 		result.sections[1].time = U.walking_time_2_riding_time(result.sections[1].time);
-		result.time = result.sections[0].time + result.sections[1].time + result.sections[2].time;
+		bike.cache_traveltime(bs1.stationId, bs2.stationId, result.sections[1].time);
 	} else if (type == 'bus') {
+
 		result.buspath = await oapi.odsay_get_nbus_routes(
 			bs1.stationLatitude, bs1.stationLongitude,
 			bs2.stationLatitude, bs2.stationLongitude
 		);
+
+		result.sections[1].time = result.buspath.time * 60;
+		// bus.cache_traveltime(bs1.stationId, bs2.stationId, result.sections[1].time);
+
+		/*
+
+		*/
+
+		let time_upperbound_bike1 = result.sections[0].time;
+		let time_upperbound_bike2 = result.sections[2].time;
+		let o_subbike_routes1 = make_o(o.lat_start, o.lon_start, bs1.stationLatitude, bs1.stationLongitude);
+		let o_subbike_routes2 = make_o(bs2.stationLatitude, bs2.stationLongitude, o.lat_end, o.lon_end);
+		o_subbike_routes1.time_upperbound_bike = time_upperbound_bike1;
+		o_subbike_routes2.time_upperbound_bike = time_upperbound_bike2;
+
+		await search_bikebus_route(o_subbike_routes1, 'subbike');
+		await search_bikebus_route(o_subbike_routes2, 'subbike');
+
+		let route1 = o_subbike_routes1.routes.slice(0, 1);
+		let route2 = o_subbike_routes2.routes.slice(0, 1);
+		if (route1.length > 0 && route1[0].time < time_upperbound_bike1) {
+			let subsection1 = route1[0];
+			result.bs.splice(0, 0, ...subsection1.bs);
+			result.brief_list.splice(0, 1, ...subsection1.brief_list);
+			result.sections.splice(0, 1, ...subsection1.sections);
+		}
+		if (route2.length > 0 && route2[0].time < time_upperbound_bike2) {
+			let subsection2 = route2[0];
+			result.bs.splice(-1, 0, ...subsection2.bs);
+			result.brief_list.splice(-1, 1, ...subsection2.brief_list);
+			result.sections.splice(-1, 1, ...subsection2.sections);
+		}
 	}
 
-	// cache the riding time
-	if (type == 'bike') {
-		bike.cache_traveltime(bs1.stationId, bs2.stationId, result.sections[1].time);
-	} else if (type == 'bus') {
-		// bus.cache_traveltime(bs1.stationId, bs2.stationId, result.sections[1].time);
-	}
+	calculate_o_td(result);
 
 	// update time_upperbound
 	if (result.time < time_upperbound) {
-		if (type == 'bike') {
+		if (type == 'bike' || type == 'subbike') {
 			o.time_upperbound_bike = result.time;
 		} else if (type == 'bus') {
 			o.time_upperbound_bus = result.time;
@@ -294,4 +315,33 @@ const search_candidate_route = async (o, type, candidate) => {
 	}
 
 	return result;
+};
+
+const make_o = (lat_start, lon_start, lat_end, lon_end) => {
+	let o = {
+		lat_start: lat_start,
+		lon_start: lon_start,
+		lat_end: lat_end,
+		lon_end: lon_end,
+		routes: [],
+		time_upperbound_bike: Infinity,
+		time_upperbound_bus: Infinity,
+		linear_distance: U.distance(lat_start, lon_start, lat_end, lon_end),
+		bikestops_near_start: null,
+		bikestops_near_end: null,
+		busstops_near_start: null,
+		busstops_near_end: null,
+	};
+
+	o.bikestops_near_start = bike.get_bikestops(o.lat_start, o.lon_start, 0, o.linear_distance * BIKESTOP_CANDIDATE_DISTANCE);
+	o.bikestops_near_end = bike.get_bikestops(o.lat_end, o.lon_end, 0, o.linear_distance * BIKESTOP_CANDIDATE_DISTANCE);
+	o.busstops_near_start = bus.get_near_stations(o.lat_start, o.lon_start, MAX_BUSSTOP_SEARCH);
+	o.busstops_near_end = bus.get_near_stations(o.lat_end, o.lon_end, MAX_BUSSTOP_SEARCH);
+
+	return o;
+};
+
+const calculate_o_td = (r) => {
+	r.time = r.sections.reduce((prev, current) => prev + current?.time ?? 0, 0);
+	r.distance = r.sections.reduce((prev, current) => prev + current?.distance ?? 0, 0);
 };

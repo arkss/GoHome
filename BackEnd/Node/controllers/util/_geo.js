@@ -50,9 +50,9 @@ exports.approx_distance = (lat_1, lon_1, lat_2, lon_2) => {
 const WS = 4;
 const RS = 14;
 const DS = 32;
-exports.walking_time_2_riding_time = (time) => time * WS / RS;
-exports.walking_time = (lat_1, lon_1, lat_2, lon_2) => exports.distance(lat_1, lon_1, lat_2, lon_2) / WS * 3600;
-exports.riding_time = (lat_1, lon_1, lat_2, lon_2) => exports.walking_time_2_riding_time(exports.walking_time(lat_1, lon_1, lat_2, lon_2));
-exports.driving_time = (lat_1, lon_1, lat_2, lon_2) => exports.distance(lat_1, lon_1, lat_2, lon_2) / DS * 3600;
-exports.approx_walking_time = (lat_1, lon_1, lat_2, lon_2) => exports.approx_distance(lat_1, lon_1, lat_2, lon_2) / WS * 3600;
-exports.approx_riding_time = (lat_1, lon_1, lat_2, lon_2) => exports.walking_time_2_riding_time(exports.approx_distance(lat_1, lon_1, lat_2, lon_2));
+exports.walking_time_2_riding_time = (time) => Math.round(time * WS / RS);
+exports.walking_time = (lat_1, lon_1, lat_2, lon_2) => Math.round(exports.distance(lat_1, lon_1, lat_2, lon_2) / WS * 3600);
+exports.riding_time = (lat_1, lon_1, lat_2, lon_2) => Math.round(exports.walking_time_2_riding_time(exports.walking_time(lat_1, lon_1, lat_2, lon_2)));
+exports.driving_time = (lat_1, lon_1, lat_2, lon_2) => Math.round(exports.distance(lat_1, lon_1, lat_2, lon_2) / DS * 3600);
+exports.approx_walking_time = (lat_1, lon_1, lat_2, lon_2) => Math.round(exports.approx_distance(lat_1, lon_1, lat_2, lon_2) / WS * 3600);
+exports.approx_riding_time = (lat_1, lon_1, lat_2, lon_2) => Math.round(exports.walking_time_2_riding_time(exports.approx_distance(lat_1, lon_1, lat_2, lon_2)));

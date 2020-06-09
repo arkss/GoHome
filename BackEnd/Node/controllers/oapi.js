@@ -552,14 +552,19 @@ exports.odsay_get_nbus_routes = async (lat_start, lon_start, lat_end, lon_end) =
 
 		if (p.sub_paths.length == 0) continue;
 
+		p.lat_station_start = p.sub_paths[0].lat_start;
+		p.lon_station_start = p.sub_paths[0].lon_start;
+		p.lat_station_end = p.sub_paths[p.sub_paths.length - 1].lat_end;
+		p.lon_station_end = p.sub_paths[p.sub_paths.length - 1].lon_end;
+
 		U.log(`busNos: ${busNos.toString()}`);
 		results.push(p);
 	}
 
-	// TODO: station_start, station_end가 같은 p는 한 번에 묶기
-
+	// return only one
 	U.log(`${results.length} N-Bus routes found.`);
-	return results;
+	results.sort((a, b) => a.time - b.time);
+	return (results.length > 0) ? results[0] : null;
 };
 
 /*
