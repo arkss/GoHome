@@ -490,7 +490,7 @@ sub_paths: 상세 경로 {
 
 */
 exports.odsay_get_nbus_routes = async (lat_start, lon_start, lat_end, lon_end) => {
-	U.log(`get N-Bus routes from odsay`);
+	U.log(`Request N-Bus routes from odsay ...`);
 
 	let option = {
 		uri: `https://api.odsay.com/v1/api/searchPubTransPathR`,
@@ -511,6 +511,7 @@ exports.odsay_get_nbus_routes = async (lat_start, lon_start, lat_end, lon_end) =
 	paths = paths?.result?.path || [];
 
 	for (let path of paths) {
+		let busNos = [];
 		let info = path.info;
 		let subPaths = path.subPath;
 
@@ -529,6 +530,7 @@ exports.odsay_get_nbus_routes = async (lat_start, lon_start, lat_end, lon_end) =
 
 		// pop subPath(bus)
 		for (let subPath of subPaths) {
+			U.unwrap_properties(subPath);
 			// take only N-bus path
 			if (subPath.trafficType != 2) continue;
 			/*if (subPath.lane.busNo[0] != 'N') {
@@ -544,14 +546,19 @@ exports.odsay_get_nbus_routes = async (lat_start, lon_start, lat_end, lon_end) =
 				lon_end: subPath.endX,
 				station_start: subPath.startName,
 				station_end: subPath.endName
-			})
+			});
+			busNos.push(subPath.lane.busNo);
 		}
 
-		if (p.sub_paths.length > 0) continue;
+		if (p.sub_paths.length == 0) continue;
 
+		U.log(`busNos: ${busNos.toString()}`);
 		results.push(p);
 	}
 
+	// TODO: station_start, station_end가 같은 p는 한 번에 묶기
+
+	U.log(`${results.length} N-Bus routes found.`);
 	return results;
 };
 
@@ -568,37 +575,31 @@ const parse_itemList = (json) =>
 	Request and decode the result to UTF8, and return it as JSON.
 
 */
-const requestAndParseJSON = (option, type = 'json') =>
-	new Promise((resolve, reject) => {
-		U.log(`request to ${option.url || option.uri}`);
+const requestAndParseJSON = async (option, type = 'json') => {
+	let res, decoded;
+	U.log(`request:\n${JSON.stringify(option, null, 2)}`);
 
-		request(option)
-		.then(result => iconv.decode(Buffer.from(result), 'utf8'))
-		.then(decoded => {
+	// request
+	try {
+		res = await request(option);
+		decoded = iconv.decode(Buffer.from(res), 'utf8');
+	} catch (err) {
+		U.error('Error on requestAndParseAsJSON: ');
+		U.error(err);
+		return {};
+	}
 
-			// json to json
-			if (type == 'json') {
-				return resolve(JSON.parse(decoded));
-			}
-
-			// xml to json
-			if (type == 'xml') {
-				return xml2js
-				.parseStringPromise(decoded)
-				.then(resolve)
-				.catch(err => {
-					U.error('Error on parseStringPromise: ')
-					U.error(err);
-					resolve({});
-				});
-			}
-
-			// undefined type
-			return decoded;
-		})
-		.catch(err => {
-			U.error('Error on requestAndParseAsJSON: ');
+	if (type == 'json') { // json to json
+		return JSON.parse(decoded);
+	} else if (type == 'xml') { // xml to json
+		try {
+			return await xml2js.parseStringPromise(decoded);
+		} catch (err) {
+			U.error('Error on parseStringPromise: ')
 			U.error(err);
-			resolve({});
-		});
-	});
+			return {};
+		}
+	} else { // undefined type
+		return decoded;
+	}
+};
