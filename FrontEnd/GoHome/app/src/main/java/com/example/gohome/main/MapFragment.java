@@ -25,6 +25,14 @@ import android.widget.Toast;
 import com.example.gohome.GpsTracker;
 import com.example.gohome.OnGpsEventListener;
 import com.example.gohome.R;
+import com.example.gohome.SignUpActivity;
+import com.example.gohome.retrofit2.Bikestop;
+import com.example.gohome.retrofit2.BikestopData;
+import com.example.gohome.retrofit2.RetrofitClientInstance;
+import com.example.gohome.retrofit2.RetrofitClientInstance2;
+import com.example.gohome.retrofit2.RetrofitService;
+import com.example.gohome.retrofit2.RetrofitService2;
+import com.google.gson.JsonObject;
 import com.skt.Tmap.TMapData;
 import com.skt.Tmap.TMapMarkerItem;
 import com.skt.Tmap.TMapPoint;
@@ -35,6 +43,11 @@ import com.skt.Tmap.TMapView;
 
 import java.util.ArrayList;
 import java.util.Objects;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -163,6 +176,9 @@ public class MapFragment extends Fragment implements OnGpsEventListener {
 
         // GPS init
         gpsTracker = new GpsTracker(this.getContext(), this);
+
+        // Show bike stops
+        showBikestops();
     }
 
     @Override
@@ -181,5 +197,42 @@ public class MapFragment extends Fragment implements OnGpsEventListener {
             tMapView.setLocationPoint(lon, lat);
             tMapView.setCenterPoint(lon, lat);
         }
+    }
+
+    void showBikestops() {
+        final Retrofit retrofit = RetrofitClientInstance2.getRetrofitInstance();
+        final RetrofitService2 service = retrofit.create(RetrofitService2.class);
+        Call<BikestopData> request = service.getBikestops();
+        request.enqueue(new Callback<BikestopData>() {
+            String bikestop = "BIKESTOP";
+            @Override
+            public void onResponse(Call<BikestopData> call, Response<BikestopData> response) {
+                if(response.isSuccessful()) {
+                    Log.d(bikestop, "onResponse");
+
+                    BikestopData bikestopData = response.body();
+
+                    // Log the message.
+                    String msg = bikestopData.getMessage();
+                    Log.d(bikestop, msg);
+
+                    // Set bikestops pins.
+                    Bikestop[] bikestops = bikestopData.getBikestops();
+                    Integer cnt = 0;
+                    for(Bikestop bikestop : bikestops) {
+                        TMapMarkerItem markerItem = new TMapMarkerItem();
+                        markerItem.setTMapPoint(bikestop.getPoint());
+                        tMapView.addMarkerItem("markerItem" + cnt.toString(), markerItem);
+                        cnt++;
+                    }
+                } else
+                    Log.d(bikestop,"response is not successful");
+            }
+
+            @Override
+            public void onFailure(Call<BikestopData> call, Throwable t) {
+                Log.d(bikestop,"communicate failed, msg:"+t.getMessage());
+            }
+        });
     }
 }
