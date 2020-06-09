@@ -430,6 +430,8 @@ exports.get_pedestrian_route = (points) =>
 						case 'PP3': // 경유지3
 						case 'PP4': // 경유지4
 						case 'PP5': // 경유지5
+							result.time += time;	
+							result.distance += distance;	
 							result.sections.push({
 								time: time,
 								distance: distance,
