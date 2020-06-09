@@ -5,7 +5,7 @@ const bike = require('./bike');
 const bus = require('./bus');
 
 const CONCALL_BIKE_ROUTE_SEARCH   = keys.settings.concall_bike_route_search || 1;
-const CONCALL_BUS_ROUTE_SEARCH    = keys.settings.concall_bike_route_search || 1;
+const CONCALL_BUS_ROUTE_SEARCH    = keys.settings.concall_bus_route_search || 1;
 const MAX_BIKE_ROUTE_SEARCH       = keys.settings.max_bike_route_search || 8;
 const MAX_BIKE_ROUTE_RETURN       = keys.settings.max_bike_route_return || 6;
 const MAX_BUS_ROUTE_SEARCH        = keys.settings.max_bus_route_search || 1;
@@ -194,6 +194,8 @@ const find_candidate_pairs = (o, type) => {
 	// for every possible pairs
 	for (let bs1 of ar_start) {
 		for (let bs2 of ar_end) {
+			if (bs1.stationId == bs2.stationId) continue;
+
 			// calculate expected riding & walking time (in sec)
 			traveltime = (
 				f_cached_time(bs1.stationId, bs2.stationId) ||
@@ -237,19 +239,17 @@ const search_candidate_route = async (o, type, candidate) => {
 		return null;
 	}
 
-	U.log(`expected minimum travel time: ${candidate.traveltime}, upperbound: ${time_upperbound}`);
+	U.log(`real route searched
+	expected minimum travel time: ${candidate.traveltime}, upperbound: ${time_upperbound}`);
 
 	let bs1 = candidate.bs[0];
 	let bs2 = candidate.bs[1];
-
 	let result = await oapi.get_pedestrian_route([
 		[o.lat_start, o.lon_start],
 		[bs1.stationLatitude, bs1.stationLongitude],
 		[bs2.stationLatitude, bs2.stationLongitude],
 		[o.lat_end, o.lon_end],
 	]);
-
-	U.log(`real route searched`);
 
 	// for test: handle exception
 	// TODO: make it available
@@ -270,13 +270,18 @@ const search_candidate_route = async (o, type, candidate) => {
 	if (type == 'bike') {
 		result.sections[1].time = U.walking_time_2_riding_time(result.sections[1].time);
 		result.time = result.sections[0].time + result.sections[1].time + result.sections[2].time;
+	} else if (type == 'bus') {
+		result.buspath = await oapi.odsay_get_nbus_routes(
+			bs1.stationLatitude, bs1.stationLongitude,
+			bs2.stationLatitude, bs2.stationLongitude
+		);
 	}
 
 	// cache the riding time
 	if (type == 'bike') {
-		bus.cache_traveltime(bs1.stationId, bs2.stationId, result.sections[1].time);
-	} else if (type == 'bus') {
 		bike.cache_traveltime(bs1.stationId, bs2.stationId, result.sections[1].time);
+	} else if (type == 'bus') {
+		// bus.cache_traveltime(bs1.stationId, bs2.stationId, result.sections[1].time);
 	}
 
 	// update time_upperbound
