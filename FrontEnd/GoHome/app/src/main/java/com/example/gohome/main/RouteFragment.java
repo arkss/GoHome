@@ -153,6 +153,9 @@ public class RouteFragment extends Fragment implements View.OnClickListener {
         tMapView.setCenterPoint((minLongitude+maxLongitude)/2, (minLatitude+maxLatitude)/2);
         tMapView.zoomToSpan(maxLatitude-minLatitude, maxLongitude-minLongitude);
         tMapView.setIconVisibility(true);
+
+        Location myLocation = ((MainActivity)getActivity()).getLocation();
+        tMapView.setLocationPoint(myLocation.getLongitude(), myLocation.getLatitude());
     }
 
     @Override
