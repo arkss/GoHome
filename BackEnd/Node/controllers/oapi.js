@@ -637,10 +637,7 @@ exports.topis_get_nbus_routes = async (lat_start, lon_start, lat_end, lon_end) =
 			U.error(`Unexpected busstop's stationId: ${s.startArsId}, ${s.endArsId}.`);
 			return null;
 		}
-		p.points.push([
-			[station1.stationLatitude, station1.stationLongitude],
-			[station2.stationLatitude, station2.stationLongitude]
-		]);
+		p.points.push([station1.stationLatitude, station1.stationLongitude], [station2.stationLatitude, station2.stationLongitude]);
 		p.routeNames.push(s.routeName);
 	}
 
