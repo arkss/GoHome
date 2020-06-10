@@ -4,6 +4,8 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.EditText;
+import android.widget.ImageButton;
 
 import com.example.gohome.R;
 import com.example.gohome.SearchRecycler.InnerData;
@@ -24,15 +26,14 @@ import androidx.recyclerview.widget.RecyclerView;
  * Use the {@link SearchFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class SearchFragment extends Fragment {
-    // TODO: Rename parameter arguments, choose names that match
-    // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
-    private static final String ARG_PARAM1 = "param1";
-    private static final String ARG_PARAM2 = "param2";
+public class SearchFragment extends Fragment implements View.OnClickListener {
 
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
+    private ImageButton backBtn;
+    private ImageButton swapBtn;
+    private ImageButton okBtn;
+
+    private EditText destination;
+    private EditText departure;
 
     public SearchFragment() {
         // Required empty public constructor
@@ -50,8 +51,6 @@ public class SearchFragment extends Fragment {
     public static SearchFragment newInstance(String param1, String param2) {
         SearchFragment fragment = new SearchFragment();
         Bundle args = new Bundle();
-        args.putString(ARG_PARAM1, param1);
-        args.putString(ARG_PARAM2, param2);
         fragment.setArguments(args);
         return fragment;
     }
@@ -60,8 +59,7 @@ public class SearchFragment extends Fragment {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
+
         }
     }
 
@@ -75,13 +73,16 @@ public class SearchFragment extends Fragment {
     public void onViewCreated(@NonNull View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
 
-        view.findViewById(R.id.button_first).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                NavHostFragment.findNavController(SearchFragment.this)
-                        .navigate(R.id.action_SearchFragment_to_RouteFragment);
-            }
-        });
+        // find view
+        backBtn = (ImageButton)view.findViewById(R.id.imageButtonBackFromSearch);
+        swapBtn = (ImageButton)view.findViewById(R.id.imageButtonSwap);
+        okBtn = (ImageButton)view.findViewById(R.id.imageButtonMoreVert);
+        departure = (EditText)view.findViewById(R.id.editTextDeparture);
+        destination = (EditText)view.findViewById(R.id.editTextDestination);
+
+        backBtn.setOnClickListener(this);
+        swapBtn.setOnClickListener(this);
+        okBtn.setOnClickListener(this);
 
         /* Test code */
         ArrayList<SearchData> dataList = new ArrayList<>();
@@ -112,9 +113,27 @@ public class SearchFragment extends Fragment {
         // init recycler view
         RecyclerView recyclerView = view.findViewById(R.id.search_recycler);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+
         // add divider line
         recyclerView.addItemDecoration(new DividerItemDecoration(recyclerView.getContext(), DividerItemDecoration.VERTICAL));
         SearchRecyclerAdapter adapter = new SearchRecyclerAdapter(getActivity(), dataList, allInnerData, this);
         recyclerView.setAdapter(adapter);
+    }
+
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.imageButtonBackFromSearch:
+                NavHostFragment.findNavController(SearchFragment.this)
+                        .navigate(R.id.action_SearchFragment_to_MapFragment);
+                break;
+            case R.id.imageButtonSwap:
+                String tmp = departure.getText().toString();
+                departure.setText(destination.getText().toString());
+                destination.setText(tmp);
+                break;
+            case R.id.imageButtonMoreVert:
+                break;
+        }
     }
 }

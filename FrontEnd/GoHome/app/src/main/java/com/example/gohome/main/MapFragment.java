@@ -187,6 +187,7 @@ public class MapFragment extends Fragment implements OnGpsEventListener, View.On
             case R.id.current_location:
                 Location location = gpsTracker.getLocation();
                 tMapView.setCenterPoint(location.getLongitude(), location.getLatitude());
+                Log.d("LOCATION", location.getLongitude()+", "+location.getLatitude());
                 break;
         }
     }
