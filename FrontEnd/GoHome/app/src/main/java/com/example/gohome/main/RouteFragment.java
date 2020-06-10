@@ -2,6 +2,7 @@ package com.example.gohome.main;
 
 import android.content.Intent;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.location.Location;
 import android.os.Bundle;
 
@@ -11,6 +12,7 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
+import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -25,12 +27,15 @@ import com.example.gohome.MainActivity;
 import com.example.gohome.GpsTracker;
 import com.example.gohome.R;
 import com.example.gohome.SharePositionDialog;
+import com.example.gohome.retrofit2.Datum;
+import com.example.gohome.retrofit2.Section;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.skt.Tmap.TMapPoint;
 import com.skt.Tmap.TMapPolyLine;
 import com.skt.Tmap.TMapView;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import static java.lang.Math.max;
 import static java.lang.Math.min;
@@ -47,12 +52,18 @@ public class RouteFragment extends Fragment implements View.OnClickListener {
     private static final String ARG_PARAM2 = "param2";
 
     private TMapView tMapView;
+    private TMapPolyLine polyLine[];
 
     private FloatingActionButton cameraBtn;
     private FloatingActionButton shareBtn;
     private FloatingActionButton locationBtn;
 
     private GpsTracker gpsTracker;
+
+    private Datum datum;
+
+    private Handler mHandler;
+    private boolean flag = false;
 
     double minLat = 37.423930, maxLat = 37.704151;
     double minLon = 126.761920, maxLon = 127.186964;
@@ -134,28 +145,33 @@ public class RouteFragment extends Fragment implements View.OnClickListener {
         shareBtn.setOnClickListener(this);
         locationBtn.setOnClickListener(this);
 
-        // event
-        cameraBtn.setOnClickListener(new View.OnClickListener() {
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
             @Override
-            public void onClick(View v) {
-                Toast.makeText(getActivity(), "AR Open", Toast.LENGTH_SHORT).show();
-                Intent intent = new Intent(getActivity(), com.example.gohome.testActivity.class);
-                startActivity(intent);
+            public void run() {
+                if(flag == false) {
+                    Log.d("TEST", "FLAG FALSE");
+                    handler.postDelayed(this, 1000);
+                }else {
+                    drawLine();
+                }
             }
-        });
+        }, 1000);
 
-        TMapPolyLine polyLine = ((MainActivity)getActivity()).getPolyLine();
-        tMapView.addTMapPolyLine("fastestPath", polyLine);
-        double minLatitude = getMinLatitude(polyLine.getLinePoint());
-        double maxLatitude = getMaxLatitude(polyLine.getLinePoint());
-        double minLongitude = getMinLongitude(polyLine.getLinePoint());
-        double maxLongitude = getMaxLongitude(polyLine.getLinePoint());
-        tMapView.setCenterPoint((minLongitude+maxLongitude)/2, (minLatitude+maxLatitude)/2);
-        tMapView.zoomToSpan(maxLatitude-minLatitude, maxLongitude-minLongitude);
-        tMapView.setIconVisibility(true);
 
-        Location myLocation = ((MainActivity)getActivity()).getLocation();
-        tMapView.setLocationPoint(myLocation.getLongitude(), myLocation.getLatitude());
+//        TMapPolyLine polyLine = ((MainActivity)getActivity()).getPolyLine();
+//        tMapView.addTMapPolyLine("fastestPath", polyLine);
+//        double minLatitude = getMinLatitude(polyLine.getLinePoint());
+//        double maxLatitude = getMaxLatitude(polyLine.getLinePoint());
+//        double minLongitude = getMinLongitude(polyLine.getLinePoint());
+//        double maxLongitude = getMaxLongitude(polyLine.getLinePoint());
+//        tMapView.setCenterPoint((minLongitude+maxLongitude)/2, (minLatitude+maxLatitude)/2);
+//        tMapView.zoomToSpan(maxLatitude-minLatitude, maxLongitude-minLongitude);
+//        tMapView.setIconVisibility(true);
+//
+//        Location myLocation = ((MainActivity)getActivity()).getLocation();
+//        tMapView.setLocationPoint(myLocation.getLongitude(), myLocation.getLatitude());
+
     }
 
     @Override
@@ -203,6 +219,49 @@ public class RouteFragment extends Fragment implements View.OnClickListener {
         return ret;
     }
 
+    public void setDatum(Datum datum) {
+        this.datum = datum;
+        Log.d("TEST", "datum.toString "+datum.toString());
+        flag = true;
+        Log.d("TEST", "datum received");
+    }
+
+    public void drawLine() {
+        List<Section> sectionList = datum.getSections();
+        Log.d("TEST", sectionList.get(0).getTime()+" ");
+        polyLine = new TMapPolyLine[sectionList.size()];
+        Log.d("TEST", "size = "+sectionList.size());
+        for(int i=0; i<sectionList.size(); i++) {
+            polyLine[i] = new TMapPolyLine();
+
+            for(Section section : sectionList) {
+                // set line color
+                switch (section.getType()) {
+                    case 1:
+                        polyLine[i].setLineColor(Color.BLACK);
+                        break;
+                    case 2:
+                        polyLine[i].setLineColor(Color.GREEN);
+                        break;
+                    case 3:
+                        polyLine[i].setLineColor(Color.RED);
+                        break;
+                }
+
+                // set line points
+                for (List<Double> point : section.getPoints()) {
+                    Log.d("TEST", "point(0)="+point.get(0)+", point(1)="+point.get(1));
+                    polyLine[i].addLinePoint(new TMapPoint(point.get(0), point.get(1)));
+                }
+                tMapView.addTMapPolyLine("line"+i, polyLine[i]);
+            }
+        }
+
+        for(TMapPolyLine line : polyLine) {
+            Log.d("TEST", line.getDistance()+" ");
+        }
+    }
+
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
@@ -214,9 +273,8 @@ public class RouteFragment extends Fragment implements View.OnClickListener {
 
             // current location btn clicked
             case R.id.route_location_btn:
-                Location location = gpsTracker.getLocation();
+                Location location = ((MainActivity)getActivity()).getLocation();
                 tMapView.setCenterPoint(location.getLongitude(), location.getLatitude());
-
                 tMapView.setTrackingMode(true);
                 break;
 

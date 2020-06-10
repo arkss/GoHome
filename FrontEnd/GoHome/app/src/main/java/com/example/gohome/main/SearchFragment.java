@@ -1,35 +1,32 @@
 package com.example.gohome.main;
 
+import android.content.Context;
 import android.location.Location;
 import android.os.Bundle;
-import android.os.IBinder;
-import android.os.Parcel;
-import android.os.Parcelable;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
-import android.widget.Toast;
 
-import com.example.gohome.GpsTracker;
 import com.example.gohome.MainActivity;
-import com.example.gohome.OnGpsEventListener;
-import android.widget.EditText;
-import android.widget.ImageButton;
 
 import com.example.gohome.R;
 import com.example.gohome.SearchRecycler.InnerData;
 import com.example.gohome.SearchRecycler.SearchData;
 import com.example.gohome.SearchRecycler.SearchRecyclerAdapter;
+import com.example.gohome.retrofit2.Datum;
+import com.example.gohome.retrofit2.RetrofitClientInstance2;
+import com.example.gohome.retrofit2.RetrofitService2;
+import com.example.gohome.retrofit2.RouteSearchResult;
+import com.example.gohome.retrofit2.Section;
 import com.skt.Tmap.TMapData;
-import com.skt.Tmap.TMapGpsManager;
 import com.skt.Tmap.TMapPOIItem;
 import com.skt.Tmap.TMapPoint;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import androidx.annotation.NonNull;
 import androidx.fragment.app.Fragment;
@@ -38,8 +35,12 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.example.gohome.OnGpsEventListener;
 import com.skt.Tmap.TMapPolyLine;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -48,12 +49,19 @@ import com.skt.Tmap.TMapPolyLine;
  */
 public class SearchFragment extends Fragment implements View.OnClickListener {
 
+    private OnDataSendListener mListener;
+
     private ImageButton backBtn;
     private ImageButton swapBtn;
     private ImageButton okBtn;
 
-    private EditText destination;
-    private EditText departure;
+    private EditText text_destination;
+    private EditText text_departure;
+
+    private ArrayList<SearchData> searchDataList;
+    private ArrayList<ArrayList<InnerData>> innerDataList;
+
+    private List<Datum> datumList;
 
     TMapData tmapdata;
 
@@ -83,6 +91,13 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
         if (getArguments() != null) {
 
         }
+        Context context = getContext();
+        if(context instanceof OnDataSendListener) {
+            mListener = (OnDataSendListener) context;
+        }
+        else {
+            throw new RuntimeException(context.toString()+" must implement event listener");
+        }
     }
 
     @Override
@@ -99,46 +114,25 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
         backBtn = (ImageButton)view.findViewById(R.id.imageButtonBackFromSearch);
         swapBtn = (ImageButton)view.findViewById(R.id.imageButtonSwap);
         okBtn = (ImageButton)view.findViewById(R.id.imageButtonMoreVert);
-        departure = (EditText)view.findViewById(R.id.editTextDeparture);
-        destination = (EditText)view.findViewById(R.id.editTextDestination);
+        text_departure = (EditText)view.findViewById(R.id.editTextDeparture);
+        text_destination = (EditText)view.findViewById(R.id.editTextDestination);
 
         backBtn.setOnClickListener(this);
         swapBtn.setOnClickListener(this);
         okBtn.setOnClickListener(this);
 
-        /* Test code */
-        ArrayList<SearchData> dataList = new ArrayList<>();
-        dataList.add(new SearchData("17분"));
-        dataList.add(new SearchData("21분"));
-
-        ArrayList<InnerData> dataInnerList1 = new ArrayList<>();
-//        dataInnerList1.add(new InnerData(R.drawable.bicycle_icon, "따릉이 정류소 1"));
-//        dataInnerList1.add(new InnerData(R.drawable.bus_icon, "N버스 정류소 1"));
-        dataInnerList1.add(new InnerData(R.drawable.bicycle_icon));
-        dataInnerList1.add(new InnerData(R.drawable.bus_icon));
-
-
-        ArrayList<InnerData> dataInnerList2 = new ArrayList<>();
-//        dataInnerList2.add(new InnerData(R.drawable.bicycle_icon, "따릉이 정류소 2"));
-//        dataInnerList2.add(new InnerData(R.drawable.bus_icon, "N버스 정류소 2"));
-//        dataInnerList2.add(new InnerData(R.drawable.taxi_icon, "택시"));
-
-        dataInnerList2.add(new InnerData(R.drawable.bicycle_icon));
-        dataInnerList2.add(new InnerData(R.drawable.bus_icon));
-        dataInnerList2.add(new InnerData(R.drawable.taxi_icon));
-
-        ArrayList<ArrayList<InnerData>> allInnerData = new ArrayList<>();
-        allInnerData.add(dataInnerList1);
-        allInnerData.add(dataInnerList2);
-        /* test code */
-
         // init recycler view
         RecyclerView recyclerView = view.findViewById(R.id.search_recycler);
         recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
 
+        // init data list
+        searchDataList = new ArrayList<>();
+        innerDataList = new ArrayList<>();
+
         // add divider line
         recyclerView.addItemDecoration(new DividerItemDecoration(recyclerView.getContext(), DividerItemDecoration.VERTICAL));
-        SearchRecyclerAdapter adapter = new SearchRecyclerAdapter(getActivity(), dataList, allInnerData, this);
+
+        SearchRecyclerAdapter adapter = new SearchRecyclerAdapter(getActivity(), searchDataList, innerDataList, this);
         recyclerView.setAdapter(adapter);
 
         // when search button is pressed
@@ -147,8 +141,8 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
             @Override
             public void onClick(View view) {
                 // destination
-                EditText etDestination = (EditText)getActivity().findViewById(R.id.editTextDestination);
-                String destinationText = etDestination.getText().toString();
+//                String destinationText = destination.getText().toString();
+                String destinationText = "서울시립대학교";
 
                 // POI search
                 tmapdata = new TMapData();
@@ -162,11 +156,77 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
                                     "Address: " + item.getPOIAddress().replace("null", "")  + ", " +
                                     "Point: " + item.getPOIPoint().toString());
                         }
+                        // get first poi item
                         TMapPOIItem item = (TMapPOIItem)poiItem.get(0);
+
+                        // get departure, destination point
                         TMapPoint destination = item.getPOIPoint();
                         Location departure_location = ((MainActivity)getActivity()).getLocation();
                         TMapPoint departure = new TMapPoint(departure_location.getLatitude(), departure_location.getLongitude());
-                        routeSearch(departure, destination);
+                        Log.d("TEST", "current latitude: "+departure.getLatitude()+", longitude: "+departure.getLongitude());
+
+                        // request routes
+                        Retrofit retrofit = RetrofitClientInstance2.getRetrofitInstance();
+                        RetrofitService2 service = retrofit.create(RetrofitService2.class);
+                        Call<RouteSearchResult> request = service.getRoutes(departure_location.getLatitude(), departure_location.getLongitude(), destination.getLatitude(), destination.getLongitude(), "Y", "N");
+                        request.enqueue(new Callback<RouteSearchResult>() {
+                            @Override
+                            public void onResponse(Call<RouteSearchResult> call, Response<RouteSearchResult> response) {
+                                if(response.isSuccessful()) {
+                                    Log.d("TEST", "CONNECT SUCCESSFUL");
+                                    RouteSearchResult data = response.body();
+                                    int result = data.getResult();
+                                    // 정상 처리됨
+                                    if(result == 1) {
+                                        String message = data.getMessage();
+                                        datumList = data.getData();
+                                        for(Datum datum : datumList) {
+                                            Log.d("TEST", "total time: "+datum.getTime()+", total distance: "+datum.getDistance());
+                                            int minute = datum.getTime()/60;
+                                            int walkingTime = 0;
+                                            ArrayList<InnerData> in = new ArrayList<>();
+
+                                            for(Section section : datum.getSections()) {
+                                                // 도보인 경우
+                                                if(section.getType() == 1) {
+                                                    Log.d("TEST", "도보시간: "+section.getTime()+", 도보 거리: "+section.getDistance());
+                                                    walkingTime += section.getTime();
+                                                }
+                                                switch(section.getType()) {
+                                                    case 1:
+                                                        in.add(new InnerData(R.drawable.walking_icon));
+                                                        break;
+                                                    case 2:
+                                                        in.add(new InnerData(R.drawable.bicycle_icon));
+                                                        break;
+                                                    case 3:
+                                                        in.add(new InnerData(R.drawable.bus_icon));
+                                                }
+                                            }
+                                            searchDataList.add(new SearchData("총 "+minute+"분", "도보시간 "+walkingTime+"분"));
+                                            innerDataList.add(in);
+                                            adapter.notifyDataSetChanged();
+                                        }
+                                    }
+                                    // 오류
+                                    else if(result == -1) {
+                                        Log.e("TEST", "result == -1, error");
+                                    }
+                                }
+                                else {
+                                    Log.d("TEST", response.toString());
+                                }
+                            }
+
+                            @Override
+                            public void onFailure(Call<RouteSearchResult> call, Throwable t) {
+                                Log.e("TEST", t.getMessage());
+                            }
+                        });
+
+
+
+//                        routeSearch(departure, destination);
                     }
                 });
             }
@@ -187,6 +247,15 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
         }
     }
 
+    // recycler view에서 아이템이 선택됐을 때, recycler view에서 호출하는 메소드
+    public void selectItem(int position) {
+        if(mListener != null) {
+            mListener.onDataInteraction(datumList.get(position));
+        }
+        NavHostFragment.findNavController(SearchFragment.this)
+                .navigate(R.id.action_SearchFragment_to_RouteFragment);
+    }
+
     @Override
     public void onClick(View view) {
         switch (view.getId()) {
@@ -195,12 +264,24 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
                         .navigate(R.id.action_SearchFragment_to_MapFragment);
                 break;
             case R.id.imageButtonSwap:
-                String tmp = departure.getText().toString();
-                departure.setText(destination.getText().toString());
-                destination.setText(tmp);
+                String tmp = text_departure.getText().toString();
+                text_departure.setText(text_destination.getText().toString());
+                text_destination.setText(tmp);
                 break;
             case R.id.imageButtonMoreVert:
                 break;
         }
     }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        mListener = null;
+    }
+
+    // fragment간 통신을 위한 인터페이스
+    public interface OnDataSendListener {
+        void onDataInteraction(Datum datum);
+    }
 }
+

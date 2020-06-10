@@ -24,6 +24,15 @@ public class RouteSearchQuery {
     @Expose
     private String includeBus;
 
+    public RouteSearchQuery(double latStart, double lonStart, double latEnd, double lonEnd, String includeBike, String includeBus) {
+        this.latStart = latStart;
+        this.lonStart = lonStart;
+        this.latEnd = latEnd;
+        this.lonEnd = lonEnd;
+        this.includeBike = includeBike;
+        this.includeBus = includeBus;
+    }
+
     public double getLatStart() {
         return latStart;
     }

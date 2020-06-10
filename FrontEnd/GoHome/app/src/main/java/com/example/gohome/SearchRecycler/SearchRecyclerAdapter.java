@@ -5,11 +5,11 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.accessibility.AccessibilityManager;
 import android.widget.Button;
 import android.widget.TextView;
 
 import com.example.gohome.R;
+import com.example.gohome.main.SearchFragment;
 
 import java.util.ArrayList;
 
@@ -31,7 +31,8 @@ public class SearchRecyclerAdapter extends RecyclerView.Adapter<SearchRecyclerAd
 
     // 아이템 뷰를 저장하는 뷰 홀더 클래스
     public class ViewHolder extends RecyclerView.ViewHolder {
-        TextView textView; // search_item의 textview
+        TextView textTime; // search_item의 textview
+        TextView textWalking;
         RecyclerView innerRecyclerView; // search_item의 recycler view
         Button startBtn;
 
@@ -50,7 +51,8 @@ public class SearchRecyclerAdapter extends RecyclerView.Adapter<SearchRecyclerAd
 //            });
 
             startBtn = item.findViewById(R.id.start_guide);
-            textView = item.findViewById(R.id.required_time);
+            textTime = item.findViewById(R.id.required_time);
+            textWalking = item.findViewById(R.id.walking_time);
             innerRecyclerView = item.findViewById(R.id.search_inner_recycler);
         }
     }
@@ -79,20 +81,22 @@ public class SearchRecyclerAdapter extends RecyclerView.Adapter<SearchRecyclerAd
     @Override
     public void onBindViewHolder(SearchRecyclerAdapter.ViewHolder holder, int position) {
         String time = sData.get(position).getTime();
+        String walkingTime = sData.get(position).getWalkingTime();
         InnerRecyclerAdapter innerAdapter = new InnerRecyclerAdapter(sInData.get(position));
 
-        holder.textView.setText(time);
+        holder.textTime.setText(time);
+        holder.textWalking.setText(walkingTime);
         // orientation: horizontal
         holder.innerRecyclerView.setLayoutManager(new LinearLayoutManager(context, LinearLayoutManager.HORIZONTAL, false));
         holder.innerRecyclerView.setAdapter(innerAdapter);
 
-        // TEST
+        // on click
         holder.startBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Log.d("RECYCLER VIEW", "pos = "+position);
-                NavHostFragment.findNavController(fragment)
-                        .navigate(R.id.action_SearchFragment_to_RouteFragment);
+                ((SearchFragment)fragment).selectItem(position);
+//                NavHostFragment.findNavController(fragment)
+//                        .navigate(R.id.action_SearchFragment_to_RouteFragment);
             }
         });
     }

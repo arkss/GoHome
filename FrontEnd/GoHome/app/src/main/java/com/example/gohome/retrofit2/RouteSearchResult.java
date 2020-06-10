@@ -1,18 +1,23 @@
+
 package com.example.gohome.retrofit2;
 
+import java.util.List;
 import com.google.gson.annotations.Expose;
 import com.google.gson.annotations.SerializedName;
 
 public class RouteSearchResult {
+
     @SerializedName("result")
     @Expose
     private int result;
+
     @SerializedName("message")
     @Expose
     private String message;
+
     @SerializedName("data")
     @Expose
-    private RouteData data;
+    private List<Datum> data = null;
 
     public int getResult() {
         return result;
@@ -30,36 +35,12 @@ public class RouteSearchResult {
         this.message = message;
     }
 
-    public RouteData getData() {
+    public List<Datum> getData() {
         return data;
     }
 
-    public void setData(RouteData data) {
+    public void setData(List<Datum> data) {
         this.data = data;
     }
-}
 
-class RouteData {
-    @SerializedName("n")
-    @Expose
-    private int n;
-    @SerializedName("routes")
-    @Expose
-    private Route[] routes = null;
-
-    public int getN() {
-        return n;
-    }
-
-    public void setN(int n) {
-        this.n = n;
-    }
-
-    public Route[] getRoutes() {
-        return routes;
-    }
-
-    public void setRoutes(Route[] routes) {
-        this.routes = routes;
-    }
 }
