@@ -74,8 +74,6 @@ public class MapFragment extends Fragment {
     View drawerView;
     TMapView tMapView;
 
-    GpsTracker gpsTracker;
-
     public MapFragment() {
         // Required empty public constructor
     }
@@ -173,6 +171,8 @@ public class MapFragment extends Fragment {
             }
         });
 
+        ((MainActivity)getActivity()).setMapFragment(this);
+
         // Show bike stops
         //showBikestops();
     }
@@ -212,5 +212,10 @@ public class MapFragment extends Fragment {
                 Log.d(bikestop,"communicate failed, msg:"+t.getMessage());
             }
         });
+    }
+
+    public void setLocationPoint(Location location) {
+        tMapView.setLocationPoint(location.getLongitude(), location.getLatitude());
+        tMapView.setCenterPoint(location.getLongitude(), location.getLatitude());
     }
 }
