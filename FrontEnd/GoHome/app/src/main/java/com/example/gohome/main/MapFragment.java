@@ -222,7 +222,7 @@ public class MapFragment extends Fragment implements View.OnClickListener {
 
             // current location btn clicked
             case R.id.current_location:
-                Location location = gpsTracker.getLocation();
+                Location location = ((MainActivity)getActivity()).getLocation();
                 tMapView.setCenterPoint(location.getLongitude(), location.getLatitude());
                 Log.d("LOCATION", location.getLongitude()+", "+location.getLatitude());
                 break;
