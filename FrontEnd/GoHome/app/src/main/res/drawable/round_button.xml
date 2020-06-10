@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<selector xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item>
+        <layer-list>
+            <!-- shadow (밑으로) : 그림자 -->
+            <item android:top="5dp">
+                <shape>
+                        <solid android:color="#66505050"/>
+                        <corners
+                            android:bottomRightRadius="25dp"
+                            android:bottomLeftRadius="25dp"
+                            android:topLeftRadius="25dp"
+                            android:topRightRadius="25dp"/>
+                </shape>
+            </item>
+            <!-- background (위로) -->
+            <item android:bottom="3dp">
+                <shape>
+                    <solid android:color="#CCFFFFFF"/>
+                    <corners
+                        android:bottomRightRadius="25dp"
+                        android:bottomLeftRadius="25dp"
+                        android:topLeftRadius="25dp"
+                        android:topRightRadius="25dp"/>
+
+                    <!--
+                    <gradient
+                        android:angle="315"
+                        android:startColor="@color/colorPrimary"
+                        android:endColor="#ffffff"
+                        />
+                        -->
+                </shape>
+            </item>
+        </layer-list>
+    </item>
+</selector>

@@ -26,14 +26,16 @@
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:paddingVertical="4dp"
             android:orientation="horizontal"
             android:gravity="center"
             android:layout_alignParentTop="true"
             android:layout_centerHorizontal="true"
             android:layout_marginTop="10dp"
             android:layout_marginHorizontal="10dp"
-            android:background="#CCFFFFFF"
+            android:background="@drawable/searchbar"
             android:weightSum="100"
+            android:elevation="10dp"
             >
             <ImageButton
                 android:id="@+id/searchbar_menu"
@@ -49,12 +51,15 @@
                 android:id="@+id/searchbar_text"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:layout_marginHorizontal="10dp"
                 android:layout_weight="84"
+                android:layout_marginHorizontal="10dp"
+                android:paddingStart="3dp"
+                android:gravity="center_vertical"
+
                 android:background="@null"
-                android:text="destination"
-                android:textSize="20sp"
-                android:gravity="center_vertical"/>
+
+                android:hint="장소 검색"
+                android:textSize="20sp"/>
 
             <ImageButton
                 android:id="@+id/searchbar_search"
@@ -72,12 +77,31 @@
             android:id="@+id/position_share_btn"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+
             android:layout_alignParentRight="true"
             android:layout_alignParentBottom="true"
+
             android:src="@drawable/share_icon"
-            android:layout_margin="16dp"
+            android:backgroundTint="@color/colorPrimary"
+
             app:fabSize="normal"
             />
+
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/current_location"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentBottom="true"
+
+            android:src="@drawable/aim_icon"
+            android:backgroundTint="@color/colorPrimary"
+            app:fabSize="normal"
+            />
+
     </RelativeLayout>
 
     <!-- drawer 동작시 사용되는 main_drawer layout을 include -->

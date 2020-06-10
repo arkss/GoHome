@@ -1,6 +1,8 @@
 package com.example.gohome.main;
 
 import android.content.Intent;
+import android.graphics.BitmapFactory;
+import android.location.Location;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -20,7 +22,9 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.example.gohome.MainActivity;
+import com.example.gohome.GpsTracker;
 import com.example.gohome.R;
+import com.example.gohome.SharePositionDialog;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.skt.Tmap.TMapPoint;
 import com.skt.Tmap.TMapPolyLine;
@@ -36,14 +40,22 @@ import static java.lang.Math.min;
  * Use the {@link RouteFragment#newInstance} factory method to
  * create an instance of this fragment.
  */
-public class RouteFragment extends Fragment {
+public class RouteFragment extends Fragment implements OnGpsEventListener, View.OnClickListener {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
     private static final String ARG_PARAM2 = "param2";
 
+    private TMapView tMapView;
+
     private FloatingActionButton cameraBtn;
     private FloatingActionButton shareBtn;
+    private FloatingActionButton locationBtn;
+
+    private GpsTracker gpsTracker;
+
+    double minLat = 37.423930, maxLat = 37.704151;
+    double minLon = 126.761920, maxLon = 127.186964;
 
     private TMapPoint points[];
 
@@ -83,6 +95,7 @@ public class RouteFragment extends Fragment {
 
         // init variable
 
+
         // use onOptionsItemSelected in Fragment
         setHasOptionsMenu(true);
     }
@@ -106,14 +119,20 @@ public class RouteFragment extends Fragment {
 
 
         // tmapview 추가
-        TMapView tMapView = new TMapView(getContext());
+        tMapView = new TMapView(getContext());
+        tMapView.setIcon(BitmapFactory.decodeResource(getResources(), R.drawable.dot));
+        tMapView.setIconVisibility(true);
         LinearLayout tMapLayout = (LinearLayout)view.findViewById(R.id.route_tmap);
         tMapLayout.addView(tMapView);
 
-
         // find view by id
         cameraBtn = (FloatingActionButton) view.findViewById(R.id.route_camera_btn);
+        shareBtn = (FloatingActionButton) view.findViewById(R.id.route_share_btn);
+        locationBtn = (FloatingActionButton) view.findViewById(R.id.route_location_btn);
 
+        cameraBtn.setOnClickListener(this);
+        shareBtn.setOnClickListener(this);
+        locationBtn.setOnClickListener(this);
 
         // event
         cameraBtn.setOnClickListener(new View.OnClickListener() {
@@ -179,5 +198,31 @@ public class RouteFragment extends Fragment {
             ret = max(ret, tMapPoint.getLongitude());
         }
         return ret;
+    }
+
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()) {
+            // position share btn clicked
+            case R.id.route_share_btn:
+                SharePositionDialog dialog = SharePositionDialog.newInstance("url here");
+                dialog.show(getActivity().getSupportFragmentManager(), "share dialog");
+                break;
+
+            // current location btn clicked
+            case R.id.route_location_btn:
+                Location location = gpsTracker.getLocation();
+                tMapView.setCenterPoint(location.getLongitude(), location.getLatitude());
+
+                tMapView.setTrackingMode(true);
+                break;
+
+            // camera btn clicked
+            case R.id.route_camera_btn:
+                Toast.makeText(getActivity(), "AR Open", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(getActivity(), com.example.gohome.testActivity.class);
+                startActivity(intent);
+                break;
+        }
     }
 }
