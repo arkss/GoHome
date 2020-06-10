@@ -18,16 +18,33 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.example.gohome.GpsTracker;
+import com.example.gohome.MainActivity;
 import com.example.gohome.OnGpsEventListener;
 import com.example.gohome.R;
+import com.example.gohome.SignUpActivity;
+import com.example.gohome.retrofit2.Bikestop;
+import com.example.gohome.retrofit2.BikestopData;
+import com.example.gohome.retrofit2.RetrofitClientInstance;
+import com.example.gohome.retrofit2.RetrofitClientInstance2;
+import com.example.gohome.retrofit2.RetrofitService;
+import com.example.gohome.retrofit2.RetrofitService2;
+import com.google.gson.JsonObject;
 import com.skt.Tmap.TMapData;
+import com.skt.Tmap.TMapMarkerItem;
+import com.skt.Tmap.TMapPOIItem;
 import com.skt.Tmap.TMapPoint;
 import com.example.gohome.SharePositionDialog;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.skt.Tmap.TMapPolyLine;
 import com.skt.Tmap.TMapView;
 
+import java.net.MalformedURLException;
 import java.util.ArrayList;
+
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -35,7 +52,7 @@ import java.util.ArrayList;
  * create an instance of this fragment.
  */
 
-public class MapFragment extends Fragment implements OnGpsEventListener, View.OnClickListener {
+public class MapFragment extends Fragment implements View.OnClickListener {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -51,11 +68,6 @@ public class MapFragment extends Fragment implements OnGpsEventListener, View.On
     DrawerLayout drawerLayout;
     View drawerView;
     TMapView tMapView;
-
-    GpsTracker gpsTracker;
-
-    double minLat = 37.423930, maxLat = 37.704151;
-    double minLon = 126.761920, maxLon = 127.186964;
 
     public MapFragment() {
         // Required empty public constructor
@@ -83,7 +95,6 @@ public class MapFragment extends Fragment implements OnGpsEventListener, View.On
     public void onCreate(Bundle savedInstanceState) {
         // Fragment가 생성될 때 호출
         super.onCreate(savedInstanceState);
-
 //        if (getArguments() != null) {
 //            mParam1 = getArguments().getString(ARG_PARAM1);
 //            mParam2 = getArguments().getString(ARG_PARAM2);
@@ -152,26 +163,52 @@ public class MapFragment extends Fragment implements OnGpsEventListener, View.On
             }
         });
 
-        // GPS init
-        gpsTracker = new GpsTracker(this.getContext(), this);
+        ((MainActivity)getActivity()).setMapFragment(this);
+
+        // Show bike stops
+        //showBikestops();
     }
 
-    @Override
-    public void onGpsEvent(Location location)
-    {
-        if(location != null) {
-            double lat = location.getLatitude(), lon = location.getLongitude();
-            if(lat < minLat || lat > maxLat || lon < minLon || lon > maxLon) {
-                Toast.makeText(this.getContext(), "Not in Seoul", Toast.LENGTH_SHORT).show();
-                return;
+    void showBikestops() {
+        final Retrofit retrofit = RetrofitClientInstance2.getRetrofitInstance();
+        final RetrofitService2 service = retrofit.create(RetrofitService2.class);
+        Call<BikestopData> request = service.getBikestops();
+        request.enqueue(new Callback<BikestopData>() {
+            String bikestop = "BIKESTOP";
+            @Override
+            public void onResponse(Call<BikestopData> call, Response<BikestopData> response) {
+                if(response.isSuccessful()) {
+                    Log.d(bikestop, "onResponse");
+
+                    BikestopData bikestopData = response.body();
+
+                    // Log the message.
+                    String msg = bikestopData.getMessage();
+                    Log.d(bikestop, msg);
+
+                    // Set bikestops pins.
+                    Bikestop[] bikestops = bikestopData.getBikestops();
+                    Integer cnt = 0;
+                    for(Bikestop bikestop : bikestops) {
+                        TMapMarkerItem markerItem = new TMapMarkerItem();
+                        markerItem.setTMapPoint(bikestop.getPoint());
+                        tMapView.addMarkerItem("markerItem" + cnt.toString(), markerItem);
+                        cnt++;
+                    }
+                } else
+                    Log.d(bikestop,"response is not successful");
             }
 
-            Toast.makeText(this.getContext(), "latitude: " + Double.toString(lat) + ", longitude: " + Double.toString(lon), Toast.LENGTH_SHORT).show();
+            @Override
+            public void onFailure(Call<BikestopData> call, Throwable t) {
+                Log.d(bikestop,"communicate failed, msg:"+t.getMessage());
+            }
+        });
+    }
 
-            // 내 위치로 이동
-            tMapView.setLocationPoint(lon, lat);
-            tMapView.setCenterPoint(lon, lat);
-        }
+    public void setLocationPoint(Location location) {
+        tMapView.setLocationPoint(location.getLongitude(), location.getLatitude());
+        tMapView.setCenterPoint(location.getLongitude(), location.getLatitude());
     }
 
     @Override

@@ -11,6 +11,7 @@ import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
@@ -20,15 +21,19 @@ import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.example.gohome.MainActivity;
 import com.example.gohome.GpsTracker;
-import com.example.gohome.OnGpsEventListener;
 import com.example.gohome.R;
 import com.example.gohome.SharePositionDialog;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.skt.Tmap.TMapPoint;
+import com.skt.Tmap.TMapPolyLine;
 import com.skt.Tmap.TMapView;
 
 import java.util.ArrayList;
+
+import static java.lang.Math.max;
+import static java.lang.Math.min;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -129,7 +134,25 @@ public class RouteFragment extends Fragment implements OnGpsEventListener, View.
         shareBtn.setOnClickListener(this);
         locationBtn.setOnClickListener(this);
 
-        gpsTracker = new GpsTracker(this.getContext(), this);
+        // event
+        cameraBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Toast.makeText(getActivity(), "AR Open", Toast.LENGTH_SHORT).show();
+                Intent intent = new Intent(getActivity(), com.example.gohome.testActivity.class);
+                startActivity(intent);
+            }
+        });
+
+        TMapPolyLine polyLine = ((MainActivity)getActivity()).getPolyLine();
+        tMapView.addTMapPolyLine("fastestPath", polyLine);
+        double minLatitude = getMinLatitude(polyLine.getLinePoint());
+        double maxLatitude = getMaxLatitude(polyLine.getLinePoint());
+        double minLongitude = getMinLongitude(polyLine.getLinePoint());
+        double maxLongitude = getMaxLongitude(polyLine.getLinePoint());
+        tMapView.setCenterPoint((minLongitude+maxLongitude)/2, (minLatitude+maxLatitude)/2);
+        tMapView.zoomToSpan(maxLatitude-minLatitude, maxLongitude-minLongitude);
+        tMapView.setIconVisibility(true);
     }
 
     @Override
@@ -145,21 +168,36 @@ public class RouteFragment extends Fragment implements OnGpsEventListener, View.
         return super.onOptionsItemSelected(item);
     }
 
-    @Override
-    public void onGpsEvent(Location location) {
-        if(location != null) {
-            double lat = location.getLatitude(), lon = location.getLongitude();
-            if(lat < minLat || lat > maxLat || lon < minLon || lon > maxLon) {
-                Toast.makeText(this.getContext(), "Not in Seoul", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            Toast.makeText(this.getContext(), "latitude: " + Double.toString(lat) + ", longitude: " + Double.toString(lon), Toast.LENGTH_SHORT).show();
-
-            // 내 위치로 이동
-            tMapView.setLocationPoint(lon, lat);
-            tMapView.setCenterPoint(lon, lat);
+    double getMinLatitude(ArrayList<TMapPoint> tMapPoints) {
+        double ret = 999;
+        for(TMapPoint tMapPoint : tMapPoints) {
+            ret = min(ret, tMapPoint.getLatitude());
         }
+        return ret;
+    }
+
+    double getMaxLatitude(ArrayList<TMapPoint> tMapPoints) {
+        double ret = -999;
+        for(TMapPoint tMapPoint : tMapPoints) {
+            ret = max(ret, tMapPoint.getLatitude());
+        }
+        return ret;
+    }
+
+    double getMinLongitude(ArrayList<TMapPoint> tMapPoints) {
+        double ret = 999;
+        for(TMapPoint tMapPoint : tMapPoints) {
+            ret = min(ret, tMapPoint.getLongitude());
+        }
+        return ret;
+    }
+
+    double getMaxLongitude(ArrayList<TMapPoint> tMapPoints) {
+        double ret = -999;
+        for(TMapPoint tMapPoint : tMapPoints) {
+            ret = max(ret, tMapPoint.getLongitude());
+        }
+        return ret;
     }
 
     @Override

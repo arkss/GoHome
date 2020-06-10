@@ -29,7 +29,7 @@
                     android:layout_marginStart="50dp"
                     android:layout_marginTop="16dp"
                     android:layout_marginEnd="50dp"
-                    android:hint="Departure"
+                    android:text="현재 위치"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toTopOf="parent" />
@@ -41,7 +41,7 @@
                     android:layout_marginStart="50dp"
                     android:layout_marginEnd="50dp"
                     android:layout_marginBottom="16dp"
-                    android:hint="Destination"
+                    android:hint="도착 위치"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent" />

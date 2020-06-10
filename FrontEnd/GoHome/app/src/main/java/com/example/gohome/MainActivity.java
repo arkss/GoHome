@@ -2,6 +2,7 @@ package com.example.gohome;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.core.app.ActivityCompat;
+import androidx.fragment.app.Fragment;
 
 import android.content.Context;
 import android.content.pm.PackageManager;
@@ -18,35 +19,53 @@ import android.view.View;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
 
+import com.example.gohome.main.RouteFragment;
+import com.example.gohome.main.SearchFragment;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
+import com.skt.Tmap.TMapPolyLine;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements OnGpsEventListener {
+    MapFragment mapFragment;
+
     GpsTracker gpsTracker;
-    private static final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 10;
-
-    //권한 체크
-    private void checkPermission() {
-        try {
-            //권한 얻기 - GPS
-            if(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) !=
-                    PackageManager.PERMISSION_GRANTED) {
-                if(ActivityCompat.shouldShowRequestPermissionRationale(this, android.Manifest.permission.ACCESS_FINE_LOCATION)) {
-                }
-                else {
-                    ActivityCompat.requestPermissions(this, new String[] {android.Manifest.permission.ACCESS_FINE_LOCATION},
-                            MY_PERMISSIONS_REQUEST_READ_CONTACTS);
-                }
-            }
-        }
-        catch(Exception e) {
-            Log.e("GPS permission exception", e.getMessage());
-        }
-    }
+    TMapPolyLine polyLine;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        checkPermission();
         setContentView(R.layout.content_main);
+
+        gpsInit();
+    }
+
+    private void gpsInit() {
+        gpsTracker = new GpsTracker(this);
+    }
+
+    public Location getLocation() {
+        return gpsTracker.getLocation();
+    }
+
+    @Override
+    public void onGpsEvent(Location location) {
+        try {
+            double lat = location.getLatitude(), lon = location.getLongitude();
+            Toast.makeText(this, "latitude: " + Double.toString(lat) + ", longitude: " + Double.toString(lon), Toast.LENGTH_SHORT).show();
+            mapFragment.setLocationPoint(location);
+        } catch(Exception e) {
+            Log.e("onGpsEvent", e.getMessage());
+        }
+    }
+
+    public void setPolyLine(TMapPolyLine polyLine) {
+        this.polyLine = polyLine;
+    }
+
+    public TMapPolyLine getPolyLine() {
+        return polyLine;
+    }
+
+    public void setMapFragment(MapFragment mapFragment) {
+        this.mapFragment = mapFragment;
     }
 }
