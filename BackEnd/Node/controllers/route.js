@@ -211,7 +211,7 @@ const find_candidate_pairs = (o, type) => {
 	}
 
 	// for test
-	U.log(`${candidate_routes.length} candidate pairs found`);
+	U.log(`${candidate_routes.length} candidate pairs found, type: ${type}`);
 
 	// sort pairs out by expected travel time
 	candidate_routes.sort((a, b) => a.traveltime - b.traveltime);
@@ -292,7 +292,11 @@ const search_candidate_route = async (o, type, candidate) => {
 		bike.cache_traveltime(bs1.stationId, bs2.stationId, result.sections[1].time);
 	} else if (type == 'bus') {
 
-		result.buspath = await oapi.odsay_get_nbus_routes(
+		// result.buspath = await oapi.odsay_get_nbus_routes(
+		// 	bs1.stationLatitude, bs1.stationLongitude,
+		// 	bs2.stationLatitude, bs2.stationLongitude
+		// );
+		result.buspath = await oapi.topis_get_nbus_routes(
 			bs1.stationLatitude, bs1.stationLongitude,
 			bs2.stationLatitude, bs2.stationLongitude
 		);

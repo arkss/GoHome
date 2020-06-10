@@ -228,6 +228,9 @@ const cache_bus_info = (bus_info) => {
 
 // TODO: edit these
 // TODO: use cache
+exports.get_busstop = (stationId) => {
+	return CACHE.busstops[stationId] ?? null;
+};
 exports.get_traveltime = (stationId_start, stationId_end) => {
 	return null;
 };

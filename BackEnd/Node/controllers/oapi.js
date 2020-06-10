@@ -1,7 +1,9 @@
 const keys = require('../keys.json');
 const U = require('./util');
+const bus = require('./bus');
 
 const request = require('request-promise');
+const querystring = require('querystring');
 const xml2js = require('xml2js');
 const iconv = require('iconv-lite');
 
@@ -577,6 +579,72 @@ exports.odsay_get_nbus_routes = async (lat_start, lon_start, lat_end, lon_end) =
 	U.log(`${results.length} N-Bus routes found.`);
 	results.sort((a, b) => a.time - b.time);
 	return (results.length > 0) ? results[0] : null;
+};
+
+exports.topis_get_nbus_routes = async (lat_start, lon_start, lat_end, lon_end) => {
+
+	U.log(`Request N-Bus routes from TOPIS ...`);
+
+	let option = {
+		headers: {
+			'Content-Type': 'application/x-www-form-urlencoded'
+		},
+		method: "POST",
+		uri: `https://topis.seoul.go.kr/map/getRoute.do`,
+		body: querystring.stringify({
+			url: 'http://192.168.201.17:5003/routeplanning',
+			prcsType: 'web',
+			routeType: 'pub',
+			routeOption: 'nbus',
+			walkDistance: '500',
+			startName: '출발지명',
+			startX: lon_start.toString(),
+			startY: lat_start.toString(),
+			endName: '도착지명',
+			endX: lon_end.toString(),
+			endY: lat_end.toString(),
+			viaName1: '',
+			viaX1: '',
+			viaY1: '',
+			viaName2: '',
+			viaX2: '',
+			viaY2: '',
+			viaCount: '0'
+		})
+	};
+
+	let result = await requestAndParseJSON(option);
+	let routes = (result?.rows?.routeInfo ?? []).filter(route => route.type === 'BUS');
+	if (routes.length == 0) {
+		U.log(`TOPIS route not found.`);
+		return null;
+	}
+	routes.sort((a, b) => a.ranking - b.ranking);
+	let route = routes[0];
+	let summary = route.summary;
+
+	let p = {
+		time: route.totalTime,
+		transit_count: route.numberOfTransit,
+		points: [],
+		routeNames: []
+	};
+
+	for (let s of summary) {
+		let station1 = bus.get_busstop(s.startArsId);
+		let station2 = bus.get_busstop(s.endArsId);
+		if (station1 == null || station2 == null) {
+			U.error(`Unexpected busstop's stationId: ${s.startArsId}, ${s.endArsId}.`);
+			return null;
+		}
+		p.points.push([
+			[station1.stationLatitude, station1.stationLongitude],
+			[station2.stationLatitude, station2.stationLongitude]
+		]);
+		p.routeNames.push(s.routeName);
+	}
+
+	return p;
 };
 
 /*
