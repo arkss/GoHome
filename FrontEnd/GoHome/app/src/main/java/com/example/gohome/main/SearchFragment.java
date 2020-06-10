@@ -1,14 +1,24 @@
 package com.example.gohome.main;
 
+import android.location.Location;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Toast;
 
+import com.example.gohome.GpsTracker;
+import com.example.gohome.MainActivity;
+import com.example.gohome.OnGpsEventListener;
 import com.example.gohome.R;
 import com.example.gohome.SearchRecycler.InnerData;
 import com.example.gohome.SearchRecycler.SearchData;
 import com.example.gohome.SearchRecycler.SearchRecyclerAdapter;
+import com.skt.Tmap.TMapData;
+import com.skt.Tmap.TMapGpsManager;
+import com.skt.Tmap.TMapPOIItem;
+import com.skt.Tmap.TMapPoint;
 
 import java.util.ArrayList;
 
@@ -18,6 +28,8 @@ import androidx.navigation.fragment.NavHostFragment;
 import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+
+import com.example.gohome.OnGpsEventListener;
 
 /**
  * A simple {@link Fragment} subclass.
@@ -116,5 +128,29 @@ public class SearchFragment extends Fragment {
         recyclerView.addItemDecoration(new DividerItemDecoration(recyclerView.getContext(), DividerItemDecoration.VERTICAL));
         SearchRecyclerAdapter adapter = new SearchRecyclerAdapter(getActivity(), dataList, allInnerData, this);
         recyclerView.setAdapter(adapter);
+
+        // POI search
+        TMapData tmapdata = new TMapData();
+        tmapdata.findAllPOI("강남역", new TMapData.FindAllPOIListenerCallback() {
+            @Override
+            public void onFindAllPOI(ArrayList poiItem) {
+                // 모든 POI 출력.
+                for(int i = 0; i < poiItem.size(); i++) {
+                    TMapPOIItem item = (TMapPOIItem)poiItem.get(i);
+                    Log.d("POI Name: ", item.getPOIName().toString() + ", " +
+                            "Address: " + item.getPOIAddress().replace("null", "")  + ", " +
+                            "Point: " + item.getPOIPoint().toString());
+                }
+                TMapPOIItem item = (TMapPOIItem)poiItem.get(0);
+                routeSearch(item.getPOIPoint());
+            }
+        });
+    }
+
+    public void routeSearch(TMapPoint dst) {
+        Location dpt = ((MainActivity)getActivity()).getLocation();
+
+        Log.d("routeSearch", Double.toString(dpt.getLatitude()) + " " + Double.toString(dpt.getLongitude()));
+        Log.d("routeSearch", Double.toString(dst.getLatitude()) + " " + Double.toString(dst.getLongitude()));
     }
 }

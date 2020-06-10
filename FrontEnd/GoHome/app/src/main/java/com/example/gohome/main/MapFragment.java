@@ -23,6 +23,7 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.example.gohome.GpsTracker;
+import com.example.gohome.MainActivity;
 import com.example.gohome.OnGpsEventListener;
 import com.example.gohome.R;
 import com.example.gohome.SignUpActivity;
@@ -35,12 +36,14 @@ import com.example.gohome.retrofit2.RetrofitService2;
 import com.google.gson.JsonObject;
 import com.skt.Tmap.TMapData;
 import com.skt.Tmap.TMapMarkerItem;
+import com.skt.Tmap.TMapPOIItem;
 import com.skt.Tmap.TMapPoint;
 import com.example.gohome.SharePositionDialog;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.skt.Tmap.TMapPolyLine;
 import com.skt.Tmap.TMapView;
 
+import java.net.MalformedURLException;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -55,7 +58,7 @@ import retrofit2.Retrofit;
  * create an instance of this fragment.
  */
 
-public class MapFragment extends Fragment implements OnGpsEventListener {
+public class MapFragment extends Fragment {
     // TODO: Rename parameter arguments, choose names that match
     // the fragment initialization parameters, e.g. ARG_ITEM_NUMBER
     private static final String ARG_PARAM1 = "param1";
@@ -72,9 +75,6 @@ public class MapFragment extends Fragment implements OnGpsEventListener {
     TMapView tMapView;
 
     GpsTracker gpsTracker;
-
-    double minLat = 37.423930, maxLat = 37.704151;
-    double minLon = 126.761920, maxLon = 127.186964;
 
     public MapFragment() {
         // Required empty public constructor
@@ -102,7 +102,6 @@ public class MapFragment extends Fragment implements OnGpsEventListener {
     public void onCreate(Bundle savedInstanceState) {
         // Fragment가 생성될 때 호출
         super.onCreate(savedInstanceState);
-
 //        if (getArguments() != null) {
 //            mParam1 = getArguments().getString(ARG_PARAM1);
 //            mParam2 = getArguments().getString(ARG_PARAM2);
@@ -174,29 +173,8 @@ public class MapFragment extends Fragment implements OnGpsEventListener {
             }
         });
 
-        // GPS init
-        gpsTracker = new GpsTracker(this.getContext(), this);
-
         // Show bike stops
-        showBikestops();
-    }
-
-    @Override
-    public void onGpsEvent(Location location)
-    {
-        if(location != null) {
-            double lat = location.getLatitude(), lon = location.getLongitude();
-            if(lat < minLat || lat > maxLat || lon < minLon || lon > maxLon) {
-                Toast.makeText(this.getContext(), "Not in Seoul", Toast.LENGTH_SHORT).show();
-                return;
-            }
-
-            Toast.makeText(this.getContext(), "latitude: " + Double.toString(lat) + ", longitude: " + Double.toString(lon), Toast.LENGTH_SHORT).show();
-
-            // 내 위치로 이동
-            tMapView.setLocationPoint(lon, lat);
-            tMapView.setCenterPoint(lon, lat);
-        }
+        //showBikestops();
     }
 
     void showBikestops() {

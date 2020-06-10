@@ -21,38 +21,47 @@ import com.example.gohome.OnGpsEventListener;
 import static android.content.Context.LOCATION_SERVICE;
 
 public class GpsTracker {
-    //위도 경도 형식으로 받아온 배열값
-//    private double[][] gpsNodePoint = {
-//            {37.586488, 127.054158} // 전농파출소 위도, 경도
-//            //{ 37.583484, 127.054825 } // 정문 세븐일레븐
-//            //{ 37.4219983, -127.084}
-//    };
-
-    //GPS 표시를 위한 변수, 상수
-    private boolean isGPSEnabled;
-    private boolean isNetEnabled;
     private Location myLocation = new Location("myLoc");
 
     private OnGpsEventListener onGpsEventListener;
+    private static final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 10;
 
-    public GpsTracker(Context mainContext, Fragment mapFragment) {
-        onGpsEventListener = (OnGpsEventListener)mapFragment;
+    double minLat = 37.423930, maxLat = 37.704151;
+    double minLon = 126.761920, maxLon = 127.186964;
 
-        //checkPermission();
+    // GPS 권한 체크
+    private void checkPermission(Activity activity) {
+        try {
+            //권한 얻기 - GPS
+            if(ActivityCompat.checkSelfPermission(activity, android.Manifest.permission.ACCESS_FINE_LOCATION) !=
+                    PackageManager.PERMISSION_GRANTED) {
+                if(!ActivityCompat.shouldShowRequestPermissionRationale(activity, android.Manifest.permission.ACCESS_FINE_LOCATION)) {
+                    ActivityCompat.requestPermissions(activity, new String[] {android.Manifest.permission.ACCESS_FINE_LOCATION},
+                            MY_PERMISSIONS_REQUEST_READ_CONTACTS);
+                }
+            }
+        }
+        catch(Exception e) {
+            Log.e("GPS permission exception", e.getMessage());
+        }
+    }
+
+    public GpsTracker(Activity activity) {
+        onGpsEventListener = (OnGpsEventListener)activity;
+
+        checkPermission(activity);
         Log.e("GpsTracker", "GpsTracker creating...");
 
-        LocationManager lm = (LocationManager)mainContext.getSystemService(Context.LOCATION_SERVICE);
+        LocationManager lm = (LocationManager)activity.getSystemService(Context.LOCATION_SERVICE);
 
         LocationListener locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location location) {
-//                LocationManager locationManager = (LocationManager)getSystemService(LOCATION_SERVICE);
-//
-//                isGPSEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-//                isNetEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-
-                myLocation = location;
-                onGpsEventListener.onGpsEvent(myLocation);
+                double lat = location.getLatitude(), lon = location.getLongitude();
+                if(lat >= minLat && lat <= maxLat && lon >= minLon && lon <= maxLon) {
+                    myLocation = location;
+                    onGpsEventListener.onGpsEvent(myLocation);
+                }
             }
 
             @Override
@@ -69,7 +78,7 @@ public class GpsTracker {
         };
 
         assert lm != null;
-        if (ActivityCompat.checkSelfPermission(mainContext, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(mainContext, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+        if (ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED && ActivityCompat.checkSelfPermission(activity, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
             // TODO: Consider calling
             //    ActivityCompat#requestPermissions
             // here to request the missing permissions, and then overriding

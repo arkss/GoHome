@@ -20,33 +20,31 @@ import android.view.animation.AnimationUtils;
 
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements OnGpsEventListener {
     GpsTracker gpsTracker;
-    private static final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 10;
-
-    //권한 체크
-    private void checkPermission() {
-        try {
-            //권한 얻기 - GPS
-            if(ActivityCompat.checkSelfPermission(this, android.Manifest.permission.ACCESS_FINE_LOCATION) !=
-                    PackageManager.PERMISSION_GRANTED) {
-                if(ActivityCompat.shouldShowRequestPermissionRationale(this, android.Manifest.permission.ACCESS_FINE_LOCATION)) {
-                }
-                else {
-                    ActivityCompat.requestPermissions(this, new String[] {android.Manifest.permission.ACCESS_FINE_LOCATION},
-                            MY_PERMISSIONS_REQUEST_READ_CONTACTS);
-                }
-            }
-        }
-        catch(Exception e) {
-            Log.e("GPS permission exception", e.getMessage());
-        }
-    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        checkPermission();
         setContentView(R.layout.content_main);
+        gpsInit();
+    }
+
+    private void gpsInit() {
+        gpsTracker = new GpsTracker(this);
+    }
+
+    public Location getLocation() {
+        return gpsTracker.getLocation();
+    }
+
+    @Override
+    public void onGpsEvent(Location location) {
+        try {
+            double lat = location.getLatitude(), lon = location.getLongitude();
+            Toast.makeText(this, "latitude: " + Double.toString(lat) + ", longitude: " + Double.toString(lon), Toast.LENGTH_SHORT).show();
+        } catch(Exception e) {
+            Log.e("onGpsEvent", e.getMessage());
+        }
     }
 }
