@@ -62,10 +62,7 @@ exports.api_get_routes = (req, res, next) => {
 	if (U.isInvalid(res, lat_start, lon_start, lat_end, lon_end)) return;
 	exports.get_routes(lat_start, lon_start, lat_end, lon_end, include_bike, include_bus)
 	.then(routes => {
-		U.response(res, true, `${routes.length} route found`, {
-			n: routes.length,
-			routes: routes
-		});
+		U.response(res, true, `${routes.length} route found`, routes);
 	})
 	.catch(next);
 };
@@ -99,8 +96,14 @@ const search_pedestrian_route = async (o) => {
 	o.time_upperbound_bike = Math.min(o.time_upperbound_bike, result.time);
 	o.time_upperbound_bus = Math.min(o.time_upperbound_bus, result.time);
 
-	result.brief_list = [1];
 	result.sections[0].type = 1;
+	result.sections[0].stationNameStart = null;
+	result.sections[0].stationNameEnd = null;
+	result.sections[0].stationLatitudeStart = null;
+	result.sections[0].stationLongitudeStart = null;
+	result.sections[0].stationLatitudeEnd = null;
+	result.sections[0].stationLongitudeEnd = null;
+
 	o.routes.push(result);
 };
 
@@ -252,11 +255,35 @@ const search_candidate_route = async (o, type, candidate) => {
 	}
 
 	// add more info for response
-	result.bs = [bs1, bs2];
+	result.sections[0].stationNameStart = null;
+	result.sections[0].stationNameEnd = null;
+	result.sections[0].stationLatitudeStart = null;
+	result.sections[0].stationLongitudeStart = null;
+	result.sections[0].stationLatitudeEnd = null;
+	result.sections[0].stationLongitudeEnd = null;
+
+	result.sections[1].stationNameStart = bs1.stationName;
+	result.sections[1].stationNameEnd = bs2.stationName;
+	result.sections[1].stationLatitudeStart = bs1.stationLatitude;
+	result.sections[1].stationLongitudeStart = bs1.stationLongitude;
+	result.sections[1].stationLatitudeEnd = bs2.stationLatitude;
+	result.sections[1].stationLongitudeEnd = bs2.stationLongitude;
+
+	result.sections[2].stationNameStart = null;
+	result.sections[2].stationNameEnd = null;
+	result.sections[2].stationLatitudeStart = null;
+	result.sections[2].stationLongitudeStart = null;
+	result.sections[2].stationLatitudeEnd = null;
+	result.sections[2].stationLongitudeEnd = null;
+
 	if (type == 'bike' || type == 'subbike') {
-		result.brief_list = [1, 2, 1];
+		result.sections[0].type = 1;
+		result.sections[1].type = 2;
+		result.sections[2].type = 1;
 	} else if (type == 'bus') {
-		result.brief_list = [1, 3, 1];
+		result.sections[0].type = 1;
+		result.sections[1].type = 3;
+		result.sections[2].type = 1;
 	}
 
 	// re-calculate time since the middle section is for riding, not walking
@@ -269,6 +296,11 @@ const search_candidate_route = async (o, type, candidate) => {
 			bs1.stationLatitude, bs1.stationLongitude,
 			bs2.stationLatitude, bs2.stationLongitude
 		);
+
+		if (result.buspath == null) {
+			U.error('bus route not found!');
+			return null;
+		}
 
 		result.sections[1].points = result.buspath.points;
 		result.sections[1].time = result.buspath.time * 60;
@@ -293,14 +325,14 @@ const search_candidate_route = async (o, type, candidate) => {
 		let route2 = o_subbike_routes2.routes.slice(0, 1);
 		if (route1.length > 0 && route1[0].time < time_upperbound_bike1) {
 			let subsection1 = route1[0];
-			result.bs.splice(0, 0, ...subsection1.bs);
-			result.brief_list.splice(0, 1, ...subsection1.brief_list);
+			//result.bs.splice(0, 0, ...subsection1.bs);
+			//result.brief_list.splice(0, 1, ...subsection1.brief_list);
 			result.sections.splice(0, 1, ...subsection1.sections);
 		}
 		if (route2.length > 0 && route2[0].time < time_upperbound_bike2) {
 			let subsection2 = route2[0];
-			result.bs.splice(-1, 0, ...subsection2.bs);
-			result.brief_list.splice(-1, 1, ...subsection2.brief_list);
+			//result.bs.splice(-1, 0, ...subsection2.bs);
+			//result.brief_list.splice(-1, 1, ...subsection2.brief_list);
 			result.sections.splice(-1, 1, ...subsection2.sections);
 		}
 	}

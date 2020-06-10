@@ -147,6 +147,8 @@ const cache_bikestops = (bikestops) => {
 	// use classic for loop for performance
 	for (let bikestop of bikestops) {
 		stationId = bikestop.stationId;
+		bikestop.stationLatitude = parseFloat(bikestop.stationLatitude);
+		bikestop.stationLongitude = parseFloat(bikestop.stationLongitude);
 		bikestop.traveltime = CACHE.bikestops[stationId]?.traveltime || {};
 		CACHE.bikestops[stationId] = bikestop;
 	}

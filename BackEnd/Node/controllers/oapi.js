@@ -406,13 +406,13 @@ exports.get_pedestrian_route = (points) =>
 			if (json?.type != 'FeatureCollection')
 				return;
 
-			let i, points, point_type, time, distance, feature, features;
+			let points, point_type, time, distance, feature, features;
 
 			time = 0;
 			distance = 0;
 			points = [];
 			features = json.features || [];
-			for (i = 0; i < features.length; i++) {
+			for (let i = 0; i < features.length; i++) {
 				feature = features[i];
 
 				// handle exception: unexpected type
@@ -430,12 +430,16 @@ exports.get_pedestrian_route = (points) =>
 						case 'PP3': // 경유지3
 						case 'PP4': // 경유지4
 						case 'PP5': // 경유지5
+							points = points.filter(Boolean).flat(); // delete all false-values
+							for (let j = 0; j < points.length; j++) {
+								points[j] = [points[j][1], points[j][0]];
+							}
 							result.time += time;
 							result.distance += distance;
 							result.sections.push({
 								time: time,
 								distance: distance,
-								points: points.filter(Boolean).flat() // delete all false-values
+								points: points
 							});
 							time = 0;
 							distance = 0;
@@ -454,6 +458,8 @@ exports.get_pedestrian_route = (points) =>
 					distance += feature.properties.distance ?? 0;
 				}
 			}
+
+
 		}, U.error)
 		.then(() => resolve(result));
 	});
@@ -510,6 +516,7 @@ exports.odsay_get_nbus_routes = async (lat_start, lon_start, lat_end, lon_end) =
 	let paths = await requestAndParseJSON(option);
 	paths = paths?.result?.path || [];
 
+	U.log(`${paths.length} paths from odsay response.`);
 	for (let path of paths) {
 		let busNos = [];
 		let info = path.info;
@@ -549,10 +556,8 @@ exports.odsay_get_nbus_routes = async (lat_start, lon_start, lat_end, lon_end) =
 				station_end: subPath.endName
 			});
 			p.points.push([
-				subPath.startX,
-				subPath.startY,
-				subPath.endX,
-				subPath.endY
+				[subPath.startY, subPath.startX], // lat, lon
+				[subPath.endY, subPath.endX]      // lat, lon
 			]);
 			busNos.push(subPath.lane.busNo);
 		}
@@ -600,6 +605,8 @@ const requestAndParseJSON = async (option, type = 'json') => {
 		U.error(err);
 		return {};
 	}
+
+	// U.log(`response from ${option.uri || option.url}`);
 
 	if (type == 'json') { // json to json
 		return JSON.parse(decoded);
