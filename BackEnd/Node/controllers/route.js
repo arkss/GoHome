@@ -270,7 +270,9 @@ const search_candidate_route = async (o, type, candidate) => {
 			bs2.stationLatitude, bs2.stationLongitude
 		);
 
+		result.sections[1].points = result.buspath.points;
 		result.sections[1].time = result.buspath.time * 60;
+		delete result.buspath.points;
 		// bus.cache_traveltime(bs1.stationId, bs2.stationId, result.sections[1].time);
 
 		/*

@@ -430,8 +430,8 @@ exports.get_pedestrian_route = (points) =>
 						case 'PP3': // 경유지3
 						case 'PP4': // 경유지4
 						case 'PP5': // 경유지5
-							result.time += time;	
-							result.distance += distance;	
+							result.time += time;
+							result.distance += distance;
 							result.sections.push({
 								time: time,
 								distance: distance,
@@ -525,7 +525,8 @@ exports.odsay_get_nbus_routes = async (lat_start, lon_start, lat_end, lon_end) =
 			station_start: info.firstStartStation,
 			station_end: info.lastEndStation,
 			number_of_stations: info.busStationCount,
-			sub_paths: []
+			sub_paths: [],
+			points: []
 		};
 
 		// pop subPath(bus)
@@ -547,15 +548,21 @@ exports.odsay_get_nbus_routes = async (lat_start, lon_start, lat_end, lon_end) =
 				station_start: subPath.startName,
 				station_end: subPath.endName
 			});
+			p.points.push([
+				subPath.startX,
+				subPath.startY,
+				subPath.endX,
+				subPath.endY
+			]);
 			busNos.push(subPath.lane.busNo);
 		}
 
 		if (p.sub_paths.length == 0) continue;
 
-		p.lat_station_start = p.sub_paths[0].lat_start;
-		p.lon_station_start = p.sub_paths[0].lon_start;
-		p.lat_station_end = p.sub_paths[p.sub_paths.length - 1].lat_end;
-		p.lon_station_end = p.sub_paths[p.sub_paths.length - 1].lon_end;
+		// p.lat_station_start = p.sub_paths[0].lat_start;
+		// p.lon_station_start = p.sub_paths[0].lon_start;
+		// p.lat_station_end = p.sub_paths[p.sub_paths.length - 1].lat_end;
+		// p.lon_station_end = p.sub_paths[p.sub_paths.length - 1].lon_end;
 
 		U.log(`busNos: ${busNos.toString()}`);
 		results.push(p);
