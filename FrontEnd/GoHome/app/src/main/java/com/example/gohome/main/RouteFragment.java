@@ -192,38 +192,6 @@ public class RouteFragment extends Fragment implements View.OnClickListener {
         return super.onOptionsItemSelected(item);
     }
 
-    double getMinLatitude(ArrayList<TMapPoint> tMapPoints) {
-        double ret = 999;
-        for(TMapPoint tMapPoint : tMapPoints) {
-            ret = min(ret, tMapPoint.getLatitude());
-        }
-        return ret;
-    }
-
-    double getMaxLatitude(ArrayList<TMapPoint> tMapPoints) {
-        double ret = -999;
-        for(TMapPoint tMapPoint : tMapPoints) {
-            ret = max(ret, tMapPoint.getLatitude());
-        }
-        return ret;
-    }
-
-    double getMinLongitude(ArrayList<TMapPoint> tMapPoints) {
-        double ret = 999;
-        for(TMapPoint tMapPoint : tMapPoints) {
-            ret = min(ret, tMapPoint.getLongitude());
-        }
-        return ret;
-    }
-
-    double getMaxLongitude(ArrayList<TMapPoint> tMapPoints) {
-        double ret = -999;
-        for(TMapPoint tMapPoint : tMapPoints) {
-            ret = max(ret, tMapPoint.getLongitude());
-        }
-        return ret;
-    }
-
     public void setDatum(Datum datum) {
         this.datum = datum;
         Log.d("TEST", "datum.toString "+datum.toString());
