@@ -32,6 +32,7 @@ public class LoginActivity extends AppCompatActivity {
                 Intent intent = new Intent(LoginActivity.this, MainActivity.class);
                 startActivity(intent);
                 finish();
+
 //                // parse LoginData
 //                EditText etId = (EditText)findViewById(R.id.login_id);
 //                EditText etPw = (EditText)findViewById(R.id.login_password);

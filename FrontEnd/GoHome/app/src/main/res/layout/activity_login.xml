@@ -58,6 +58,7 @@
             android:paddingStart="20dp"
             android:textSize="15sp"
             android:hint="passwaord"
+            android:inputType="textPassword"
             android:background="@drawable/round_edittext"
             />
 

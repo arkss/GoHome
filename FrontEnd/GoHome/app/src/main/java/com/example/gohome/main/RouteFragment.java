@@ -13,6 +13,7 @@ import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
 
 import android.os.Handler;
+import android.se.omapi.Session;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MenuItem;
@@ -232,12 +233,12 @@ public class RouteFragment extends Fragment implements View.OnClickListener {
 
     public void drawLine() {
         List<Section> sectionList = datum.getSections();
-        Log.d("TEST", sectionList.get(0).getTime()+" ");
         polyLine = new TMapPolyLine[sectionList.size()];
-        Log.d("TEST", "size = "+sectionList.size());
         for(int i=0; i<sectionList.size(); i++) {
             polyLine[i] = new TMapPolyLine();
+            polyLine[i].setLineWidth(2);
 
+            Log.d("TEST","section size = "+sectionList.size());
             for(Section section : sectionList) {
                 // set line color
                 switch (section.getType()) {
@@ -257,13 +258,20 @@ public class RouteFragment extends Fragment implements View.OnClickListener {
                     Log.d("TEST", "point(0)="+point.get(0)+", point(1)="+point.get(1));
                     polyLine[i].addLinePoint(new TMapPoint(point.get(0), point.get(1)));
                 }
+
                 tMapView.addTMapPolyLine("line"+i, polyLine[i]);
             }
         }
+    }
 
-        for(TMapPolyLine line : polyLine) {
-            Log.d("TEST", line.getDistance()+" ");
+    public ArrayList<double[]> getPointList() {
+        ArrayList<double[]> list = new ArrayList<>();
+        for(Section section : datum.getSections()) {
+            for(List<Double> point : section.getPoints()) {
+                list.add(new double[]{point.get(0), point.get(1)});
+            }
         }
+        return list;
     }
 
     @Override
@@ -286,6 +294,8 @@ public class RouteFragment extends Fragment implements View.OnClickListener {
             case R.id.route_camera_btn:
                 Toast.makeText(getActivity(), "AR Open", Toast.LENGTH_SHORT).show();
                 Intent intent = new Intent(getActivity(), com.example.gohome.testActivity.class);
+
+                intent.putExtra("points", getPointList());
                 startActivity(intent);
                 break;
         }

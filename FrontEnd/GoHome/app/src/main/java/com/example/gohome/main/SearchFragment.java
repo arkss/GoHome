@@ -142,6 +142,10 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
         searchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                // clear List
+                searchDataList.clear();
+                innerDataList.clear();
+
                 // destination
                 String destinationText = text_destination.getText().toString();
 //                String destinationText = "서울시립대학교";

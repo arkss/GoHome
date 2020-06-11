@@ -173,6 +173,9 @@ public class testActivity extends AppCompatActivity  implements SensorEventListe
         setContentView(R.layout.activity_main);
 
         Intent intent = getIntent();
+        ArrayList<double[]> list = (ArrayList<double[]>)intent.getSerializableExtra("points");
+        Log.d("TEST", "success, " + list.get(0)[0] +", "+list.get(1)[1]);
+
         mPointer = (ImageView)findViewById(R.id.pointer);
 
         for(int i = 0; i < gpsNodePoint.length ; i++) {
