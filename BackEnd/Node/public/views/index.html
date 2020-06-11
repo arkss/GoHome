@@ -15,7 +15,7 @@
 	<script>
 		let base_url = "http://15.164.105.118:8080";
 
-		let iconSize = new Tmapv2.Size(10, 20);
+		let iconSize = new Tmapv2.Size(18, 30);
 
 		// 마커들을 저장할 배열입니다.
 		let bikestopMarkers = [];
@@ -51,18 +51,21 @@
 			.catch(console.log);
 		};
 
-		const getRoutes = (lat_start, lon_start, lat_end, lon_end) => {
+		const getRoutes = (lat_start, lon_start, lat_end, lon_end, include_bike = 'Y', include_bus = 'Y') => {
 			req(`${base_url}/api/routes`, 'GET', {
 				lat_start: lat_start,
 				lon_start: lon_start,
 				lat_end: lat_end,
-				lon_end: lon_end
+				lon_end: lon_end,
+				include_bike: include_bike,
+				include_bus: include_bus
 			})
 			.then(res => {
 				console.log(res);
-				if (res.data.routes.length == 0) return;
-				res.data.routes.sort((a, b) => a.time - b.time);
-				showRouteMarkers(res.data.routes[0].points);
+				if (res.data.length == 0) return;
+				res.data.sort((a, b) => a.time - b.time);
+
+				showRouteMarkers(res.data[0].sections);
 			})
 			.catch(console.log);
 		};
@@ -104,7 +107,7 @@
 			// Marker 객체 생성.
 			for (let station of stations) {
 				var marker = new Tmapv2.Marker({
-					position: new Tmapv2.LatLng(station.gpsY, station.gpsX),
+					position: new Tmapv2.LatLng(station.stationLatitude, station.stationLongitude),
 					label: `N[${station.stationNm}]`,
 					iconSize: iconSize
 				});
@@ -113,20 +116,25 @@
 			}
 		};
 
-		const showRouteMarkers = (route) => {
+		const showRouteMarkers = (sections) => {
 			removeMarkers(routeMarkers);
 			routeMarkers = [];
 
 			// Marker 객체 생성.
-			let i, point;
-			for (i = 0; i < route.length; i++) {
-				point = route[i];
-				var marker = new Tmapv2.Marker({
-					position: new Tmapv2.LatLng(point[1], point[0]),
-					label: `R[${i}]`
-				});
-				marker.setMap(map);
-				routeMarkers.push(marker);
+			for (let s of sections) {
+				let points = s.points;
+				let type = s.type;
+				for (let i = 0; i < points.length; i++) {
+					let point = points[i];
+					var marker = new Tmapv2.Marker({
+						position: new Tmapv2.LatLng(point[0], point[1]),
+						icon: (type == 2) ? "http://tmapapi.sktelecom.com/resources/images/common/pin_car.png" : undefined, //Marker의 아이콘.
+						label: `${type} - [${i}]`,
+						iconSize: iconSize
+					});
+					marker.setMap(map);
+					routeMarkers.push(marker);
+				}
 			}
 		};
 

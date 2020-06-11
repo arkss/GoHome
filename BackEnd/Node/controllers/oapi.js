@@ -1,7 +1,9 @@
 const keys = require('../keys.json');
 const U = require('./util');
+const bus = require('./bus');
 
 const request = require('request-promise');
+const querystring = require('querystring');
 const xml2js = require('xml2js');
 const iconv = require('iconv-lite');
 
@@ -22,42 +24,35 @@ const iconv = require('iconv-lite');
 	}
 
 */
-exports.load_bikestops = () =>
-	new Promise((resolve, reject) => {
-		// cache expired, fetch new
-		console.log(`load bikestops from fetched`);
-		let base_url = `http://openapi.seoul.go.kr:8088/${keys.api_key.seoul_opendata}/json/bikeList`;
-		let option_1 = {
-			url: `${base_url}/1/1000/`,
-			encoding: null
-		};
-		let option_2 = {
-			url: `${base_url}/1001/2000/`,
-			encoding: null
-		};
+exports.load_bikestops = async () => {
+	U.log(`load bikestops from fetched`);
+	let base_url = `http://openapi.seoul.go.kr:8088/${keys.api_key.seoul_opendata}/json/bikeList`;
+	let option_1 = {
+		url: `${base_url}/1/1000/`,
+		encoding: null
+	};
+	let option_2 = {
+		url: `${base_url}/1001/2000/`,
+		encoding: null
+	};
 
-		let list = [];
+	// request bikestop list
+	let list = [];
+	try {
+		let [json_1, json_2] = await Promise.all([
+			requestAndParseJSON(option_1),
+			requestAndParseJSON(option_2)
+		]);
+		list = list.concat(
+			U.get_value(json_1, [], "rentBikeStatus", "row"),
+			U.get_value(json_2, [], "rentBikeStatus", "row")
+		);
+	} catch (err) {
+		U.error(err);
+	}
 
-		// request bikestop list
-		Promise.all([
-			requestAndParseAsJSON(option_1),
-			requestAndParseAsJSON(option_2)
-		])
-		.then(([json_1, json_2]) => {
-			/*
-			NOTE: at ES2020, you can use optional chaining operator (?.)
-			and nullish coalescing operator (??) to make it simpler
-			*/
-			list = list.concat(U.json.get_value(json_1, [], "rentBikeStatus", "row"));
-			list = list.concat(U.json.get_value(json_2, [], "rentBikeStatus", "row"));
-		})
-		.catch(console.log)
-		.then(() => {
-			// sort by id and update cache
-			//list.sort((a, b) => a.stationId.slice(3) - b.stationId.slice(3));
-			resolve(list);
-		});
-	});
+	return list;
+};
 
 /*
 
@@ -196,109 +191,154 @@ exports.load_bikestops = () =>
 	}
 
 */
-exports.load_nbus_info = () =>
-	new Promise((resolve, reject) => {
+exports.load_nbus_info = async () => {
+	U.log(`load N-Bus info from fetched`);
 
-		// load from cache
-		if (exports.nbus_info.expired == false) {
-			console.log(`load N-Bus info from cache`);
-			return resolve();
+	let option_routelist = {
+		uri: `http://ws.bus.go.kr/api/rest/busRouteInfo/getBusRouteList`,
+		qs: {
+			serviceKey: keys.api_key.data_portal
+		}
+	},
+	option_getstations = {
+		uri: `http://ws.bus.go.kr/api/rest/busRouteInfo/getStaionByRoute`,
+		qs: {
+			serviceKey: keys.api_key.data_portal,
+		}
+	},
+	option_arrive_info = {
+		uri: `http://ws.bus.go.kr/api/rest/arrive/getArrInfoByRouteAll`,
+		qs: {
+			serviceKey: keys.api_key.data_portal,
+		}
+	};
+
+	let i, len;
+	let nbus_info_list = [];
+	let route, routes, promise_stations = [], promise_arrive_infos = [];
+
+	// get all bus routes
+	try {
+		routes = await requestAndParseJSON(option_routelist, 'xml').then(parse_itemList);
+
+		// get all N-bus and find stations of each route
+		promise_stations = [];
+		promise_arrive_infos = [];
+		for (i = 0, len = routes.length; i < len; i++) {
+			route = routes[i];
+
+			// take N-bus only
+			if (U.get_value(route, null, "busRouteNm", 0, 0) != 'N') continue;
+
+			// beautify: "property:[value]" -> "property:value"
+			U.unwrap_properties(route);
+			nbus_info_list.push(route);
+
+			// request to get all stations of the bus
+			option_getstations.qs.busRouteId = route.busRouteId;
+			promise_stations.push(
+				requestAndParseJSON(option_getstations, 'xml')
+				.then(parse_itemList)
+				.then(U.unwrap_properties)
+			);
+			option_arrive_info.qs.busRouteId = route.busRouteId;
+			promise_arrive_infos.push(
+				requestAndParseJSON(option_arrive_info, 'xml')
+				.then(parse_itemList)
+				.then(U.unwrap_properties)
+			);
 		}
 
-		// cache expired, fetch new
-		console.log(`load N-Bus info from fetched`);
+		// CHECK: use Promise.allSettled
+		let [json_stations, json_arrive_infos] = await Promise.all([
+			Promise.all(promise_stations),
+			Promise.all(promise_arrive_infos)
+		]);
 
-		let nbus_info_list = [];
+		let stations, arrive_infos;
+		for (i = 0, len = nbus_info_list.length; i < len; i++) {
 
-		// request bus info list
-		requestAndParseAsJSON({
-			uri: `http://ws.bus.go.kr/api/rest/busRouteInfo/getBusRouteList`,
-			qs: {
-				serviceKey: keys.api_key.data_portal
-			}
-		}, 'xml')
-		.then(parse_itemList)
-		.then(info_list => {
-			// get all N-bus and find stations of each route
+			stations = json_stations[i];
+			arrive_infos = json_arrive_infos[i];
 
-			let promises = [];
-			let i, info, option_getstations, option_arrive_info;
-
-			option_getstations = {
-				uri: `http://ws.bus.go.kr/api/rest/busRouteInfo/getStaionByRoute`,
-				qs: {
-					serviceKey: keys.api_key.data_portal,
-					busRouteId: ''
-				}
-			};
-
-			option_arrive_info = {
-				uri: `http://ws.bus.go.kr/api/rest/arrive/getArrInfoByRouteAll`,
-				qs: {
-					serviceKey: keys.api_key.data_portal,
-					busRouteId: ''
-				}
-			};
-
-			for (i = 0; i < info_list.length; i++) {
-				info = info_list[i];
-
-				// take N-bus only
-				if (U.json.get_value(info, null, "busRouteNm", 0, 0) != 'N') continue;
-
-				// beautify: "property:[value]" -> "property:value"
-				U.json.unwrap_properties(info);
-				info.stations = [];
-				nbus_info_list.push(info);
-
-				// request to get all stations of the bus
-				option_getstations.qs.busRouteId = info.busRouteId;
-				option_arrive_info.qs.busRouteId = info.busRouteId;
-				promises.push(
-					requestAndParseAsJSON(option_getstations, 'xml')
-					.then(parse_itemList)
-					.then(U.json.unwrap_properties),
-					requestAndParseAsJSON(option_arrive_info, 'xml')
-					.then(parse_itemList)
-					.then(U.json.unwrap_properties)
-				);
-			}
-
-			Promise.all(promises)
-			.then(jsons => {
-				let i, stations, arriveInfos;
-				for (i = 0; i < jsons.length; i += 2) {
-
-					stations = jsons[i];
-					arriveInfos = jsons[i + 1];
-
-					// TODO: sort arriveInfo for optimization
-					// save every arrive info into its station info
-					for (let station of stations) {
-						let stationNo = station.stationNo;
-						station.arriveInfo = null;
-						for (let arriveInfo of arriveInfos) {
-							if (arriveInfo.arsId == stationNo) {
-								station.arriveInfo = arriveInfo;
-							}
-						}
+			// TODO: sort arriveInfo for optimization
+			// save every arrive info into its station info
+			for (let station of stations) {
+				let stationNo = station.stationNo;
+				station.arriveInfo = null;
+				for (let arriveInfo of arrive_infos) {
+					if (arriveInfo.arsId == stationNo) {
+						station.arriveInfo = arriveInfo;
 					}
-
-					nbus_info_list[i / 2].stations = stations;
 				}
-			})
-			.then(() => {
-				update_cache(exports.nbus_info, nbus_info_list);
-				resolve();
-			});
-		})
-		.catch(err => {
-			console.log(err);
-			update_cache(exports.nbus_info, exports.nbus_info.list);
-			resolve();
-		});
-	})
-	.then(() => JSON.parse(JSON.stringify(exports.nbus_info.list))); // return deep copy
+			}
+
+			nbus_info_list[i].stations = stations;
+		}
+	} catch (err) {
+		U.error(err);
+		return [];
+	}
+
+	U.log(`${nbus_info_list.length} nbus_info fetched`);
+	return nbus_info_list;
+};
+
+
+/*
+
+	Return informations of a busstop.
+
+*/
+// TODO: test it
+exports.load_buspaths = async (lat_start, lon_start, lat_end, lon_end) => {
+	let info = [];
+	let temp = [];
+	let option = {
+		uri: `http://ws.bus.go.kr/api/rest/pathinfo/getPathInfoByBus`,
+		qs: {
+			serviceKey: keys.api_key.data_portal,
+			startX: lon_start,
+			startY: lat_start,
+			endX: lon_end,
+			endY: lat_end,
+		}
+	};
+
+	U.log(`load_buspaths(${lat_start}, ${lon_start}, ${lat_end}, ${lon_end})`);
+
+	try {
+		info = await requestAndParseJSON(option, 'xml').then(parse_itemList);
+
+		if (!info) info = [];
+		for (let path of info) {
+			if (path.pathList) {
+				if (path.pathList.every(path => {
+					console.log(path.routeNm[0]);
+					return path.routeNm[0][0] == 'N'
+				})) {
+					temp.push(path);
+				}
+			}
+		}
+
+		info = [];
+		for (let path of temp) {
+			let unwraped = U.unwrap_properties(path);
+			unwraped.distance = parseInt(unwraped.distance);
+			unwraped.time = parseInt(unwraped.time);
+			unwraped.fx = parseInt(unwraped.fx);
+			unwraped.fy = parseInt(unwraped.fy);
+			unwraped.tx = parseInt(unwraped.tx);
+			unwraped.ty = parseInt(unwraped.ty);
+			info.push(unwraped);
+		}
+	} catch (err) {
+		U.error(err);
+	}
+
+	return info;
+};
 
 /*
 
@@ -309,11 +349,15 @@ exports.load_nbus_info = () =>
 	{
 		time: 868,
 		distance: 1099,
-		section_time: [868],
-		section_distance: [1099],
-		points: [
-			[127.05353861565403, 37.5865481484368],
-			...
+		sections: [
+			{
+				time: 868
+				distance: 1099
+				points: [
+					[127.05353861565403, 37.5865481484368],
+					...
+				]
+			}
 		]
 	}
 
@@ -325,9 +369,7 @@ exports.get_pedestrian_route = (points) =>
 		let result = {
 			time: 0,
 			distance: 0,
-			section_time: [],
-			section_distance: [],
-			points: []
+			sections: []
 		};
 
 		// handle exceptions
@@ -342,7 +384,7 @@ exports.get_pedestrian_route = (points) =>
 		}
 		passList = passList.slice(1);
 
-		console.log(`get_pedestrian_route([${points}])`);
+		U.log(`get_pedestrian_route([${points}])`);
 		let option = {
 			method: "POST",
 			uri: "https://apis.openapi.sk.com/tmap/routes/pedestrian?version=1",
@@ -361,17 +403,18 @@ exports.get_pedestrian_route = (points) =>
 		};
 
 		// request pedestrian route
-		requestAndParseAsJSON(option)
+		requestAndParseJSON(option)
 		.then(json => {
 			if (json?.type != 'FeatureCollection')
 				return;
 
-			let i, point_type, time, distance, feature, features;
+			let points, point_type, time, distance, feature, features;
 
 			time = 0;
 			distance = 0;
+			points = [];
 			features = json.features || [];
-			for (i = 0; i < features.length; i++) {
+			for (let i = 0; i < features.length; i++) {
 				feature = features[i];
 
 				// handle exception: unexpected type
@@ -389,12 +432,20 @@ exports.get_pedestrian_route = (points) =>
 						case 'PP3': // 경유지3
 						case 'PP4': // 경유지4
 						case 'PP5': // 경유지5
-							result.section_time.push(time);
-							result.section_distance.push(distance);
+							points = points.filter(Boolean).flat(); // delete all false-values
+							for (let j = 0; j < points.length; j++) {
+								points[j] = [points[j][1], points[j][0]];
+							}
 							result.time += time;
 							result.distance += distance;
+							result.sections.push({
+								time: time,
+								distance: distance,
+								points: points
+							});
 							time = 0;
 							distance = 0;
+							points = [];
 							break;
 						//case 'SP': // 출발지
 						//case 'GP': // 일반 안내점
@@ -404,43 +455,193 @@ exports.get_pedestrian_route = (points) =>
 				} else {
 					// LineString
 					// push the point to the list in order
-					result.points[feature.properties.lineIndex] = feature.geometry.coordinates;
+					points[feature.properties.lineIndex] = feature.geometry.coordinates;
 					time += feature.properties.time ?? 0;
 					distance += feature.properties.distance ?? 0;
 				}
 			}
 
-			// delete all false-values
-			result.points = result.points.filter(Boolean).flat();
-		}, console.log)
+
+		}, U.error)
 		.then(() => resolve(result));
 	});
 
+exports.odsay_get_nbus_info = async () => {
+	U.log(`get N-Bus info from odsay`);
+
+	let option_routelist = {
+		uri: `https://api.odsay.com/v1/api/searchBusLane`,
+		qs: {
+			apiKey: keys.api_key.odsay,
+			busNo: 'N', // N bus only
+			CID: 1000   // seoul
+		}
+	};
+};
 /*
 
-	update cache
-	TODO: save it in DB
+time: 예상 소요시간
+transit_count: 환승횟수
+payment: 예상요금
+station_start: 첫 정류장
+station_end: 마지막 정류장
+number_of_stations: 총 정류장 수
+sub_paths: 상세 경로 {
+	busNo: 버스 번호
+	lat_start: 탑승 정류장 위도
+	lon_start: 탑승 정류장 경도
+	lat_end: 하차 정류장 위도
+	lon_end: 하차 정류장 경도
+	station_start: 탑승 정류장 이름
+	station_end: 하차 정류장 이름
+}
 
 */
-exports.nbus_info = {
-	expired: true,
-	list: [],
-	func_update: exports.load_nbus_info,
-	term_update: 200000
+exports.odsay_get_nbus_routes = async (lat_start, lon_start, lat_end, lon_end) => {
+	U.log(`Request N-Bus routes from odsay ...`);
+
+	let option = {
+		uri: `https://api.odsay.com/v1/api/searchPubTransPathR`,
+		qs: {
+			apiKey: keys.api_key.odsay, // api key
+			output: 'json',             // output format
+			SX: lon_start,              // longitude
+			SY: lat_start,              // latitude
+			EX: lon_end,                // longitude
+			EY: lat_end,                // latitude
+			OPT: 0,                     // sort by distance
+			SearchPathType: 2           // bus only
+		}
+	};
+
+	let results = [];
+	let paths = await requestAndParseJSON(option);
+	paths = paths?.result?.path || [];
+
+	U.log(`${paths.length} paths from odsay response.`);
+	for (let path of paths) {
+		let busNos = [];
+		let info = path.info;
+		let subPaths = path.subPath;
+
+		// handle exceptions
+		if (path.pathType != 2 || !info || !subPaths) continue;
+
+		let p = {
+			time: info.totalTime,
+			transit_count: info.busTransitCount,
+			payment: info.payment,
+			station_start: info.firstStartStation,
+			station_end: info.lastEndStation,
+			number_of_stations: info.busStationCount,
+			sub_paths: [],
+			points: []
+		};
+
+		// pop subPath(bus)
+		for (let subPath of subPaths) {
+			U.unwrap_properties(subPath);
+			// take only N-bus path
+			if (subPath.trafficType != 2) continue;
+			/*if (subPath.lane.busNo[0] != 'N') {
+				p.sub_paths = [];
+				break;
+			}*/
+
+			p.sub_paths.push({
+				busNo: subPath.lane.busNo,
+				lat_start: subPath.startY,
+				lon_start: subPath.startX,
+				lat_end: subPath.endY,
+				lon_end: subPath.endX,
+				station_start: subPath.startName,
+				station_end: subPath.endName
+			});
+			p.points.push([
+				[subPath.startY, subPath.startX], // lat, lon
+				[subPath.endY, subPath.endX]      // lat, lon
+			]);
+			busNos.push(subPath.lane.busNo);
+		}
+
+		if (p.sub_paths.length == 0) continue;
+
+		// p.lat_station_start = p.sub_paths[0].lat_start;
+		// p.lon_station_start = p.sub_paths[0].lon_start;
+		// p.lat_station_end = p.sub_paths[p.sub_paths.length - 1].lat_end;
+		// p.lon_station_end = p.sub_paths[p.sub_paths.length - 1].lon_end;
+
+		U.log(`busNos: ${busNos.toString()}`);
+		results.push(p);
+	}
+
+	// return only one
+	U.log(`${results.length} N-Bus routes found.`);
+	results.sort((a, b) => a.time - b.time);
+	return (results.length > 0) ? results[0] : null;
 };
 
-update_cache = (cache, list) => {
-	// update cache
-	cache.list = list;
-	cache.expired = false;
+exports.topis_get_nbus_routes = async (lat_start, lon_start, lat_end, lon_end) => {
 
-	// after 200sec, expire cache and fetch new
-	console.log(`Cache updated.`);
-	setTimeout(() => {
-		console.log(`Cache expired. Fetch new info.`);
-		cache.expired = true;
-		cache.func_update();
-	}, cache.term_update);
+	U.log(`Request N-Bus routes from TOPIS ...`);
+
+	let option = {
+		headers: {
+			'Content-Type': 'application/x-www-form-urlencoded'
+		},
+		method: "POST",
+		uri: `https://topis.seoul.go.kr/map/getRoute.do`,
+		body: querystring.stringify({
+			url: 'http://192.168.201.17:5003/routeplanning',
+			prcsType: 'web',
+			routeType: 'pub',
+			routeOption: 'nbus',
+			walkDistance: '500',
+			startName: '출발지명',
+			startX: lon_start.toString(),
+			startY: lat_start.toString(),
+			endName: '도착지명',
+			endX: lon_end.toString(),
+			endY: lat_end.toString(),
+			viaName1: '',
+			viaX1: '',
+			viaY1: '',
+			viaName2: '',
+			viaX2: '',
+			viaY2: '',
+			viaCount: '0'
+		})
+	};
+
+	let result = await requestAndParseJSON(option);
+	let routes = (result?.rows?.routeInfo ?? []).filter(route => route.type === 'BUS');
+	if (routes.length == 0) {
+		U.log(`TOPIS route not found.`);
+		return null;
+	}
+	routes.sort((a, b) => a.ranking - b.ranking);
+	let route = routes[0];
+	let summary = route.summary;
+
+	let p = {
+		time: route.totalTime,
+		transit_count: route.numberOfTransit,
+		points: [],
+		routeNames: []
+	};
+
+	for (let s of summary) {
+		let station1 = bus.get_busstop(s.startArsId);
+		let station2 = bus.get_busstop(s.endArsId);
+		if (station1 == null || station2 == null) {
+			U.error(`Unexpected busstop's stationId: ${s.startArsId}, ${s.endArsId}.`);
+			return null;
+		}
+		p.points.push([station1.stationLatitude, station1.stationLongitude], [station2.stationLatitude, station2.stationLongitude]);
+		p.routeNames.push(s.routeName);
+	}
+
+	return p;
 };
 
 /*
@@ -448,43 +649,41 @@ update_cache = (cache, list) => {
 	Extract itemList from response json.
 
 */
-parse_itemList = (json) =>
-	U.json.get_value(json, [], "ServiceResult", "msgBody", 0, "itemList");
+const parse_itemList = (json) =>
+	U.get_value(json, [], "ServiceResult", "msgBody", 0, "itemList");
 
 /*
 
 	Request and decode the result to UTF8, and return it as JSON.
 
 */
-requestAndParseAsJSON = (option, type = 'json') =>
-	new Promise((resolve, reject) => {
-		console.log(`request to ${option.url || option.uri}`);
+const requestAndParseJSON = async (option, type = 'json') => {
+	let res, decoded;
+	U.log(`request:\n${JSON.stringify(option, null, 2)}`);
 
-		request(option)
-		.then(result => iconv.decode(Buffer.from(result), 'utf8'))
-		.then(decoded => {
+	// request
+	try {
+		res = await request(option);
+		decoded = iconv.decode(Buffer.from(res), 'utf8');
+	} catch (err) {
+		U.error('Error on requestAndParseAsJSON: ');
+		U.error(err);
+		return {};
+	}
 
-			// json to json
-			if (type == 'json') {
-				return resolve(JSON.parse(decoded));
-			}
+	// U.log(`response from ${option.uri || option.url}`);
 
-			// xml to json
-			if (type == 'xml') {
-				return xml2js
-				.parseStringPromise(decoded)
-				.then(resolve)
-				.catch(err => {
-					console.log('Error on parseStringPromise: ', err);
-					resolve({});
-				});
-			}
-
-			// undefined type
-			return decoded;
-		})
-		.catch(err => {
-			console.log('Error on requestAndParseAsJSON: ', err);
-			resolve({});
-		});
-	});
+	if (type == 'json') { // json to json
+		return JSON.parse(decoded);
+	} else if (type == 'xml') { // xml to json
+		try {
+			return await xml2js.parseStringPromise(decoded);
+		} catch (err) {
+			U.error('Error on parseStringPromise: ')
+			U.error(err);
+			return {};
+		}
+	} else { // undefined type
+		return decoded;
+	}
+};

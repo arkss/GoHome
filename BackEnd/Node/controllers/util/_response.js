@@ -1,8 +1,10 @@
+const log = require('./_logger').log;
+
 /* Usage
 	response(res, true, 'success!');
 */
 exports.response = (res, success, message, data = {}) => {
-	console.log(`[RESPONSE] ${message}`);
+	log(`[RESPONSE] ${message}`);
 	if (res) {
 		res.json({
 			result: success ? 1 : -1,
@@ -28,7 +30,7 @@ exports.status = (res, code) => {
 		case 500: message = '500 internal server error'; break;
 		default:                                         break;
 	}
-	console.log(`[STATUS ${code}] ${message}`);
+	log(`[STATUS ${code}] ${message}`);
 	if (res)
 		res.status(code).send(message);
 };
