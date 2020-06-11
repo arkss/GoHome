@@ -150,19 +150,32 @@ public class RouteFragment extends Fragment implements View.OnClickListener {
         shareBtn.setOnClickListener(this);
         locationBtn.setOnClickListener(this);
 
-//        TMapPolyLine polyLine = ((MainActivity)getActivity()).getPolyLine();
-//        tMapView.addTMapPolyLine("fastestPath", polyLine);
-//        double minLatitude = getMinLatitude(polyLine.getLinePoint());
-//        double maxLatitude = getMaxLatitude(polyLine.getLinePoint());
-//        double minLongitude = getMinLongitude(polyLine.getLinePoint());
-//        double maxLongitude = getMaxLongitude(polyLine.getLinePoint());
-//        tMapView.setCenterPoint((minLongitude+maxLongitude)/2, (minLatitude+maxLatitude)/2);
-//        tMapView.zoomToSpan(maxLatitude-minLatitude, maxLongitude-minLongitude);
-//        tMapView.setIconVisibility(true);
-//
-//        Location myLocation = ((MainActivity)getActivity()).getLocation();
-//        tMapView.setLocationPoint(myLocation.getLongitude(), myLocation.getLatitude());
+        // minLat, minLon, maxLat, maxLon
+        double[] minMaxLatLon = getMinMaxLatLon();
+        double minLat = minMaxLatLon[0], minLon = minMaxLatLon[1];
+        double maxLat = minMaxLatLon[2], maxLon = minMaxLatLon[3];
 
+        // Move my location and zoom control
+        Location myLocation = ((MainActivity)getActivity()).getLocation();
+        tMapView.setLocationPoint(myLocation.getLongitude(), myLocation.getLatitude());
+        tMapView.zoomToSpan(maxLat-minLat, maxLon-minLon);
+        tMapView.setCenterPoint(myLocation.getLongitude(), myLocation.getLatitude());
+    }
+
+    // [minLat, minLon, maxLat, maxLon]
+    double[] getMinMaxLatLon() {
+        double minLat = 999, minLon = 999, maxLat = -999, maxLon = -999;
+        List<Section> sectionList = datum.getSections();
+        for(Section section : sectionList) {
+            for (List<Double> point : section.getPoints()) {
+                minLat = min(minLat, point.get(0));
+                minLon = min(minLon, point.get(1));
+                maxLat = max(maxLat, point.get(0));
+                maxLon = max(maxLon, point.get(1));
+            }
+        }
+        double[] minMaxLatLon = {minLat, minLon, maxLat, maxLon};
+        return minMaxLatLon;
     }
 
     @Override
