@@ -66,9 +66,6 @@ public class RouteFragment extends Fragment implements View.OnClickListener {
     private Handler mHandler;
     private boolean flag = false;
 
-    double minLat = 37.423930, maxLat = 37.704151;
-    double minLon = 126.761920, maxLon = 127.186964;
-
     private TMapPoint points[];
 
     // TODO: Rename and change types of parameters
