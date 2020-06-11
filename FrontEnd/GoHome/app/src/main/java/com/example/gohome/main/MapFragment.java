@@ -121,6 +121,7 @@ public class MapFragment extends Fragment implements View.OnClickListener {
         // 티맵 view 생성
         LinearLayout linearLayoutTmap = getView().findViewById(R.id.linearLayoutTmap);
         linearLayoutTmap.addView(tMapView);
+        setMyLocation();
 
 //        TMapPoint point1 = new TMapPoint(37.583, 127.054);
 //        TMapPoint point2 = new TMapPoint(37.580, 127.047);
@@ -166,6 +167,13 @@ public class MapFragment extends Fragment implements View.OnClickListener {
 
         // Show bike stops
         //showBikestops();
+    }
+
+    Location setMyLocation() {
+        Location location = ((MainActivity)getActivity()).getLocation();
+        tMapView.setCenterPoint(location.getLongitude(), location.getLatitude());
+        tMapView.setLocationPoint(location.getLongitude(), location.getLatitude());
+        return location;
     }
 
     void showBikestops() {
@@ -221,8 +229,7 @@ public class MapFragment extends Fragment implements View.OnClickListener {
 
             // current location btn clicked
             case R.id.current_location:
-                Location location = ((MainActivity)getActivity()).getLocation();
-                tMapView.setCenterPoint(location.getLongitude(), location.getLatitude());
+                Location location = setMyLocation();
                 Log.d("LOCATION", location.getLongitude()+", "+location.getLatitude());
                 break;
         }
