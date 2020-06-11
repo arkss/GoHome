@@ -80,6 +80,11 @@ exports.get_routes = (lat_start, lon_start, lat_end, lon_end, include_bike, incl
 		.then(() => {
 			// end of searching
 			U.log(`All routes are found.`);
+			// sort by total time
+			o.routes.sort((a, b) => a.time - b.time);
+			for (let route of o.routes) {
+				U.log(`time: ${route.time}`);
+			}
 			resolve(o.routes);
 		});
 	});
