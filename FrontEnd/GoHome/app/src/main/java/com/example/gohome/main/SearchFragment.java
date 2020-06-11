@@ -4,6 +4,7 @@ import android.content.Context;
 import android.location.Location;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -235,6 +236,20 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
 //                        routeSearch(departure, destination);
                     }
                 });
+            }
+        });
+
+        text_destination.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View view, int i, KeyEvent keyEvent) {
+                switch(i) {
+                    case KeyEvent.KEYCODE_ENTER:
+                        String text = text_destination.getText().toString();
+                        text_destination.setText(text.subSequence(0, text.length()-1));
+                        searchButton.callOnClick();
+                        return true;
+                }
+                return false;
             }
         });
     }
