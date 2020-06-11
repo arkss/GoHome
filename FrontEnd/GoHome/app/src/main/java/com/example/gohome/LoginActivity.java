@@ -4,6 +4,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -96,6 +97,20 @@ public class LoginActivity extends AppCompatActivity {
 //                        Log.d(loginTag, "login-communication failed, msg: "+t.getMessage());
 //                    }
 //                });
+            }
+        });
+
+        // password 창에 엔터 치면 로그인
+        EditText login_password = (EditText)findViewById(R.id.login_password);
+        login_password.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View view, int i, KeyEvent keyEvent) {
+                switch(i) {
+                    case KeyEvent.KEYCODE_ENTER:
+                        signInBtn.callOnClick();
+                        return true;
+                }
+                return false;
             }
         });
 

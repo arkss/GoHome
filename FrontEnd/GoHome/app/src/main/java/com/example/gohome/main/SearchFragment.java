@@ -239,13 +239,14 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
             }
         });
 
+        // 도착 위치 엔터치면 검색
         text_destination.setOnKeyListener(new View.OnKeyListener() {
             @Override
             public boolean onKey(View view, int i, KeyEvent keyEvent) {
                 switch(i) {
                     case KeyEvent.KEYCODE_ENTER:
-                        String text = text_destination.getText().toString();
-                        text_destination.setText(text.subSequence(0, text.length()-1));
+//                        String text = text_destination.getText().toString();
+//                        text_destination.setText(text.subSequence(0, text.length()-1));
                         searchButton.callOnClick();
                         return true;
                 }
