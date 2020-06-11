@@ -3,18 +3,18 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:layout="http://schemas.android.com/tools"
     android:gravity="bottom"
     app:umanoDragView="@id/route_sliding_view"
     app:umanoPanelHeight="30dp"
     app:umanoShadowHeight="10dp"
-    app:umanoFadeColor="@android:color/transparent"
-    >
+    app:umanoFadeColor="@android:color/transparent">
     <!--
-        @ umanoDragView     : 드래그해서 보여줄 뷰
-        @ umanoPanelHeight  : 드래그 전 어느정도 보여주는지
-        @ umanoShadowHeight : 그림자 크기
-        @ umanoFadeColor    : 슬라이딩 패널을 올렸을 때, 화면 어두워지는것 조정
-        -->
+    @ umanoDragView     : 드래그해서 보여줄 뷰
+    @ umanoPanelHeight  : 드래그 전 어느정도 보여주는지
+    @ umanoShadowHeight : 그림자 크기
+    @ umanoFadeColor    : 슬라이딩 패널을 올렸을 때, 화면 어두워지는것 조정
+    -->
 
     <!-- Main View -->
     <RelativeLayout
@@ -28,6 +28,7 @@
             android:layout_alignParentTop="true"
             android:background="?attr/colorPrimary"
             android:theme="@style/ThemeOverlay.AppCompat.Dark"
+            app:title="Go Home"
             app:popupTheme="@style/Theme.AppCompat.Light"
             />
 
@@ -62,29 +63,22 @@
             android:src="@drawable/share_icon"
             app:fabSize="normal"
             />
+        <com.google.android.material.floatingactionbutton.FloatingActionButton
+            android:id="@+id/route_location_btn"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_margin="16dp"
+
+            android:layout_alignParentLeft="true"
+            android:layout_alignParentBottom="true"
+
+            android:src="@drawable/aim_icon"
+            app:fabSize="normal"
+            />
     </RelativeLayout>
 
     <!-- sliding panel -->
-    <LinearLayout
-        android:id="@+id/route_sliding_view"
-        android:layout_width="match_parent"
-        android:layout_height="600dp"
-        android:orientation="vertical"
-        >
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="test"
-            />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="View"
-            android:textSize="50sp"
-            />
-    </LinearLayout>
+    <include layout = "@layout/slide_view"/>
 
 
 </com.sothree.slidinguppanel.SlidingUpPanelLayout>

@@ -165,6 +165,9 @@ public class testActivity extends AppCompatActivity  implements SensorEventListe
         Intent intent = getIntent();
         ArrayList<double[]> gpsNodePointArrayList2 = (ArrayList<double[]>) intent.getSerializableExtra("points");
 
+        ArrayList<double[]> list = (ArrayList<double[]>)intent.getSerializableExtra("points");
+        Log.d("TEST", "success, " + list.get(0)[0] +", "+list.get(1)[1]);
+
         //GPS 정보 초기화
         if(gpsNodePointArrayList2 != null) {
             //intent 잘 받아오면 넣기

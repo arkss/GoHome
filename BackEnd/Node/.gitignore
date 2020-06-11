@@ -3,3 +3,9 @@ keys.json
 
 # test file
 test.js
+
+# eslint
+.eslintrc.json
+
+# files to access remote server
+.remote
