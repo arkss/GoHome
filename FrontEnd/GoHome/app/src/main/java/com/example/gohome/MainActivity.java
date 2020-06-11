@@ -20,6 +20,8 @@ public class MainActivity extends AppCompatActivity implements OnGpsEventListene
     GpsTracker gpsTracker;
     TMapPolyLine polyLine;
 
+    Datum datum;
+
     private RouteFragment routeFragment;
 
     @Override
@@ -51,8 +53,12 @@ public class MainActivity extends AppCompatActivity implements OnGpsEventListene
     }
 
     @Override
-    public void onDataInteraction(Datum datum) {
-        routeFragment.setDatum(datum);
+    public void setDatum(Datum datum) {
+        this.datum = datum;
+    }
+
+    public Datum getDatum() {
+        return datum;
     }
 
     public void setPolyLine(TMapPolyLine polyLine) {

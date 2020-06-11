@@ -42,6 +42,8 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 
+import static java.lang.Math.round;
+
 /**
  * A simple {@link Fragment} subclass.
  * Use the {@link SearchFragment#newInstance} factory method to
@@ -141,8 +143,8 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
             @Override
             public void onClick(View view) {
                 // destination
-//                String destinationText = destination.getText().toString();
-                String destinationText = "서울시립대학교";
+                String destinationText = text_destination.getText().toString();
+//                String destinationText = "서울시립대학교";
 
                 // POI search
                 tmapdata = new TMapData();
@@ -203,7 +205,7 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
                                                         in.add(new InnerData(R.drawable.bus_icon));
                                                 }
                                             }
-                                            searchDataList.add(new SearchData("총 "+minute+"분", "도보시간 "+walkingTime+"분"));
+                                            searchDataList.add(new SearchData("총 "+minute+"분", "도보시간 "+round(walkingTime/60.0)+"분"));
                                             innerDataList.add(in);
                                             adapter.notifyDataSetChanged();
                                         }
@@ -250,7 +252,7 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
     // recycler view에서 아이템이 선택됐을 때, recycler view에서 호출하는 메소드
     public void selectItem(int position) {
         if(mListener != null) {
-            mListener.onDataInteraction(datumList.get(position));
+            mListener.setDatum(datumList.get(position));
         }
         NavHostFragment.findNavController(SearchFragment.this)
                 .navigate(R.id.action_SearchFragment_to_RouteFragment);
@@ -281,7 +283,7 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
 
     // fragment간 통신을 위한 인터페이스
     public interface OnDataSendListener {
-        void onDataInteraction(Datum datum);
+        void setDatum(Datum datum);
     }
 }
 

@@ -115,6 +115,7 @@ public class RouteFragment extends Fragment implements View.OnClickListener {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
+
         return inflater.inflate(R.layout.fragment_route, container, false);
     }
 
@@ -128,7 +129,6 @@ public class RouteFragment extends Fragment implements View.OnClickListener {
         ((AppCompatActivity)getActivity()).getSupportActionBar().setDisplayShowTitleEnabled(false); // title 제거
         ((AppCompatActivity)getActivity()).getSupportActionBar().setDisplayHomeAsUpEnabled(true); // 뒤로가기 버튼 생성
 
-
         // tmapview 추가
         tMapView = new TMapView(getContext());
         tMapView.setIcon(BitmapFactory.decodeResource(getResources(), R.drawable.dot));
@@ -141,23 +141,14 @@ public class RouteFragment extends Fragment implements View.OnClickListener {
         shareBtn = (FloatingActionButton) view.findViewById(R.id.route_share_btn);
         locationBtn = (FloatingActionButton) view.findViewById(R.id.route_location_btn);
 
+        // draw line
+        this.datum = ((MainActivity)getActivity()).getDatum();
+        drawLine();
+
+        // onClick Listener
         cameraBtn.setOnClickListener(this);
         shareBtn.setOnClickListener(this);
         locationBtn.setOnClickListener(this);
-
-        Handler handler = new Handler();
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                if(flag == false) {
-                    Log.d("TEST", "FLAG FALSE");
-                    handler.postDelayed(this, 1000);
-                }else {
-                    drawLine();
-                }
-            }
-        }, 1000);
-
 
 //        TMapPolyLine polyLine = ((MainActivity)getActivity()).getPolyLine();
 //        tMapView.addTMapPolyLine("fastestPath", polyLine);
