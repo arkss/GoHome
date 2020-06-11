@@ -42,6 +42,8 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 
+import static java.lang.Math.round;
+
 /**
  * A simple {@link Fragment} subclass.
  * Use the {@link SearchFragment#newInstance} factory method to
@@ -203,7 +205,7 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
                                                         in.add(new InnerData(R.drawable.bus_icon));
                                                 }
                                             }
-                                            searchDataList.add(new SearchData("총 "+minute+"분", "도보시간 "+walkingTime+"분"));
+                                            searchDataList.add(new SearchData("총 "+minute+"분", "도보시간 "+round(walkingTime/60.0)+"분"));
                                             innerDataList.add(in);
                                             adapter.notifyDataSetChanged();
                                         }
