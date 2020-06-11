@@ -8,8 +8,6 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.hardware.camera2.CameraAccessException;
-import android.hardware.camera2.CameraCharacteristics;
 import android.hardware.camera2.CameraManager;
 import android.location.Location;
 import android.location.LocationListener;
@@ -24,7 +22,6 @@ import android.view.animation.Animation;
 import android.view.animation.RotateAnimation;
 import android.widget.ImageView;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -50,77 +47,64 @@ import com.google.ar.sceneform.ux.TransformableNode;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Timer;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
-
 public class testActivity extends AppCompatActivity  implements SensorEventListener {
 
+    //UI 변수
     private CameraManager cameraManager;
+    private TextView tv1, tv2, tv3;
 
-    //GPS 표시를 위한 변수, 상수
-    private static final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 10;
-
-    private String cameraId;
-
-    private float prevPitchMag = 0;
-    private float prevAzimuthMag = 0;
-
-    private int pitchIsPlus = 1;
-    private float pitchDegrees;
-    private double currentDistance;
-
-    private ImageView mPointer;
-    private boolean flashOn;
-    private boolean isGPSEnabled;
-    private boolean isNetEnabled;
-    private float angle;
-
+    //센서 변수
     private SensorManager mSensorManager;
     private Sensor mAccelerometer;
     private Sensor mMagnetometer;
     private Sensor mGyro;
-
-    private ModelRenderable arrowRenderable;
-
-    private ArFragment arFragment;
-    private ArSceneView arSceneView;
-    private AnchorNode prevAnchorNode;
-    private Pose myPose, tmpPose, planePose, dPose;
-
-    private float azimuthinDegress;
-
-    private TextView tv1, tv2, tv3;
-
-    private Location myLocation = new Location("myLoc");
-    private Location targetLocation;
-
-    private int currentCheckPoint = 0;
-
+    private float azimuthinDegress; // y축 각도
     private float[] noAccel = {0,3,3};
-
-    //위도 경도 형식으로 받아온 배열값
-    private double[][] gpsNodePoint = {
-            {37.586488, 127.054158} // 전농파출소 위도, 경도
-            //{ 37.583484, 127.054825 } // 정문 세븐일레븐
-            //{ 37.4219983, -127.084}
-    };
-
-    ArrayList<Double> nodeDistance = new ArrayList<>();
-
-    //나침반을 위한 변수들
     private float[] mLastAccelerometer = new float[3];
     private float[] mLastMagnetometer = new float[3];
     private boolean mLastAccelerometerSet = false;
     private boolean mLastMagnetometerSet = false;
     private float[] mR = new float[9];
     private float[] mOrientation = new float[3];
-
     private float mCurrentDegree = 0f;
 
-    private android.hardware.Camera camera = null;
+    //AR 변수
+    private ModelRenderable arrowRenderable;
+    private ArFragment arFragment;
+    private ArSceneView arSceneView;
+    private AnchorNode prevAnchorNode;
+    private Pose myPose, tmpPose, planePose, dPose;
     private Node node = new Node();
+
+    //GPS 변수
+    private static final int MY_PERMISSIONS_REQUEST_READ_CONTACTS = 10;
+
+    private Location myLocation = new Location("myLoc");
+    private Location targetLocation, lastLocation;
+
+    private boolean isGPSEnabled;
+    private boolean isNetEnabled;
+
+    //위도 경도 형식으로 받아오는 배열값
+
+    ArrayList<double[]> gpsNodePointArrayList = new ArrayList<>();
+    private double[][] gpsNodePoint = {
+            //{37.586488, 127.054158} // 전농파출소 위도, 경도
+            //{ 37.583484, 127.054825 } // 정문 세븐일레븐
+            {37.583634610676576, 127.05422474709316},
+            {37.583634610676576, 127.05422474709316},
+            {37.58363461307705, 127.05435806827995},
+            {37.583551295983426, 127.0547219263878},
+            {37.5834846410683, 127.05494413026098},
+    };
+
+    //각도, 거리 계산 변수
+    private float angle;
+    private double currentDistance, lastDistance;
+
     //권한 체크
     private void checkPermission() {
         try {
@@ -137,9 +121,8 @@ public class testActivity extends AppCompatActivity  implements SensorEventListe
             }
         }
         catch(Exception e) {
-            Log.e("TEST ACTIVITY", e.getMessage());
+            Log.e("PERMISSION DENIED", e.getMessage());
         }
-
     }
 
     //LocationManager 선언
@@ -172,31 +155,40 @@ public class testActivity extends AppCompatActivity  implements SensorEventListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        Intent intent = getIntent();
-        ArrayList<double[]> list = (ArrayList<double[]>)intent.getSerializableExtra("points");
-        Log.d("TEST", "success, " + list.get(0)[0] +", "+list.get(1)[1]);
-
-        mPointer = (ImageView)findViewById(R.id.pointer);
-
-        for(int i = 0; i < gpsNodePoint.length ; i++) {
-            nodeDistance.add(1000.0);
-        }
-
-        if(currentCheckPoint >= gpsNodePoint.length) {
-            return;
-        }
-
-        mSensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
-        mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        mMagnetometer = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-        mGyro = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
-
+        //텍스트뷰 초기화
         tv1 = (TextView) findViewById(R.id.myPose);
         tv2 = (TextView) findViewById(R.id.anchorPose);
         tv3 = (TextView) findViewById(R.id.text3);
         cameraManager = (CameraManager) getSystemService(CAMERA_SERVICE);
 
-        tv2.setText("다음 포인트까지 남은 거리");
+        //Intent 값 받아오기
+        Intent intent = getIntent();
+        ArrayList<double[]> gpsNodePointArrayList2 = (ArrayList<double[]>) intent.getSerializableExtra("points");
+
+        ArrayList<double[]> list = (ArrayList<double[]>)intent.getSerializableExtra("points");
+        Log.d("TEST", "success, " + list.get(0)[0] +", "+list.get(1)[1]);
+
+        //GPS 정보 초기화
+        if(gpsNodePointArrayList2 != null) {
+            //intent 잘 받아오면 넣기
+            tv1.setText("AR 경로 안내");
+            gpsNodePointArrayList = gpsNodePointArrayList2;
+        }
+        else {
+            //아닐 경우 기본 값으로 설정
+            tv1.setText("AR 경로 탐색");
+            for(int i = 0; i< gpsNodePoint.length;i++) {
+                gpsNodePointArrayList.add(gpsNodePoint[i]);
+            }
+        }
+
+        //센서 초기화
+        mSensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
+        mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        mMagnetometer = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        mGyro = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
+
+        //체크포인트 AR 이미지 초기화
         CompletableFuture<ModelRenderable> goal = ModelRenderable.builder()
                 .setSource(this, Uri.parse("circle.sfb"))
                 .build();
@@ -214,6 +206,7 @@ public class testActivity extends AppCompatActivity  implements SensorEventListe
                     return null;
                 });
 
+        //AR 화면 실행
         arFragment = (ArFragment)getSupportFragmentManager().findFragmentById(R.id.arFragment);
         arFragment.getArSceneView().getScene().addOnUpdateListener(this::onUpdate);
     }
@@ -230,48 +223,10 @@ public class testActivity extends AppCompatActivity  implements SensorEventListe
             mLastMagnetometerSet = true;
         }
 
-        /*
-        mLastAccelerometer : 가속도 센서값 => {Azimuth 가속도, Pitch 자기장}
-        mLastMagnetometer  : 자기장 센서값 => {Azimuth 가속도, Pitch 자기장}
-         */
         if(mLastAccelerometerSet && mLastMagnetometerSet) {
-
-            //SensorManager.getRotationMatrix(mR, null, mLastAccelerometer, mLastMagnetometer);
             SensorManager.getRotationMatrix(mR, null, noAccel, mLastMagnetometer);
-            //SensorManager.getRotationMatrix(mR,null,null,mLastMagnetometer);
-            if (mLastMagnetometer[1] >= 0) {
-                pitchIsPlus = -1;
-            }
-            else {
-                pitchIsPlus = 1;
-            }
-
             //azimuth 가 너무 갑자기 변하면
-            if(true) {
-                azimuthinDegress = (int) (Math.toDegrees(SensorManager.getOrientation(mR, mOrientation)[0]) + 360) % 360;
-            }
-
-            //pitch가 너무 갑자기 변하면
-            if(true) {
-                pitchDegrees = (int) (Math.toDegrees(SensorManager.getOrientation(mR, mOrientation)[2]));
-            }
-
-            //tv1.setText(Float.toString(azimuthinDegress) + " and " + Float.toString(pitchDegrees) + " and " + Float.toString(mLastMagnetometer[0]) + " and " + Float.toString( mLastMagnetometer[1]) );
-
-            prevAzimuthMag = mLastMagnetometer[0];
-            prevPitchMag = mLastMagnetometer[1];
-
-            //나침반 그림 방향 회전
-            RotateAnimation ra = new RotateAnimation(
-                    -mCurrentDegree,
-                    -azimuthinDegress,
-                    Animation.RELATIVE_TO_SELF, 0.5f,
-                    Animation.RELATIVE_TO_SELF, 0.5f
-            );
-
-            ra.setDuration(1000);
-            ra.setFillAfter(true);
-            mPointer.startAnimation(ra);
+            azimuthinDegress = (int) (Math.toDegrees(SensorManager.getOrientation(mR, mOrientation)[0]) + 360) % 360;
             mCurrentDegree = -azimuthinDegress;
         }
     }
@@ -286,39 +241,56 @@ public class testActivity extends AppCompatActivity  implements SensorEventListe
         Camera camera = arSceneView.getScene().getCamera();
 
         //target 위치에 모델 세우기
-        targetLocation = getNextLocation(gpsNodePoint[currentCheckPoint][0], gpsNodePoint[currentCheckPoint][1]);
+        targetLocation = getNextLocation(gpsNodePointArrayList.get(0)[0], gpsNodePointArrayList.get(0)[1]);
+        lastLocation = getNextLocation(gpsNodePointArrayList.get(gpsNodePointArrayList.size()-1)[0],gpsNodePointArrayList.get(gpsNodePointArrayList.size()-1)[1]);
 
+        //target 위치와 현재 위치 간 각도 및 거리 계산
         angle = (float) gpsToDegree(myLocation, targetLocation);
+        currentDistance = getDistance(myLocation, getNextLocation(gpsNodePointArrayList.get(0)[0], gpsNodePointArrayList.get(0)[1]));
+        lastDistance = getDistance(myLocation, lastLocation);
+
+        tv2.setText("남은 체크포인트 : "  + Integer.toString(gpsNodePointArrayList.size())+" 개 ");
+        tv3.setText("남은 거리 : "+ Math.round(lastDistance*100)/100.0+" m");
 
         //체크포인트 표시
-        if(Math.abs(angle - azimuthinDegress) <= 5 && currentDistance <= 100) {
+        if(Math.abs(angle - azimuthinDegress) <= 10 && currentDistance <= 5) {
             node.setParent(arSceneView.getScene());
             node.setRenderable(arrowRenderable);
-            Ray ray = camera.screenPointToRay(1000/2f , 1920/2f);
+            Ray ray = camera.screenPointToRay(1000/2f , 500);
 
-            Vector3 newPosition = ray.getPoint((float)(currentDistance/20));
-
+            Vector3 newPosition = ray.getPoint((float)(currentDistance/5));
             node.setLocalPosition(newPosition);
         }
+        else {
+            node.setRenderable(null);
+        }
 
-        //내 현재 위치 구하기, 다음 체크포인트까지의 거리 계산
+        //내 현재 위치 myLocation 구하기
         LocationManager lm = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
         checkPermission();
         lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000,1, locationListener);
         lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000,1, locationListener);
 
-        //현재 위치 기반으로 다음 체크포인트까지 남은 위치 계산
-        currentDistance = getDistance(myLocation, getNextLocation(gpsNodePoint[currentCheckPoint][0], gpsNodePoint[currentCheckPoint][1]));
-        tv3.setText(Math.round(currentDistance*100)/100.0+" m");
+        //일정 거리 이상 가까이 오면 다음 체크포인트로
+        if(currentDistance <= 3) {
+            gpsNodePointArrayList.remove(0);
+        }
 
-        //for문 돌면서 체크포인트를 뛰어넘었는지 계산
-        for(int i = 0 ; i<gpsNodePoint.length; i++) {
-            nodeDistance.set(i, getDistance(myLocation,getNextLocation(gpsNodePoint[i][0], gpsNodePoint[i][1])));
-
-            //특정 점이 현재 점보다 다음 체크포인트이고, 그 점이 오히려 더 가까워졌다면
-            if(nodeDistance.get(i) <= currentDistance && i > currentCheckPoint) {
-                currentCheckPoint = i;
+        //남은 체크포인트 중 지나친 체크포인트 체크
+        if(gpsNodePointArrayList.size() > 0) {
+            for (int i = 0; i < gpsNodePointArrayList.size(); i++) {
+                double tmp = getDistance(myLocation, getNextLocation(gpsNodePointArrayList.get(i)[0], gpsNodePointArrayList.get(i)[1]));
+                //다음 점이 더 가깝고 일정 거리 이하라면
+                if (currentDistance > tmp && currentDistance <= 3) {
+                    for (int j = 0; j < i; j++) {
+                        gpsNodePointArrayList.remove(j);
+                    }
+                    break;
+                }
             }
+        }
+        else {
+            finish();
         }
 
         //평면 지속적으로 탐색
@@ -326,11 +298,9 @@ public class testActivity extends AppCompatActivity  implements SensorEventListe
         for (Plane plane : planes) {
             if (plane.getTrackingState() == TrackingState.TRACKING) {
                 try {
-
-                    //센서를 통해서 내 위치 계산후 방위각 계산
-                    myPose = frame.getAndroidSensorPose();
+                    //센서를 통해서 평면 위치 계산후 방위각 계산
                     planePose = plane.getCenterPose();
-                    tmpPose = myPoseToNewPose(myPose, planePose);
+                    tmpPose = myPoseToNewPose(planePose);
 
                     //평면에 내가 바라보는 방향으로 Anchor 생성
                     Anchor anchor = plane.createAnchor(tmpPose);
@@ -338,7 +308,7 @@ public class testActivity extends AppCompatActivity  implements SensorEventListe
                         prevAnchorNode.getAnchor().detach();
                     }
 
-                    //AnchorNode에 Model을 세움
+                    //AnchorNode에 Model을 만듦
                     prevAnchorNode = makeArrow(anchor, angle);
                 }
                 catch (Exception e) {
@@ -349,72 +319,10 @@ public class testActivity extends AppCompatActivity  implements SensorEventListe
         }
     }
 
-    //에러 시 n초 후 종료
-    private void delayedFlash() {
-        new Handler().postDelayed(new Runnable() {
-            @Override
-            public void run() {
-                finish();
-            }
-        },3500);
-    }
-
-    //후면카메라 플래시 켜기
-    private void flashlight() {
-        if(cameraId == null) {
-            cameraManager = (CameraManager) getSystemService(Context.CAMERA_SERVICE);
-            try {
-                for (String id : cameraManager.getCameraIdList()) {
-                    CameraCharacteristics c= cameraManager.getCameraCharacteristics(id);
-                    Boolean flashAvailable = c.get(CameraCharacteristics.FLASH_INFO_AVAILABLE);
-                    Integer lens = c.get(CameraCharacteristics.LENS_FACING);
-
-                    if (flashAvailable != null && flashAvailable && lens != null && lens == CameraCharacteristics.LENS_FACING_BACK) {
-                        cameraId = id;
-                        break;
-                    }
-                }
-            }
-            catch(CameraAccessException e) {
-                cameraId = null;
-                e.printStackTrace();
-                return;
-            }
-        }
-
-        flashOn = !flashOn;
-        tv2.setText(Boolean.toString(flashOn));
-        try {
-            cameraManager.setTorchMode(cameraId, flashOn);
-        }
-        catch(CameraAccessException e) {
-            e.printStackTrace();
-        }
-    }
-
     //돌아가기 버튼
     public void onClick2(View view)
     {
-        /*
-        try {
-            cameraManager.setTorchMode(cameraId, false);
-        }
-        catch(CameraAccessException e) {
-            e.printStackTrace();
-            finish();
-        }
-        */
         finish();
-    }
-
-    //손전등 켜기 버튼
-    public void flashClick(View view) {
-        if(!getPackageManager().hasSystemFeature(PackageManager.FEATURE_CAMERA_FLASH)) {
-            Toast.makeText(getApplicationContext(), "No camera\n",Toast.LENGTH_LONG).show();
-            delayedFlash();
-            return;
-        }
-        flashlight();
     }
 
     //위도 경도에 따른 Location 값으로 변환
@@ -444,8 +352,11 @@ public class testActivity extends AppCompatActivity  implements SensorEventListe
                 Math.sin(myLat) * Math.sin(targetLat)
                         + Math.cos(myLat) * Math.cos(targetLat) * Math.cos(myLng - targetLng));
 
+        //라디안 거리 => 라디안 각 변환
         double radian_bearing = Math.acos((Math.sin(targetLat) - Math.sin(myLat) * Math.cos(radian_distance)) / (0.00001+ (Math.cos(myLat) * Math.sin(radian_distance))));
         double true_bearing = 0;
+
+        //라디안 각 => 각도로 변환
         if(Math.sin(targetLng - myLng) < 0) {
             true_bearing = radian_bearing * (180 / 3.141592);
             true_bearing = 360 - true_bearing;
@@ -457,24 +368,24 @@ public class testActivity extends AppCompatActivity  implements SensorEventListe
     }
 
     //내 위치를 화살표가 잘보이는 위치로 변경
-    private Pose myPoseToNewPose(Pose myPose, Pose tPose) {
-        if(myPose == null) {
-            myPose = arFragment.getArSceneView().getArFrame().getAndroidSensorPose();
-        }
+    private Pose myPoseToNewPose(Pose planePose) {
+        //안드로이드 화면이 바라보는 방향의 Pose 추출
         dPose = arFragment.getArSceneView().getArFrame().getCamera().getDisplayOrientedPose();
-        float[] tr = {dPose.tx(), tPose.ty(), dPose.tz()};
-        float [] rt = {dPose.qx(), dPose.qy(), dPose.qz(), dPose.qw()};
 
-        Pose tmpPose = new Pose(tr, rt);
+        //평면의 Pose와 화면 계산
+        float[] tmpVec = {dPose.tx(), planePose.ty(), dPose.tz()};
+        Pose pose = Pose.makeTranslation(tmpVec);
 
-        return tmpPose;
+        return pose;
     }
 
     //두 위도 경도 주어지면 거리로 변환
     private double getDistance(Location myLocation, Location targetLocation){
+        //위도 추출
         double lat1 = myLocation.getLatitude();
         double lat2 = targetLocation.getLatitude();
 
+        //경도 추출
         double lng1 = myLocation.getLongitude();
         double lng2 = targetLocation.getLongitude();
 
@@ -513,21 +424,12 @@ public class testActivity extends AppCompatActivity  implements SensorEventListe
     //찾은 앵커에 3D 모델을 만듦
     private void addToModelScene(Anchor anchor, AnchorNode anchorNode, ModelRenderable modelRenderable, float angle) {
         TransformableNode transformableNode = new TransformableNode(arFragment.getTransformationSystem());
+        float rotateAngle = (-azimuthinDegress+angle)%360;
 
-        //tv2.setText("목표 방위각 : "+ Float.toString(angle));
-        Vector3 tmpVector1 = new Vector3(0, planePose.ty(),0);
-        Vector3 tmpVector2 = new Vector3(0, dPose.ty(), 0);
+        //tv2.setText(Float.toString(angle)+ " and "+Float.toString(azimuthinDegress)+" and "+Float.toString(rotateAngle));
 
-        Quaternion quaternion4 = Quaternion.rotationBetweenVectors(tmpVector2,tmpVector1);
-        Quaternion quaternion1 = Quaternion.axisAngle(new Vector3(0,-1,0),360-azimuthinDegress + angle);
-        //Quaternion quaternion2 = Quaternion.axisAngle(new Vector3(1,0,0), pitchDegrees * -pitchIsPlus + 20);
-        Quaternion quaternion2 = Quaternion.axisAngle(new Vector3(-1,0,0),pitchIsPlus*20);
-        Quaternion quaternion3 = Quaternion.multiply(quaternion1, quaternion2);
-
-        transformableNode.setWorldRotation(quaternion3);
-        Vector3 tmpVector3 = transformableNode.getWorldPosition();
-        tmpVector3.y = planePose.ty();
-        transformableNode.setWorldPosition(tmpVector3);
+        Quaternion quaternion1 = Quaternion.axisAngle(new Vector3(0,-1,0),rotateAngle);
+        transformableNode.setWorldRotation(quaternion1);
 
         transformableNode.setParent(anchorNode);
         transformableNode.select();
