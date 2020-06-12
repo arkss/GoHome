@@ -8,11 +8,10 @@ class ProfileSeriallizer(sz.ModelSerializer):
     def create(self, validated_data):
         Profile = get_user_model()
         password = validated_data.pop('password')
-        profile = Profile(
-            **validated_data
+        profile = get_user_model().objects.create_user(
+            **validated_data,
+            password=password
         )
-        profile.set_password(password)
-        profile.save()
         return profile
 
     class Meta:
