@@ -1,9 +1,11 @@
 import json
 import os
 from os.path import abspath, dirname, join
+import datetime
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
-BASE_DIR = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+BASE_DIR = os.path.dirname(os.path.dirname(
+    os.path.dirname(os.path.abspath(__file__))))
 
 
 # Quick-start development settings - unsuitable for production
@@ -13,12 +15,14 @@ secrets_file = join(BASE_DIR, './secrets.json')
 with open(secrets_file) as f:
     secrets = json.loads(f.read())
 
+
 def get_secret(setting, secrets=secrets):
     try:
         return secrets[setting]
     except KeyError:
         error_msg = "Set the {} environment variable".format(setting)
         raise ImproperlyConfigured(error_msg)
+
 
 SECRET_KEY = get_secret('SECRET_KEY')
 
@@ -39,7 +43,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'rest_framework',
     'core',
-    
+    'route',
+
 ]
 
 MIDDLEWARE = [
@@ -145,3 +150,21 @@ REST_FRAMEWORK = {
         'rest_framework.authentication.BasicAuthentication',
     ),
 }
+
+JWT_AUTH = {
+    'JWT_ALLOW_REFRESH': True,
+    # access token
+    'JWT_EXPIRATION_DELTA': datetime.timedelta(hours=1),
+    # refresh token
+    'JWT_REFRESH_EXPIRATION_DELTA': datetime.timedelta(days=2),
+}
+
+# email
+# 이메일
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_USE_TLS = True
+EMAIL_HOST = get_secret('EMAIL_HOST')
+EMAIL_HOST_USER = get_secret('EMAIL_HOST_USER')
+EMAIL_HOST_PASSWORD = get_secret('EMAIL_HOST_PASSWORD')
+EMAIL_PORT = get_secret('EMAIL_PORT')
+DEFAULT_FROM_EMAIL = EMAIL_HOST_USER
