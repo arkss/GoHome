@@ -18,7 +18,7 @@ class UserManager(BaseUserManager):
             detail_address=detail_address
         )
         user.set_password(password)
-        user.status = "0"
+        user.status = "1"
         user.role = "0"
         user.save(using=self._db)
         return user
