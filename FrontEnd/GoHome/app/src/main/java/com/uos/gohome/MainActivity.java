@@ -48,7 +48,7 @@ public class MainActivity extends AppCompatActivity implements OnGpsEventListene
     public void onGpsEvent(Location location) {
         try {
             double lat = location.getLatitude(), lon = location.getLongitude();
-            Toast.makeText(this, "latitude: " + Double.toString(lat) + ", longitude: " + Double.toString(lon), Toast.LENGTH_SHORT).show();
+//            Toast.makeText(this, "latitude: " + Double.toString(lat) + ", longitude: " + Double.toString(lon), Toast.LENGTH_SHORT).show();
             mapFragment.setLocationPoint(location);
         } catch(Exception e) {
             Log.e("onGpsEvent", e.getMessage());

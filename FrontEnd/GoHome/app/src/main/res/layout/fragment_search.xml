@@ -42,6 +42,7 @@
                     android:layout_marginEnd="50dp"
                     android:layout_marginBottom="16dp"
                     android:hint="도착 위치"
+                    android:singleLine="true"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent" />
@@ -76,7 +77,7 @@
                     android:tint="#ffffff"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintStart_toEndOf="@+id/editTextDestination"
-                    app:srcCompat="@drawable/more_vert" />
+                    app:srcCompat="@drawable/searchbar_nav" />
 
             </androidx.constraintlayout.widget.ConstraintLayout>
         </com.google.android.material.appbar.AppBarLayout>

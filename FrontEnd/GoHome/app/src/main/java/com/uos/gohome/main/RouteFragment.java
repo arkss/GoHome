@@ -66,9 +66,6 @@ public class RouteFragment extends Fragment implements View.OnClickListener {
     private Handler mHandler;
     private boolean flag = false;
 
-    double minLat = 37.423930, maxLat = 37.704151;
-    double minLon = 126.761920, maxLon = 127.186964;
-
     private TMapPoint points[];
 
     // TODO: Rename and change types of parameters
@@ -199,38 +196,6 @@ public class RouteFragment extends Fragment implements View.OnClickListener {
             default:
         }
         return super.onOptionsItemSelected(item);
-    }
-
-    double getMinLatitude(ArrayList<TMapPoint> tMapPoints) {
-        double ret = 999;
-        for(TMapPoint tMapPoint : tMapPoints) {
-            ret = min(ret, tMapPoint.getLatitude());
-        }
-        return ret;
-    }
-
-    double getMaxLatitude(ArrayList<TMapPoint> tMapPoints) {
-        double ret = -999;
-        for(TMapPoint tMapPoint : tMapPoints) {
-            ret = max(ret, tMapPoint.getLatitude());
-        }
-        return ret;
-    }
-
-    double getMinLongitude(ArrayList<TMapPoint> tMapPoints) {
-        double ret = 999;
-        for(TMapPoint tMapPoint : tMapPoints) {
-            ret = min(ret, tMapPoint.getLongitude());
-        }
-        return ret;
-    }
-
-    double getMaxLongitude(ArrayList<TMapPoint> tMapPoints) {
-        double ret = -999;
-        for(TMapPoint tMapPoint : tMapPoints) {
-            ret = max(ret, tMapPoint.getLongitude());
-        }
-        return ret;
     }
 
     public void setDatum(Datum datum) {
