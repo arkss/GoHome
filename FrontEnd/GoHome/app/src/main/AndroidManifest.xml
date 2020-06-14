@@ -40,6 +40,17 @@
             android:name="com.google.ar.core"
             android:value="required" />
         <activity android:name="com.uos.gohome.SignUpActivity" />
+        <activity android:name=".ShareActivity">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT" />
+                <category android:name="android.intent.category.BROWSABLE" />
+                <data
+                    android:scheme="uosgohome"
+                    android:host="share"
+                    />
+            </intent-filter>
+        </activity>
     </application>
 
 </manifest>
