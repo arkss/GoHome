@@ -245,104 +245,104 @@ const search_candidate_route = async (o, type, candidate) => {
 
 	let bs1 = candidate.bs[0];
 	let bs2 = candidate.bs[1];
-	let result = await oapi.get_pedestrian_route([
-		[o.lat_start, o.lon_start],
-		[bs1.stationLatitude, bs1.stationLongitude],
-		[bs2.stationLatitude, bs2.stationLongitude],
-		[o.lat_end, o.lon_end],
-	]);
-
-	// for test: handle exception
-	// TODO: make it available
-	if (result.sections.length != 3) {
-		U.error(`unexpected section length: ${result.sections.length}`);
-		return null;
-	}
-
-	// add more info for response
-	result.sections[0].stationNameStart = null;
-	result.sections[0].stationNameEnd = null;
-	result.sections[0].stationLatitudeStart = null;
-	result.sections[0].stationLongitudeStart = null;
-	result.sections[0].stationLatitudeEnd = null;
-	result.sections[0].stationLongitudeEnd = null;
-
-	result.sections[1].stationNameStart = bs1.stationName;
-	result.sections[1].stationNameEnd = bs2.stationName;
-	result.sections[1].stationLatitudeStart = bs1.stationLatitude;
-	result.sections[1].stationLongitudeStart = bs1.stationLongitude;
-	result.sections[1].stationLatitudeEnd = bs2.stationLatitude;
-	result.sections[1].stationLongitudeEnd = bs2.stationLongitude;
-
-	result.sections[2].stationNameStart = null;
-	result.sections[2].stationNameEnd = null;
-	result.sections[2].stationLatitudeStart = null;
-	result.sections[2].stationLongitudeStart = null;
-	result.sections[2].stationLatitudeEnd = null;
-	result.sections[2].stationLongitudeEnd = null;
+	let result = {};
 
 	if (type == 'bike' || type == 'subbike') {
-		result.sections[0].type = 1;
-		result.sections[1].type = 2;
-		result.sections[2].type = 1;
-	} else if (type == 'bus') {
-		result.sections[0].type = 1;
-		result.sections[1].type = 3;
-		result.sections[2].type = 1;
-	}
 
-	// re-calculate time since the middle section is for riding, not walking
-	if (type == 'bike' || type == 'subbike') {
-		result.sections[1].time = U.walking_time_2_riding_time(result.sections[1].time);
-		bike.cache_traveltime(bs1.stationId, bs2.stationId, result.sections[1].time);
-	} else if (type == 'bus') {
+		result = await oapi.get_pedestrian_route([
+			[o.lat_start, o.lon_start],
+			[bs1.stationLatitude, bs1.stationLongitude],
+			[bs2.stationLatitude, bs2.stationLongitude],
+			[o.lat_end, o.lon_end],
+		]);
 
-		// result.buspath = await oapi.odsay_get_nbus_routes(
-		// 	bs1.stationLatitude, bs1.stationLongitude,
-		// 	bs2.stationLatitude, bs2.stationLongitude
-		// );
-		result.buspath = await oapi.topis_get_nbus_routes(
-			bs1.stationLatitude, bs1.stationLongitude,
-			bs2.stationLatitude, bs2.stationLongitude
-		);
-
-		if (result.buspath == null) {
-			U.error('bus route not found!');
+		// for test: handle exception
+		// TODO: make it available
+		if (result.sections.length != 3) {
+			U.error(`unexpected section length: ${result.sections.length}`);
 			return null;
 		}
 
-		result.sections[1].points = result.buspath.points;
-		result.sections[1].time = result.buspath.time * 60;
-		delete result.buspath.points;
-		// bus.cache_traveltime(bs1.stationId, bs2.stationId, result.sections[1].time);
+		// add more info for response
+		add_station_info(result.sections[0]);
+		add_station_info(result.sections[1], bs1, bs2);
+		add_station_info(result.sections[2]);
+
+		result.sections[0].type = 1;
+		result.sections[1].type = 2;
+		result.sections[2].type = 1;
+
+		result.sections[1].time = U.walking_time_2_riding_time(result.sections[1].time);
+		bike.cache_traveltime(bs1.stationId, bs2.stationId, result.sections[1].time);
+
+	} else if (type == 'bus') {
+
+		result = {
+			sections: [{
+				type: 3,
+				points: [],
+				time: 0
+			}]
+		};
+
+		let buspath = await oapi.topis_get_nbus_routes(
+			bs1.stationLatitude, bs1.stationLongitude,
+			bs2.stationLatitude, bs2.stationLongitude,
+			bs1.stationId, bs2.stationId
+		);
+		if (buspath == null) {
+			U.error('Bus route not found!');
+			return null;
+		}
+		if (buspath.start_id != bs1.stationId) {
+			U.log('Unexpected busstop_start but keep going...');
+			bs1 = bus.get_busstop(buspath.start_id);
+		}
+		if (buspath.end_id != bs2.stationId) {
+			U.log('Unexpected busstop_end but keep going...');
+			bs2 = bus.get_busstop(buspath.end_id);
+		}
+
+		result.sections[0].points = buspath.points;
+		result.sections[0].time = buspath.time * 60;
+		add_station_info(result.sections[0], bs1, bs2);
+
+		delete buspath.points;
+		result.buspath = buspath;
+
+		// cache traveltime
+		bus.cache_traveltime(bs1.stationId, bs2.stationId, result.sections[0].time);
 
 		/*
 
+			find subbike routes
+
 		*/
 
-		let time_upperbound_bike1 = result.sections[0].time;
-		let time_upperbound_bike2 = result.sections[2].time;
 		let o_subbike_routes1 = make_o(o.lat_start, o.lon_start, bs1.stationLatitude, bs1.stationLongitude);
 		let o_subbike_routes2 = make_o(bs2.stationLatitude, bs2.stationLongitude, o.lat_end, o.lon_end);
-		o_subbike_routes1.time_upperbound_bike = time_upperbound_bike1;
-		o_subbike_routes2.time_upperbound_bike = time_upperbound_bike2;
 
 		await search_bikebus_route(o_subbike_routes1, 'subbike');
 		await search_bikebus_route(o_subbike_routes2, 'subbike');
 
+		let need_pedestrian_route = false;
 		let route1 = o_subbike_routes1.routes.slice(0, 1);
 		let route2 = o_subbike_routes2.routes.slice(0, 1);
-		if (route1.length > 0 && route1[0].time < time_upperbound_bike1) {
-			let subsection1 = route1[0];
-			//result.bs.splice(0, 0, ...subsection1.bs);
-			//result.brief_list.splice(0, 1, ...subsection1.brief_list);
-			result.sections.splice(0, 1, ...subsection1.sections);
-		}
-		if (route2.length > 0 && route2[0].time < time_upperbound_bike2) {
-			let subsection2 = route2[0];
-			//result.bs.splice(-1, 0, ...subsection2.bs);
-			//result.brief_list.splice(-1, 1, ...subsection2.brief_list);
-			result.sections.splice(-1, 1, ...subsection2.sections);
+		if (route1.length > 0) result.sections.unshift(...route1[0].sections);
+		else need_pedestrian_route = true;
+		if (route2.length > 0) result.sections.push(...route2[0].sections);
+		else need_pedestrian_route = true;
+
+		if (need_pedestrian_route) {
+			let pedestrian_route_result = await oapi.get_pedestrian_route([
+				[o.lat_start, o.lon_start],
+				[bs1.stationLatitude, bs1.stationLongitude],
+				[bs2.stationLatitude, bs2.stationLongitude],
+				[o.lat_end, o.lon_end],
+			]);
+
+			if (route1.length == 0) result.sections.unshift(pedestrian_route_result.sections[0]);
+			if (route2.length == 0) result.sections.push(pedestrian_route_result.sections[2]);
 		}
 	}
 
@@ -387,4 +387,13 @@ const make_o = (lat_start, lon_start, lat_end, lon_end) => {
 const calculate_o_td = (r) => {
 	r.time = r.sections.reduce((prev, current) => prev + current?.time ?? 0, 0);
 	r.distance = r.sections.reduce((prev, current) => prev + current?.distance ?? 0, 0);
+};
+
+const add_station_info = (section, bs1 = null, bs2 = null) => {
+	section.stationNameStart      = bs1?.stationName      ?? null;
+	section.stationNameEnd        = bs2?.stationName      ?? null;
+	section.stationLatitudeStart  = bs1?.stationLatitude  ?? null;
+	section.stationLongitudeStart = bs1?.stationLongitude ?? null;
+	section.stationLatitudeEnd    = bs2?.stationLatitude  ?? null;
+	section.stationLongitudeEnd   = bs2?.stationLongitude ?? null;
 };

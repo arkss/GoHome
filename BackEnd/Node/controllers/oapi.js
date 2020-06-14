@@ -460,8 +460,6 @@ exports.get_pedestrian_route = (points) =>
 					distance += feature.properties.distance ?? 0;
 				}
 			}
-
-
 		}, U.error)
 		.then(() => resolve(result));
 	});
@@ -581,7 +579,7 @@ exports.odsay_get_nbus_routes = async (lat_start, lon_start, lat_end, lon_end) =
 	return (results.length > 0) ? results[0] : null;
 };
 
-exports.topis_get_nbus_routes = async (lat_start, lon_start, lat_end, lon_end) => {
+exports.topis_get_nbus_routes = async (lat_start, lon_start, lat_end, lon_end, id1, id2) => {
 
 	U.log(`Request N-Bus routes from TOPIS ...`);
 
@@ -613,26 +611,58 @@ exports.topis_get_nbus_routes = async (lat_start, lon_start, lat_end, lon_end) =
 		})
 	};
 
-	let result = await requestAndParseJSON(option);
-	let routes = (result?.rows?.routeInfo ?? []).filter(route => route.type === 'BUS');
+	let result, routes, route, summary, p;
+
+	// request TOPIS and extract only those whose type is 'BUS'
+	result = await requestAndParseJSON(option);
+	routes = (result?.rows?.routeInfo ?? []).filter(route => route.type === 'BUS');
+
+	// handle exception: no route found
 	if (routes.length == 0) {
 		U.log(`TOPIS route not found.`);
 		return null;
 	}
-	routes.sort((a, b) => a.ranking - b.ranking);
-	let route = routes[0];
-	let summary = route.summary;
 
-	let p = {
-		time: route.totalTime,
-		transit_count: route.numberOfTransit,
+	// sort routes by ranking(time)
+	routes.sort((a, b) => a.ranking - b.ranking);
+	route = routes[0];
+	p = {
+		time: 0,
+		transit_count: 0,
 		points: [],
-		routeNames: []
+		routeNames: [],
+		start_id: null,
+		end_id: null
 	};
 
-	for (let s of summary) {
+	for (let i = 0; i < routes.length; i++) {
+		let r = routes[i];
+		let summary_first = r.summary[0];
+		let summary_last = r.summary[r.summary.length - 1];
+
+		// exact found
+		if (summary_first.startArsId == id1 && summary_last.endArsId == id2) {
+			U.log('Exact bus route found.');
+			route = r;
+			break;
+		}
+	}
+
+	// for the route
+	summary = route.summary;
+	p.time = route.totalTime;
+	p.transit_count = route.numberOfTransit;
+	p.start_id = summary[0].startArsId;
+	p.end_id = summary[summary.length - 1].endArsId;
+
+	// extract busstops from summary
+	for (let j = 0; j < summary.length; j++) {
+		let s = summary[j];
 		let station1 = bus.get_busstop(s.startArsId);
 		let station2 = bus.get_busstop(s.endArsId);
+
+		// TODO: handle
+		// handle exception: unexpected stations
 		if (station1 == null || station2 == null) {
 			U.error(`Unexpected busstop's stationId: ${s.startArsId}, ${s.endArsId}.`);
 			return null;
