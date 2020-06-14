@@ -4,7 +4,7 @@
     <item>
         <layer-list>
             <!-- shadow (밑으로) : 그림자 -->
-            <item android:top="5dp">
+            <item>
                 <shape>
                         <solid android:color="#66505050"/>
                         <corners
@@ -15,9 +15,9 @@
                 </shape>
             </item>
             <!-- background (위로) -->
-            <item android:bottom="3dp">
+            <item android:bottom="3dp" android:right="2dp">
                 <shape>
-                    <solid android:color="#CCFFFFFF"/>
+                    <solid android:color="#FFFFFF"/>
                     <corners
                         android:bottomRightRadius="25dp"
                         android:bottomLeftRadius="25dp"

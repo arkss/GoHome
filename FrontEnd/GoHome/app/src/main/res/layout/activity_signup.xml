@@ -49,6 +49,7 @@
             android:id="@+id/signup_password"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:inputType="textPassword"
             android:hint="password"
             />
         <TextView
@@ -61,6 +62,7 @@
             android:id="@+id/signup_confirm_password"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:inputType="textPassword"
             android:hint="password"
             />
         <TextView
@@ -81,6 +83,8 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="50dp"
+            android:background="@drawable/round_edittext"
+            android:backgroundTint="@android:color/darker_gray"
             android:text="Sign Up"
         />
 
