@@ -6,7 +6,7 @@ from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, Permis
 class UserManager(BaseUserManager):
     user_in_migrations = True
 
-    def create_user(self, username, email, nickname, address, detail_address, password=None):
+    def create_user(self, username, email, nickname, address="", detail_address="", address_lat=0, address_log=0, password=None):
         if not email:
             raise ValueError('must have user email')
         user = self.model(
@@ -15,7 +15,9 @@ class UserManager(BaseUserManager):
             email=self.normalize_email(email),
             nickname=nickname,
             address=address,
-            detail_address=detail_address
+            detail_address=detail_address,
+            address_lat=address_lat,
+            address_log=address_log
         )
         user.set_password(password)
         user.status = "1"
@@ -23,14 +25,16 @@ class UserManager(BaseUserManager):
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, username, email, nickname="", address="", detail_address="", password=None):
+    def create_superuser(self, username, email, nickname="", address="", detail_address="", address_lat=0, address_log=0, password=None):
         user = self.create_user(
             username=username,
             password=password,
             email=email,
             nickname=nickname,
             address=address,
-            detail_address=detail_address
+            detail_address=detail_address,
+            address_lat=address_lat,
+            address_log=address_log
         )
         user.status = "1"
         user.role = "10"
@@ -58,6 +62,8 @@ class Profile(AbstractBaseUser, PermissionsMixin):
     nickname = models.CharField(max_length=10, unique=True)
     address = models.CharField(max_length=50, blank=True)
     detail_address = models.CharField(max_length=30, blank=True)
+    address_lat = models.FloatField(blank=True)
+    address_log = models.FloatField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     status = models.CharField(max_length=2, choices=STATUS_CHOICES, blank=True)

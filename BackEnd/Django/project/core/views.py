@@ -5,7 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework.decorators import api_view
-from .serializers import ProfileSeriallizer
+from .serializers import ProfileSeriallizer, ProfileDetailSerializer
 
 #from config.permissions import CustomIsAuthenticated
 
@@ -56,6 +56,24 @@ class CreateProfileView(APIView):
         return Response({
             'response': 'success',
             'message': 'profile이 성공적으로 생성되었습니다.'
+        })
+
+
+class ProfileDetailView(APIView):
+    def get(self, request, *args, **kwargs):
+        try:
+            queryset = get_user_model().objects.get(id=request.user.id)
+        except:
+            return Response({
+                'response': 'error',
+                'data': f'{profile_id}에 해당하는 profile이 존재하지 않습니다.'
+            })
+
+        serializer = ProfileDetailSerializer(queryset)
+
+        return Response({
+            'response': 'success',
+            'data': serializer.data
         })
 
 

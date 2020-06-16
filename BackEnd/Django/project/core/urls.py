@@ -7,6 +7,7 @@ urlpatterns = [
     path('login/', obtain_jwt_token),
     path('refresh/', refresh_jwt_token),
     path('signup/', views.CreateProfileView.as_view()),
+    path('profile/', views.ProfileDetailView.as_view()),
     path('user_active/<str:uid64>/<str:token>/',
          views.user_active, name='user_active'),
 ]
