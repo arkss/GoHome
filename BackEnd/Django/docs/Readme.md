@@ -84,6 +84,34 @@ python manage.py runserver --settings=config.settings.deploy
 
 
 
+#### 유저 상세 정보
+
+* path : profile/
+
+* method : GET
+
+* request parameter
+
+  | Name | Type | Mandatory | Default | Example | Description |
+  | ---- | ---- | --------- | ------- | ------- | ----------- |
+  | -    | -    | -         | -       | -       | -           |
+
+* response field
+
+| Name                | Type   | Mandatory | Default | Example                           | Description               |
+| ------------------- | ------ | --------- | ------- | --------------------------------- | ------------------------- |
+| response            | String | Y         | success | success                           | 성공                      |
+| data                | Object | Y         | -       | -                                 | data를 감싸는 object 이름 |
+| data.username       | String | Y         | -       | rkdalstjd9                        | 아이디                    |
+| data.email          | String | Y         | -       | rkdalstjd9@naver.com              | 이메일                    |
+| data.nickname       | String | Y         | -       | arkss                             | 닉네임                    |
+| data.address        | String | Y         | -       | 서울특별시 동대문구 전농동 103-45 | API에 검색 가능한 주소    |
+| data.detail_address | String | Y         | -       | 주영리빙텔 108호                  | 상세주소                  |
+| data.address_lat    | Float  | Y         | -       | 37.5642135                        | 위도                      |
+| data.address_log    | Float  | Y         | -       | 127.0016985                       | 경도                      |
+
+
+
 #### 공유 경로 생성
 
 * path : share/route/
