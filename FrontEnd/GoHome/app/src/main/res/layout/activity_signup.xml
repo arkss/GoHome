@@ -11,84 +11,117 @@
         android:layout_alignParentTop="true"
         android:background="@android:color/transparent"
         />
-
-
-    <LinearLayout
-        android:id="@+id/signup_linearlayout"
+    <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_margin="30dp"
-        android:layout_below="@+id/signup_toolbar"
-        android:orientation="vertical">
+        android:layout_below="@+id/signup_toolbar" >
 
-        <TextView
-            android:id="@+id/signup_title"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="50dp"
-            android:text="Sign Up"
-            android:textSize="35sp"/>
-        <TextView
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="ID"
-            />
-        <EditText
-            android:id="@+id/signup_id"
+        <LinearLayout
+            android:id="@+id/signup_linearlayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:hint="id"
-            />
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:text="PASSWORD"
-            />
-        <EditText
-            android:id="@+id/signup_password"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="textPassword"
-            android:hint="password"
-            />
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:text="Confirm Password"
-            />
-        <EditText
-            android:id="@+id/signup_confirm_password"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:inputType="textPassword"
-            android:hint="password"
-            />
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="20dp"
-            android:text="Name"
-            />
-        <EditText
-            android:id="@+id/signup_name"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="name"
-            />
+            android:layout_marginHorizontal="30dp"
+            android:layout_marginTop="30dp"
+            android:layout_below="@+id/signup_toolbar"
+            android:orientation="vertical">
 
-        <Button
-            android:id="@+id/signup_complete"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="50dp"
-            android:background="@drawable/round_edittext"
-            android:backgroundTint="@android:color/darker_gray"
-            android:text="Sign Up"
-        />
+            <TextView
+                android:id="@+id/signup_title"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginBottom="50dp"
+                android:text="Sign Up"
+                android:textSize="35sp"/>
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="ID"
+                />
+            <EditText
+                android:id="@+id/signup_id"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="id"
+                />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="PASSWORD"
+                />
+            <EditText
+                android:id="@+id/signup_password"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPassword"
+                android:hint="password"
+                />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="Confirm Password"
+                />
+            <EditText
+                android:id="@+id/signup_confirm_password"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:inputType="textPassword"
+                android:hint="password"
+                />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="email" />
 
-    </LinearLayout>
+            <EditText
+                android:id="@+id/signup_email"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="email" />
 
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="Name"
+                />
+            <EditText
+                android:id="@+id/signup_name"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="name"
+                />
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="20dp"
+                android:text="Address" />
+            <EditText
+                android:id="@+id/signup_address"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Address" />
+            <EditText
+                android:id="@+id/signup_detail_address"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:hint="Detail Address"/>
+
+
+            <Button
+                android:id="@+id/signup_complete"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="30dp"
+                android:layout_marginBottom="40dp"
+                android:background="@drawable/round_edittext"
+                android:backgroundTint="@android:color/darker_gray"
+                android:text="Sign Up"
+                />
+        </LinearLayout>
+
+    </ScrollView>
 
 </RelativeLayout>

@@ -21,10 +21,10 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 
 public class SignUpActivity extends AppCompatActivity {
-    private EditText editId, editPw, editPwConfirm, editName;
+    private EditText editId, editPw, editPwConfirm, editName, editEmail, editAddress, editAddressDetail;
     private Button completeBtn;
 
-    private String id, pw, pw_confirm, name;
+    private String id, pw, pw_confirm, email, name, address, addressDetail;
     private static final String signupTag = "SIGNUP";
 
     @Override
@@ -43,7 +43,10 @@ public class SignUpActivity extends AppCompatActivity {
         editId = (EditText)findViewById(R.id.signup_id);
         editPw = (EditText)findViewById(R.id.signup_password);
         editPwConfirm = (EditText)findViewById(R.id.signup_confirm_password);
+        editEmail = (EditText)findViewById(R.id.signup_email);
         editName = (EditText)findViewById(R.id.signup_name);
+        editAddress = (EditText)findViewById(R.id.signup_address);
+        editAddressDetail = (EditText)findViewById(R.id.signup_detail_address);
         completeBtn = (Button)findViewById(R.id.signup_complete);
 
         completeBtn.setOnClickListener(new View.OnClickListener() {
@@ -52,7 +55,10 @@ public class SignUpActivity extends AppCompatActivity {
                 pw = editPw.getText().toString().trim();
                 pw_confirm = editPwConfirm.getText().toString().trim();
                 id = editId.getText().toString().trim();
+                email = editEmail.getText().toString().trim();
                 name = editName.getText().toString().trim();
+                address = editAddress.getText().toString().trim();
+                addressDetail = editAddressDetail.getText().toString().trim();
 
                 if(!pw.equals(pw_confirm) || pw.isEmpty()) {
                     Toast.makeText(SignUpActivity.this, "비밀번호 확인이 잘못되었습니다.", Toast.LENGTH_SHORT).show();
@@ -60,7 +66,7 @@ public class SignUpActivity extends AppCompatActivity {
                 }
                 else {
                     // SingupData로 parsing
-                    SignupData data = new SignupData(id, pw, "temp_email@uos.ac.kr", name);
+                    SignupData data = new SignupData(id, pw, email, name, address, addressDetail);
 
                     // 서버로 데이터 전송
                     Retrofit retrofit = RetrofitClientInstance.getRetrofitInstance();
