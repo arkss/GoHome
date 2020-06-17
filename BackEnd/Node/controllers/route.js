@@ -71,7 +71,7 @@ exports.api_get_routes = (req, res, next) => {
 	.then(() => {
 		// log processing time
 		end_time = Date.now();
-		U.log(`Route Searching Time: ${end_time - start_time}ms`)
+		U.log(`Route Searching Time: ${end_time - start_time}ms`);
 	});
 };
 
@@ -87,12 +87,12 @@ exports.get_routes = (lat_start, lon_start, lat_end, lon_end, include_bike, incl
 		])
 		.then(() => {
 			// end of searching
-			U.log(`All routes are found.`);
 			// sort by total time
+			let log_str = `All routes are found. Each route's time: `;
 			o.routes.sort((a, b) => a.time - b.time);
-			for (let route of o.routes) {
-				U.log(`time: ${route.time}`);
-			}
+			for (let route of o.routes)
+				log_str += route.time + ' ';
+			U.log(log_str);
 			resolve(o.routes);
 		});
 	});
@@ -248,8 +248,7 @@ const search_candidate_route = async (o, type, candidate) => {
 		return null;
 	}
 
-	U.log(`real route searched
-	expected minimum travel time: ${candidate.traveltime}, upperbound: ${time_upperbound}`);
+	U.log(`real route searched: expected min travel time: ${candidate.traveltime}, upperbound: ${time_upperbound}`);
 
 	let bs1 = candidate.bs[0];
 	let bs2 = candidate.bs[1];
@@ -302,14 +301,10 @@ const search_candidate_route = async (o, type, candidate) => {
 			U.error('Bus route not found!');
 			return null;
 		}
-		if (buspath.start_id != bs1.stationId) {
-			U.log('Unexpected busstop_start but keep going...');
+		if (buspath.start_id != bs1.stationId)
 			bs1 = bus.get_busstop(buspath.start_id);
-		}
-		if (buspath.end_id != bs2.stationId) {
-			U.log('Unexpected busstop_end but keep going...');
+		if (buspath.end_id != bs2.stationId)
 			bs2 = bus.get_busstop(buspath.end_id);
-		}
 
 		result.sections[0].points = buspath.points;
 		result.sections[0].time = buspath.time * 60;

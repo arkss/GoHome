@@ -583,7 +583,7 @@ const parse_itemList = (json) =>
 */
 const requestAndParseJSON = async (option, type = 'json') => {
 	let res, decoded;
-	U.log(`request:\n${JSON.stringify(option, null, 2)}`);
+	U.debug(`request:\n${JSON.stringify(option, null, 2)}`);
 
 	// request
 	try {
@@ -603,7 +603,7 @@ const requestAndParseJSON = async (option, type = 'json') => {
 		try {
 			return await xml2js.parseStringPromise(decoded);
 		} catch (err) {
-			U.error('Error on parseStringPromise: ')
+			U.error('Error on parseStringPromise: ');
 			U.error(err);
 			return {};
 		}
