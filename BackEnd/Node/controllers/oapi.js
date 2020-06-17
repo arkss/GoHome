@@ -582,10 +582,12 @@ const parse_itemList = (json) =>
 
 */
 const requestAndParseJSON = async (option, type = 'json') => {
-	let res, decoded;
-	U.debug(`request:\n${JSON.stringify(option, null, 2)}`);
+	let res, decoded, start_time, end_time;
+
+	U.log(`request:\n${JSON.stringify(option, null, 2)}`);
 
 	// request
+	start_time = Date.now();
 	try {
 		res = await request(option);
 		decoded = iconv.decode(Buffer.from(res), 'utf8');
@@ -595,7 +597,8 @@ const requestAndParseJSON = async (option, type = 'json') => {
 		return {};
 	}
 
-	// U.log(`response from ${option.uri || option.url}`);
+	end_time = Date.now();
+	U.log(`response from ${option.uri || option.url}.\ntime: ${end_time - start_time}ms`);
 
 	if (type == 'json') { // json to json
 		return JSON.parse(decoded);

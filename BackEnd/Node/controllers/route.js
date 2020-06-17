@@ -165,9 +165,7 @@ const search_bikebus_route = async (o, type) => {
 	}
 
 	// after all searching
-	U.log(`end of searching (type: ${type}),
-	${searched_results.length} routes are really searched with API call.
-	time upperbound: ${o.time_upperbound_bike}, ${o.time_upperbound_bus}`);
+	U.log(`[${type}] End of searching. ${searched_results.length} routes are really searched with API call.\ntime upperbound: ${o.time_upperbound_bike}, ${o.time_upperbound_bus}.`);
 
 	// sort result out by its travel time
 	searched_results.sort((a, b) => a.time - b.time);
@@ -224,7 +222,7 @@ const find_candidate_pairs = (o, type) => {
 	}
 
 	// for test
-	U.log(`${candidate_routes.length} candidate pairs found, type: ${type}`);
+	U.log(`[${type}] ${candidate_routes.length} candidate pairs found.`);
 
 	// sort pairs out by expected travel time
 	candidate_routes.sort((a, b) => a.traveltime - b.traveltime);
@@ -248,7 +246,7 @@ const search_candidate_route = async (o, type, candidate) => {
 		return null;
 	}
 
-	U.log(`real route searched: expected min travel time: ${candidate.traveltime}, upperbound: ${time_upperbound}`);
+	U.log(`[${type}] Real route searched: expected min travel time: ${candidate.traveltime}, upperbound: ${time_upperbound}`);
 
 	let bs1 = candidate.bs[0];
 	let bs2 = candidate.bs[1];
