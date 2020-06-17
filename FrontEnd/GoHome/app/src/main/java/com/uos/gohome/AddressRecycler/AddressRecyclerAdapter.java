@@ -24,7 +24,13 @@ import java.util.ArrayList;
 
 /* search_item 레이아웃을 리스트 형식으로 보여주기 위한 어댑터 클래스 */
 public class AddressRecyclerAdapter extends RecyclerView.Adapter<AddressRecyclerAdapter.MyViewHolder> {
+    public interface OnListItemSelectedInterface {
+        void onItemSelected(View v, int position);
+    }
+
     private ArrayList<AddressData> mDataset;
+    static OnListItemSelectedInterface mListener;
+    Context mContext;
 
     // Provide a reference to the views for each data item
     // Complex data items may need more than one view per item, and
@@ -32,15 +38,28 @@ public class AddressRecyclerAdapter extends RecyclerView.Adapter<AddressRecycler
     public static class MyViewHolder extends RecyclerView.ViewHolder {
         // each data item is just a string in this case
         public TextView textView;
+        public AddressData mData;
         public MyViewHolder(View v) {
             super(v);
             textView = (TextView)v.findViewById(R.id.address_text_view);
+
+            // 클릭하면 실행할 것 정의
+            textView.setOnClickListener(new View.OnClickListener() {
+                @Override
+                public void onClick(View v) {
+                    mListener.onItemSelected(v, getAdapterPosition());
+                }
+            });
         }
     }
 
     // Provide a suitable constructor (depends on the kind of dataset)
-    public AddressRecyclerAdapter(ArrayList<AddressData> myDataset) {
-        mDataset = myDataset;
+    public AddressRecyclerAdapter(ArrayList<AddressData> mDataset,
+                                  Context context,
+                                  OnListItemSelectedInterface listener) {
+        this.mDataset = mDataset;
+        this.mContext = context;
+        this.mListener = listener;
     }
 
     // Create new views (invoked by the layout manager)
@@ -58,8 +77,9 @@ public class AddressRecyclerAdapter extends RecyclerView.Adapter<AddressRecycler
     public void onBindViewHolder(MyViewHolder holder, int position) {
         // - get element from your dataset at this position
         // - replace the contents of the view with that element
-        Log.d("onBindViewHolder", Integer.toString(position) + mDataset.get(position).getAddress());
-        holder.textView.setText(mDataset.get(position).getAddress());
+        AddressData mData = mDataset.get(position);
+        holder.textView.setText(mData.getAddress() + " " + mData.getAddressDetail());
+        holder.mData = mData;
     }
 
     // Return the size of your dataset (invoked by the layout manager)

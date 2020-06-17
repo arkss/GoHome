@@ -13,7 +13,6 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.Toast;
 
 import com.skt.Tmap.TMapData;
 import com.skt.Tmap.TMapPOIItem;
@@ -21,18 +20,15 @@ import com.skt.Tmap.TMapView;
 import com.uos.gohome.AddressRecycler.AddressData;
 import com.uos.gohome.AddressRecycler.AddressRecyclerAdapter;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 
-public class AddressSearch extends AppCompatActivity {
+public class AddressSearch extends AppCompatActivity implements AddressRecyclerAdapter.OnListItemSelectedInterface {
     private RecyclerView recyclerView;
     private RecyclerView.Adapter mAdapter;
     private LinearLayoutManager layoutManager;
     ArrayList<AddressData> addressDataList;
-
     TMapView tMapView;
     TMapData tmapdata;
-
     Handler notifyHandler;
 
     @Override
@@ -42,7 +38,6 @@ public class AddressSearch extends AppCompatActivity {
 
         // RecyclerView에 표시할 데이터 리스트 생성.
         addressDataList = new ArrayList<AddressData>();
-        addressDataList.add(new AddressData("가", 0, 0));
 
         recyclerView = (RecyclerView)findViewById(R.id.address_recycler_view);
 
@@ -60,7 +55,7 @@ public class AddressSearch extends AppCompatActivity {
         recyclerView.addItemDecoration(dividerItemDecoration);
 
         // specify an adapter (see also next example)
-        mAdapter = new AddressRecyclerAdapter(addressDataList);
+        mAdapter = new AddressRecyclerAdapter(addressDataList, this, this);
         recyclerView.setAdapter(mAdapter);
 
         tMapView = new TMapView(this);
@@ -83,19 +78,6 @@ public class AddressSearch extends AppCompatActivity {
                 mAdapter.notifyDataSetChanged();
             }
         };
-
-//        addressDataList.add(new AddressData("나"));
-//        mAdapter.notifyDataSetChanged();
-//
-//        addressDataList.add(new AddressData("다"));
-//        mAdapter.notifyDataSetChanged();
-
-//        Intent data = new Intent();
-//        data.putExtra("latitude", 37.58396415159224);
-//        data.putExtra("longitude", 127.0590090751652);
-//        data.putExtra("address", "서울시립대학교");
-//        setResult(RESULT_OK, data);
-//        finish();
     }
 
     void getAddresses(String text) {
@@ -106,14 +88,30 @@ public class AddressSearch extends AppCompatActivity {
                 // 모든 주소, 위도 경도 저장.
                 for(int i = 0; i < poiItem.size(); i++) {
                     TMapPOIItem item = (TMapPOIItem)poiItem.get(i);
-                    String address = item.getPOIAddress().replace(" null", "") + " " + item.getPOIName();
+                    String address = item.getPOIAddress().replace(" null", "");
+                    String addressDetail = item.getPOIName();
                     double latitude = item.getPOIPoint().getLatitude();
                     double longitude = item.getPOIPoint().getLongitude();
-                    addressDataList.add(new AddressData(address, latitude, longitude));
+                    addressDataList.add(new AddressData(address, addressDetail, latitude, longitude));
                 }
                 Message msg = notifyHandler.obtainMessage();
                 notifyHandler.sendMessage(msg);
             }
         });
+    }
+
+    @Override
+    public void onItemSelected(View v, int position) {
+        AddressRecyclerAdapter.MyViewHolder viewHolder = (AddressRecyclerAdapter.MyViewHolder)recyclerView.findViewHolderForAdapterPosition(position);
+
+        Log.d("onItemSelected", "good");
+        // SignUpActivity로 정보 넘기기
+        Intent data = new Intent();
+        data.putExtra("address", viewHolder.mData.getAddress());
+        data.putExtra("addressDetail", viewHolder.mData.getAddressDetail());
+        data.putExtra("latitude", viewHolder.mData.getLatitude());
+        data.putExtra("longitude", viewHolder.mData.getLongitude());
+        setResult(RESULT_OK, data);
+        finish();
     }
 }

@@ -29,7 +29,7 @@ public class SignUpActivity extends AppCompatActivity {
     private String id, pw, pw_confirm, email, name, address, addressDetail;
     private static final String signupTag = "SIGNUP";
 
-    final int addressRequestCode = 1;
+    final int addressRequestCode = 0;
     double latitude, longitude;
 
     @Override
@@ -57,7 +57,8 @@ public class SignUpActivity extends AppCompatActivity {
         editAddress.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {
-                startActivityForResult(new Intent(SignUpActivity.this, AddressSearch.class), addressRequestCode);
+                if(event.getAction() == MotionEvent.ACTION_DOWN)
+                    startActivityForResult(new Intent(SignUpActivity.this, AddressSearch.class), addressRequestCode);
                 return false;
             }
         });
@@ -140,11 +141,12 @@ public class SignUpActivity extends AppCompatActivity {
         super.onActivityResult(requestCode, resultCode, data);
         if(requestCode == addressRequestCode) {
             if(resultCode == RESULT_OK) {
+                address = data.getStringExtra("address");
+                addressDetail = data.getStringExtra("addressDetail");
                 latitude = data.getDoubleExtra("latitude", 0);
                 longitude = data.getDoubleExtra("longitude", 0);
-                address = data.getStringExtra("address");
-
                 editAddress.setText(address);
+                editAddressDetail.setText(addressDetail);
             }
         }
     }
