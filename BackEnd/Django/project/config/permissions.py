@@ -1,5 +1,6 @@
 from rest_framework import permissions
 
+<<<<<<< HEAD
 
 class MyIsAuthenticated(permissions.BasePermission):
     message = ''
@@ -18,3 +19,10 @@ class MyIsAuthenticated(permissions.BasePermission):
             return False
 
         return True
+=======
+class CustomIsAuthenticated(permissions.BasePermission):
+    message = 'Adding customers not allowed.'
+
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.is_authenticated)
+>>>>>>> client/merge-AR

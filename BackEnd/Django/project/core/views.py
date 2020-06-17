@@ -5,6 +5,7 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny
 from rest_framework.decorators import api_view
+<<<<<<< HEAD
 from .serializers import ProfileSeriallizer, ProfileDetailSerializer
 
 #from config.permissions import CustomIsAuthenticated
@@ -16,6 +17,12 @@ from django.core.mail import EmailMessage
 from django.utils.encoding import force_bytes, force_text
 from .tokens import account_activation_token
 from django.utils.http import urlsafe_base64_encode, urlsafe_base64_decode
+
+=======
+from .serializers import ProfileSeriallizer
+>>>>>>> client/merge-AR
+
+from config.permissions import CustomIsAuthenticated
 
 
 class CreateProfileView(APIView):
@@ -59,6 +66,7 @@ class CreateProfileView(APIView):
         })
 
 
+<<<<<<< HEAD
 class ProfileDetailView(APIView):
     def get(self, request, *args, **kwargs):
         try:
@@ -154,3 +162,8 @@ def user_active(request, uid64, token):
     }
 
     return render(request, 'core/active_result.html', context)
+=======
+@api_view(['GET'])
+def is_login(request):
+    return Response({'message': '로그인 성공'})
+>>>>>>> client/merge-AR

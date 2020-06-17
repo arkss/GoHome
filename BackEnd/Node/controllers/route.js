@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 const keys = require('../keys.json');
 const U = require('./util');
 const oapi = require('./oapi');
@@ -14,6 +15,16 @@ const BIKESTOP_CANDIDATE_DISTANCE = keys.settings.bikestop_candidate_distance;
 const MAX_BUSSTOP_SEARCH          = keys.settings.max_busstop_search;
 const MAX_BIKE_SUBROUTE_SEARCH    = keys.settings.max_bike_subroute_search;
 const MAX_BIKE_SUBROUTE_RETURN    = keys.settings.max_bike_subroute_return;
+=======
+const U = require('./util');
+const oapi = require('./oapi');
+
+const bike = require('./bike');
+
+const CONCALL_BIKE_ROUTE_SEARCH =   1;
+const MAX_BIKE_ROUTE_SEARCH     =  10;
+const MAX_BIKE_ROUTE_RETURN     =   5;
+>>>>>>> client/merge-AR
 
 /*
 
@@ -55,6 +66,7 @@ exports.api_get_routes = (req, res, next) => {
 	let lon_start = req.query.lon_start;
 	let lat_end = req.query.lat_end;
 	let lon_end = req.query.lon_end;
+<<<<<<< HEAD
 	let include_bike = !(req.query.include_bike == 'N');
 	let include_bus = !(req.query.include_bus == 'N');
 	
@@ -63,10 +75,24 @@ exports.api_get_routes = (req, res, next) => {
 	exports.get_routes(lat_start, lon_start, lat_end, lon_end, include_bike, include_bus)
 	.then(routes => {
 		U.response(res, true, `${routes.length} route found`, routes);
+=======
+	let include_bike = req.query.include_bike == 'N';
+	let include_bus = req.query.include_bus == 'N';
+	
+	// handle exception: invalid query
+	if (U.res.isInvalid(res, lat_start, lon_start, lat_end, lon_end)) return;
+	exports.get_routes(lat_start, lon_start, lat_end, lon_end)
+	.then(routes => {
+		U.res.response(res, true, `pedestrian route found`, {
+			n: routes.length,
+			routes: routes
+		});
+>>>>>>> client/merge-AR
 	})
 	.catch(next);
 };
 
+<<<<<<< HEAD
 exports.get_routes = (lat_start, lon_start, lat_end, lon_end, include_bike, include_bus) =>
 	new Promise((resolve, reject) => {
 		let o = make_o(lat_start, lon_start, lat_end, lon_end);
@@ -388,3 +414,170 @@ const calculate_o_td = (r) => {
 	r.time = r.sections.reduce((prev, current) => prev + current?.time ?? 0, 0);
 	r.distance = r.sections.reduce((prev, current) => prev + current?.distance ?? 0, 0);
 };
+=======
+exports.get_routes = (lat_start, lon_start, lat_end, lon_end) =>
+	new Promise((resolve, reject) => {
+		let routes = [];
+
+		// *stops are sorted by distance
+		let linear_distance, bikestops_near_start, bikestops_near_end, nbusstops_near_start, nbusstops_near_end;
+
+		// find near bikestops and search routes
+		linear_distance = U.geo.distance(lat_start, lon_start, lat_end, lon_end);
+		bikestops_near_start = bike.get_bikestops(lat_start, lon_start, 0, linear_distance / 2);
+		bikestops_near_end = bike.get_bikestops(lat_end, lon_end, 0, linear_distance / 2);
+
+		let promise_bikestop = new Promise((resolve, reject) => {
+		
+			let v1 = bikestops_near_start;
+			let v2 = bikestops_near_end;
+
+			// for test
+			console.log(`linear distance: ${linear_distance}, the number of near bikestops: ${v1.length}, ${v2.length}`);
+
+			// 쌍 매칭하고 예상 시간 계산 및 정렬
+			// 예상시간 짧은 순으로 길찾기 하면서 예상시간 최댓값을 낮춰감
+			let traveltime, candidate_routes = [], searched_results = [];
+
+			// for every possible pairs
+			for (let bs1 of v1) {
+				for (let bs2 of v2) {
+					// calculate expected riding & walking time (in sec)
+					traveltime = (
+						bike.get_cached_traveltime(bs1.stationId, bs2.stationId) ||
+						U.geo.riding_time(
+							bs1.stationLatitude, bs1.stationLongitude,
+							bs2.stationLatitude, bs2.stationLongitude
+						)
+					)
+					+ U.geo.walking_time(lat_start, lon_start, bs1.stationLatitude, bs1.stationLongitude)
+					+ U.geo.walking_time(bs2.stationLatitude, bs2.stationLongitude, lat_end, lon_end);
+					// add to the candidates
+					candidate_routes.push({
+						bs: [bs1, bs2],
+						traveltime: traveltime
+					});
+				}
+			}
+
+			// for test
+			console.log(`${candidate_routes.length} candidate pairs found`);
+
+			// sort pairs out by expected travel time
+			candidate_routes.sort((a, b) => a.traveltime - b.traveltime);
+			candidate_routes = candidate_routes.slice(0, MAX_BIKE_ROUTE_SEARCH);
+
+			// search real time: promise-sequentially
+			// it may takes really long time but able to reduce the number of API call.
+			let time_upperbound = Infinity;
+
+			const end_searching = () => {
+				console.log(`${searched_results.length} routes are really searched with API call`);
+				console.log(`time upperbound: ${time_upperbound}`);
+
+				// sort result out by its travel time
+				searched_results.sort((a, b) => a.time - b.time);
+				searched_results = searched_results.slice(0, MAX_BIKE_ROUTE_RETURN);
+				routes = routes.concat(searched_results);
+
+				return resolve();
+			};
+
+			const search_candidate_routes = (i) => {
+				let promises, candidates;
+
+				candidates = candidate_routes.slice(i, i + CONCALL_BIKE_ROUTE_SEARCH);
+				// handle exception: all is searched
+				if (candidates.length == 0) {
+					console.log(`all is searched`);
+					end_searching();
+					return;
+				}
+
+				const search_candidate_route = (candidate) =>
+					new Promise((resolve, reject) => {
+
+						// don't have to search longer way
+						if (time_upperbound < candidate.traveltime) {
+							console.log(`over the upperbound`);
+							return resolve(false);
+						}
+
+						console.log(`search real route ${i}`);
+						console.log(`expected minimum travel time: ${candidate.traveltime}, upperbound: ${time_upperbound}`);
+						//return resolve(true);
+						let bs1 = candidate.bs[0];
+						let bs2 = candidate.bs[1];
+
+						oapi.get_pedestrian_route([
+							[lat_start, lon_start],
+							[bs1.stationLatitude, bs1.stationLongitude],
+							[bs2.stationLatitude, bs2.stationLongitude],
+							[lat_end, lon_end],
+						])
+						.then(result => {
+							console.log(`real route searched ${i}`);
+
+							// for test: handle exception
+							if (result.section_time.length != 3)
+								console.log(`unexpected section length: ${result.section_time.length}`);
+
+							// add more info for response
+							result.bs = [bs1, bs2];
+							result.brief_list = ['도보', '자전거', '도보'];
+
+							// re-calculate time since the middle section is for riding, not walking
+							result.section_time[1] = U.geo.walking_time_2_riding_time(result.section_time[1]);
+							result.time = result.section_time.reduce((a, c) => a + c, 0);
+
+							// cache the riding time
+							bike.cache_traveltime(bs1.stationId, bs2.stationId, result.section_time[1]);
+
+							// add result to the list
+							searched_results.push(result);
+
+							// update time_upperbound
+							if (result.time < time_upperbound)
+								time_upperbound = result.time;
+
+							return resolve(true);
+						});
+					});
+
+				promises = [];
+				for (let candidate of candidates)
+					promises.push(search_candidate_route(candidate));
+				Promise.all(promises)
+				.then(results => {
+					if (results.some(e => e)) {
+						// more search needed
+						search_candidate_routes(i + CONCALL_BIKE_ROUTE_SEARCH);
+					} else {
+						end_searching();
+					}
+				});
+			};
+
+			search_candidate_routes(0);
+		});
+
+		// search pedestran route
+		let promise_pedestrian = oapi.get_pedestrian_route([[lat_start, lon_start], [lat_end, lon_end]])
+		.then(result => {
+			result.brief_list = ['도보'];
+			routes.push(result);
+			return;
+		});
+
+		// search all routes
+		Promise.all([
+			promise_bikestop,
+			promise_pedestrian
+		])
+		.then(() => {
+			// end of searching
+			console.log(`All routes are found.`);
+			resolve(routes);
+		});
+	});
+>>>>>>> client/merge-AR

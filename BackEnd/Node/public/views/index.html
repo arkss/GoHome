@@ -15,7 +15,11 @@
 	<script>
 		let base_url = "http://15.164.105.118:8080";
 
+<<<<<<< HEAD
 		let iconSize = new Tmapv2.Size(18, 30);
+=======
+		let iconSize = new Tmapv2.Size(10, 20);
+>>>>>>> client/merge-AR
 
 		// 마커들을 저장할 배열입니다.
 		let bikestopMarkers = [];
@@ -51,11 +55,16 @@
 			.catch(console.log);
 		};
 
+<<<<<<< HEAD
 		const getRoutes = (lat_start, lon_start, lat_end, lon_end, include_bike = 'Y', include_bus = 'Y') => {
+=======
+		const getRoutes = (lat_start, lon_start, lat_end, lon_end) => {
+>>>>>>> client/merge-AR
 			req(`${base_url}/api/routes`, 'GET', {
 				lat_start: lat_start,
 				lon_start: lon_start,
 				lat_end: lat_end,
+<<<<<<< HEAD
 				lon_end: lon_end,
 				include_bike: include_bike,
 				include_bus: include_bus
@@ -66,6 +75,15 @@
 				res.data.sort((a, b) => a.time - b.time);
 
 				showRouteMarkers(res.data[0].sections);
+=======
+				lon_end: lon_end
+			})
+			.then(res => {
+				console.log(res);
+				if (res.data.routes.length == 0) return;
+				res.data.routes.sort((a, b) => a.time - b.time);
+				showRouteMarkers(res.data.routes[0].points);
+>>>>>>> client/merge-AR
 			})
 			.catch(console.log);
 		};
@@ -107,7 +125,11 @@
 			// Marker 객체 생성.
 			for (let station of stations) {
 				var marker = new Tmapv2.Marker({
+<<<<<<< HEAD
 					position: new Tmapv2.LatLng(station.stationLatitude, station.stationLongitude),
+=======
+					position: new Tmapv2.LatLng(station.gpsY, station.gpsX),
+>>>>>>> client/merge-AR
 					label: `N[${station.stationNm}]`,
 					iconSize: iconSize
 				});
@@ -116,11 +138,16 @@
 			}
 		};
 
+<<<<<<< HEAD
 		const showRouteMarkers = (sections) => {
+=======
+		const showRouteMarkers = (route) => {
+>>>>>>> client/merge-AR
 			removeMarkers(routeMarkers);
 			routeMarkers = [];
 
 			// Marker 객체 생성.
+<<<<<<< HEAD
 			for (let s of sections) {
 				let points = s.points;
 				let type = s.type;
@@ -135,6 +162,17 @@
 					marker.setMap(map);
 					routeMarkers.push(marker);
 				}
+=======
+			let i, point;
+			for (i = 0; i < route.length; i++) {
+				point = route[i];
+				var marker = new Tmapv2.Marker({
+					position: new Tmapv2.LatLng(point[1], point[0]),
+					label: `R[${i}]`
+				});
+				marker.setMap(map);
+				routeMarkers.push(marker);
+>>>>>>> client/merge-AR
 			}
 		};
 

@@ -7,7 +7,7 @@
 
     <fragment
         android:id="@+id/MapFragment"
-        android:name="com.example.gohome.main.MapFragment"
+        android:name="com.uos.gohome.main.MapFragment"
         android:label="Map Fragment"
         tools:layout="@layout/fragment_map">
 
@@ -17,7 +17,7 @@
     </fragment>
     <fragment
         android:id="@+id/SearchFragment"
-        android:name="com.example.gohome.main.SearchFragment"
+        android:name="com.uos.gohome.main.SearchFragment"
         android:label="Search Fragment"
         tools:layout="@layout/fragment_search">
 
@@ -30,7 +30,7 @@
     </fragment>
     <fragment
         android:id="@+id/RouteFragment"
-        android:name="com.example.gohome.main.RouteFragment"
+        android:name="com.uos.gohome.main.RouteFragment"
         android:label="Route Fragment"
         tools:layout="@layout/fragment_route">
 

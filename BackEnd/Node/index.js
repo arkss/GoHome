@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 const U = require('./controllers/util');
 const bike = require('./controllers/bike');
 const bus = require('./controllers/bus');
@@ -5,6 +6,13 @@ const express = require('express');
 const session = require('express-session');
 const mongoose = require('mongoose');
 const cors = require('cors');
+=======
+const R = require('./controllers/util').res;
+const bike = require('./controllers/bike');
+const express = require('express');
+const session = require('express-session');
+const mongoose = require('mongoose');
+>>>>>>> client/merge-AR
 const router = require('./routes');
 const keys = require('./keys.json');
 const app = express();
@@ -56,9 +64,15 @@ app.use((err, req, res, next) => {
 });
 
 // start server
+<<<<<<< HEAD
 U.log(`
   /$$$$$$            /$$   /$$                                  
  /$$__  $$          | $$  | $$                                  
+=======
+console.log(`
+/$$$$$$            /$$   /$$                                  
+/$$__  $$          | $$  | $$                                  
+>>>>>>> client/merge-AR
 | $$  \\__/  /$$$$$$ | $$  | $$  /$$$$$$  /$$$$$$/$$$$   /$$$$$$ 
 | $$ /$$$$ /$$__  $$| $$$$$$$$ /$$__  $$| $$_  $$_  $$ /$$__  $$
 | $$|_  $$| $$  \\ $$| $$__  $$| $$  \\ $$| $$ \\ $$ \\ $$| $$$$$$$$
@@ -66,7 +80,11 @@ U.log(`
 |  $$$$$$/|  $$$$$$/| $$  | $$|  $$$$$$/| $$ | $$ | $$|  $$$$$$$
 \\______/  \\______/ |__/  |__/ \\______/ |__/ |__/ |__/ \\_______/
 `);
+<<<<<<< HEAD
 U.log(`Starting server...`);
+=======
+console.log(`Starting server...`);
+>>>>>>> client/merge-AR
 mongoose.Promise = global.Promise;
 mongoose.connect(keys.url_mongodb, {
 	dbName: keys.db_name,
@@ -76,6 +94,7 @@ mongoose.connect(keys.url_mongodb, {
 	useFindAndModify: false // https://mongoosejs.com/docs/deprecations.html#findandmodify
 })
 .then(async () => {
+<<<<<<< HEAD
 	U.log(`Succeessfully connected to ${keys.url_mongodb}.`);
 
 	await bike.load_cache_from_db();
@@ -90,3 +109,20 @@ mongoose.connect(keys.url_mongodb, {
 
 // prevent termination due to uncaughtException
 process.on('uncaughtException', U.error);
+=======
+	console.log(`Succeessfully connected to ${keys.url_mongodb}.`);
+
+	await bike.load_cache_from_db();
+	console.log(`Succeessfully load biekstop cache.`);
+
+	server.listen(port, () => {
+		console.log(`Server listen now with ${port} port.`);
+	});
+})
+.catch(err => {
+	console.log(`ERROR while starting server: ${err}`);
+});
+
+// prevent termination due to uncaughtException
+process.on('uncaughtException', console.log);
+>>>>>>> client/merge-AR
