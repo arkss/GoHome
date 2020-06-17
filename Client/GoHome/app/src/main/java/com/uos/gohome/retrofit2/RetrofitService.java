@@ -29,11 +29,11 @@ public interface RetrofitService {
     Call<JsonArray> allSignup();
 
     @POST("share/route/")
-    Call<PostRouteData> postRoute();
+    Call<PostRouteData> postRoute(@Header("Authorization") String token);
 
     @GET("share/{route_id}/position/")
     Call<JsonObject> getPosition(@Path("route_id") int routeId);
 
     @POST("share/{route_id}/position/")
-    Call<JsonObject> postPosition(@Path("route_id") int routeId, @Field("lat") double lat, @Field("log") double log);
+    Call<JsonObject> postPosition(@Header("Authorization") String token, @Path("route_id") int routeId, @Field("lat") double lat, @Field("log") double log);
 }
