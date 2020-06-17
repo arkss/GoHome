@@ -364,7 +364,7 @@ exports.load_buspaths = async (lat_start, lon_start, lat_end, lon_end) => {
 */
 const tmap_keys = {
 	keys: keys.api_key.tmap,
-	len: tmap_keys.length,
+	len: keys.api_key.tmap.length,
 	i: 0,
 }
 exports.get_pedestrian_route = async (points) => {
