@@ -60,11 +60,19 @@ exports.api_get_routes = (req, res, next) => {
 	
 	// handle exception: invalid query
 	if (U.isInvalid(res, lat_start, lon_start, lat_end, lon_end)) return;
+
+	let start_time, end_time;
+	start_time = Date.now();
 	exports.get_routes(lat_start, lon_start, lat_end, lon_end, include_bike, include_bus)
 	.then(routes => {
 		U.response(res, true, `${routes.length} route found`, routes);
 	})
-	.catch(next);
+	.catch(next)
+	.then(() => {
+		// log processing time
+		end_time = Date.now();
+		U.log(`Route Searching Time: ${end_time - start_time}ms`)
+	});
 };
 
 exports.get_routes = (lat_start, lon_start, lat_end, lon_end, include_bike, include_bus) =>
