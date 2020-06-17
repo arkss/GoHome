@@ -38,7 +38,6 @@ exports.get_value = (json, default_value, ...properties) => {
 		if (!v) return default_value;
 	}
 	return v;
-<<<<<<< HEAD
 };
 
 exports.get_values_copied = (json) => {
@@ -49,6 +48,4 @@ exports.get_values_copied = (json) => {
 	}
 
 	return JSON.parse(JSON.stringify(list));
-=======
->>>>>>> client/merge-AR
 };

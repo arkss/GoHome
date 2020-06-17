@@ -1,12 +1,11 @@
 apply plugin: 'com.android.application'
-apply plugin: 'com.google.ar.sceneform.plugin'
 
 android {
     compileSdkVersion 29
     buildToolsVersion "29.0.3"
 
     defaultConfig {
-        applicationId "com.uos.gohome"
+        applicationId "com.example.gohome"
         minSdkVersion 24
         targetSdkVersion 29
         versionCode 1
@@ -20,10 +19,6 @@ android {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
         }
-    }
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
     }
 
 }
@@ -48,32 +43,4 @@ dependencies {
     // implementation for retrofit2
     implementation 'com.squareup.retrofit2:retrofit:2.6.0'
     implementation 'com.squareup.retrofit2:converter-gson:2.6.0'
-
-    // implementation for ARCore
-    implementation 'com.google.ar.sceneform.ux:sceneform-ux:1.15.0'
-
-    implementation 'androidx.recyclerview:recyclerview:1.1.0'
-    implementation 'androidx.recyclerview:recyclerview-selection:1.1.0-rc01'
-
-    // location play services
-//    implementation 'com.google.android.gms:play-services-location:15.0.1'
-
-    // dexter runtime permissions
-//    implementation 'com.karumi:dexter:4.2.0'
-
-    // ButterKnife view binding
-//    implementation 'com.jakewharton:butterknife:8.8.1'
-//    annotationProcessor 'com.jakewharton:butterknife-compiler:8.8.1'
 }
-
-sceneform.asset('sampledata/arrow4.obj',
-        'default',
-        'sampledata/arrow4.sfa',
-        'src/main/assets/arrow4')
-
-sceneform.asset('sampledata/circle.obj',
-        'default',
-        'sampledata/circle.sfa',
-        'src/main/assets/circle')
-
-//configurations.all {exclude group: 'com.android.support', module: 'support-v4'}

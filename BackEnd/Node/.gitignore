@@ -11,8 +11,4 @@ test.js
 .eslintrc.json
 
 # files to access remote server
-<<<<<<< HEAD
 .remote/
-=======
-.remote
->>>>>>> client/merge-AR

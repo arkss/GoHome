@@ -24,7 +24,6 @@ const iconv = require('iconv-lite');
 	}
 
 */
-<<<<<<< HEAD
 exports.load_bikestops = async () => {
 	U.log(`load bikestops from fetched`);
 	let base_url = `http://openapi.seoul.go.kr:8088/${keys.api_key.seoul_opendata}/json/bikeList`;
@@ -54,44 +53,6 @@ exports.load_bikestops = async () => {
 
 	return list;
 };
-=======
-exports.load_bikestops = () =>
-	new Promise((resolve, reject) => {
-		// cache expired, fetch new
-		console.log(`load bikestops from fetched`);
-		let base_url = `http://openapi.seoul.go.kr:8088/${keys.api_key.seoul_opendata}/json/bikeList`;
-		let option_1 = {
-			url: `${base_url}/1/1000/`,
-			encoding: null
-		};
-		let option_2 = {
-			url: `${base_url}/1001/2000/`,
-			encoding: null
-		};
-
-		let list = [];
-
-		// request bikestop list
-		Promise.all([
-			requestAndParseAsJSON(option_1),
-			requestAndParseAsJSON(option_2)
-		])
-		.then(([json_1, json_2]) => {
-			/*
-			NOTE: at ES2020, you can use optional chaining operator (?.)
-			and nullish coalescing operator (??) to make it simpler
-			*/
-			list = list.concat(U.json.get_value(json_1, [], "rentBikeStatus", "row"));
-			list = list.concat(U.json.get_value(json_2, [], "rentBikeStatus", "row"));
-		})
-		.catch(console.log)
-		.then(() => {
-			// sort by id and update cache
-			//list.sort((a, b) => a.stationId.slice(3) - b.stationId.slice(3));
-			resolve(list);
-		});
-	});
->>>>>>> client/merge-AR
 
 /*
 
@@ -252,7 +213,6 @@ exports.load_nbus_info = async () => {
 		}
 	};
 
-<<<<<<< HEAD
 	let i, len;
 	let nbus_info_list = [];
 	let route, routes, promise_stations = [], promise_arrive_infos = [];
@@ -378,253 +338,7 @@ exports.load_buspaths = async (lat_start, lon_start, lat_end, lon_end) => {
 	}
 
 	return info;
-=======
-		// cache expired, fetch new
-		console.log(`load N-Bus info from fetched`);
-
-		let nbus_info_list = [];
-
-		// request bus info list
-		requestAndParseAsJSON({
-			uri: `http://ws.bus.go.kr/api/rest/busRouteInfo/getBusRouteList`,
-			qs: {
-				serviceKey: keys.api_key.data_portal
-			}
-		}, 'xml')
-		.then(parse_itemList)
-		.then(info_list => {
-			// get all N-bus and find stations of each route
-
-			let promises = [];
-			let i, info, option_getstations, option_arrive_info;
-
-			option_getstations = {
-				uri: `http://ws.bus.go.kr/api/rest/busRouteInfo/getStaionByRoute`,
-				qs: {
-					serviceKey: keys.api_key.data_portal,
-					busRouteId: ''
-				}
-			};
-
-			option_arrive_info = {
-				uri: `http://ws.bus.go.kr/api/rest/arrive/getArrInfoByRouteAll`,
-				qs: {
-					serviceKey: keys.api_key.data_portal,
-					busRouteId: ''
-				}
-			};
-
-			for (i = 0; i < info_list.length; i++) {
-				info = info_list[i];
-
-				// take N-bus only
-				if (U.json.get_value(info, null, "busRouteNm", 0, 0) != 'N') continue;
-
-				// beautify: "property:[value]" -> "property:value"
-				U.json.unwrap_properties(info);
-				info.stations = [];
-				nbus_info_list.push(info);
-
-				// request to get all stations of the bus
-				option_getstations.qs.busRouteId = info.busRouteId;
-				option_arrive_info.qs.busRouteId = info.busRouteId;
-				promises.push(
-					requestAndParseAsJSON(option_getstations, 'xml')
-					.then(parse_itemList)
-					.then(U.json.unwrap_properties),
-					requestAndParseAsJSON(option_arrive_info, 'xml')
-					.then(parse_itemList)
-					.then(U.json.unwrap_properties)
-				);
-			}
-
-			Promise.all(promises)
-			.then(jsons => {
-				let i, stations, arriveInfos;
-				for (i = 0; i < jsons.length; i += 2) {
-
-					stations = jsons[i];
-					arriveInfos = jsons[i + 1];
-
-					// TODO: sort arriveInfo for optimization
-					// save every arrive info into its station info
-					for (let station of stations) {
-						let stationNo = station.stationNo;
-						station.arriveInfo = null;
-						for (let arriveInfo of arriveInfos) {
-							if (arriveInfo.arsId == stationNo) {
-								station.arriveInfo = arriveInfo;
-							}
-						}
-					}
-
-					nbus_info_list[i / 2].stations = stations;
-				}
-			})
-			.then(() => {
-				update_cache(exports.nbus_info, nbus_info_list);
-				resolve();
-			});
-		})
-		.catch(err => {
-			console.log(err);
-			update_cache(exports.nbus_info, exports.nbus_info.list);
-			resolve();
-		});
-	})
-	.then(() => JSON.parse(JSON.stringify(exports.nbus_info.list))); // return deep copy
-
-/*
-
-	Return a pedestrian route with the time required.
-	Parameter 'points' is array of [lat, lon] but result is [lon, lat]
-
-	Example of a route:
-	{
-		time: 868,
-		distance: 1099,
-		section_time: [868],
-		section_distance: [1099],
-		points: [
-			[127.05353861565403, 37.5865481484368],
-			...
-		]
-	}
-
-*/
-exports.get_pedestrian_route = (points) =>
-	new Promise((resolve, reject) => {
-
-		let i, passList;
-		let result = {
-			time: 0,
-			distance: 0,
-			section_time: [],
-			section_distance: [],
-			points: []
-		};
-
-		// handle exceptions
-		if (points.length < 2)
-			return reject('There should be 2 or more points.');
-		
-		passList = '';
-		for (i = 1; i < points.length - 1; i++) {
-			if (points[i].length == 2) {
-				passList += `_${points[i][1]},${points[i][0]}`;
-			}
-		}
-		passList = passList.slice(1);
-
-		console.log(`get_pedestrian_route([${points}])`);
-		let option = {
-			method: "POST",
-			uri: "https://apis.openapi.sk.com/tmap/routes/pedestrian?version=1",
-			form: {
-				appKey: keys.api_key.tmap,
-				startX: points[0][1], // lon
-				startY: points[0][0], // lat
-				endX: points[points.length - 1][1], // lon
-				endY: points[points.length - 1][0], // lat
-				passList: passList,
-				reqCoordType: "WGS84GEO", // WGS84GEO, EPSG3857
-				resCoordType: "WGS84GEO", // WGS84GEO, EPSG3857
-				startName: "출발지",
-				endName: "도착지"
-			}
-		};
-
-		// request pedestrian route
-		requestAndParseAsJSON(option)
-		.then(json => {
-			if (json?.type != 'FeatureCollection')
-				return;
-
-			let i, point_type, time, distance, feature, features;
-
-			time = 0;
-			distance = 0;
-			features = json.features || [];
-			for (i = 0; i < features.length; i++) {
-				feature = features[i];
-
-				// handle exception: unexpected type
-				if (feature?.type != 'Feature') continue;
-
-				// CHECK: Point와 LineString이 반드시 제 순서대로 들어와야 가능함
-				if (feature.geometry.type == 'Point') {
-					// check way point
-					point_type = feature.properties.pointType;
-					switch (point_type) {
-						case 'EP': // 도착지
-						case 'PP': // 경유지
-						case 'PP1': // 경유지1
-						case 'PP2': // 경유지2
-						case 'PP3': // 경유지3
-						case 'PP4': // 경유지4
-						case 'PP5': // 경유지5
-							result.section_time.push(time);
-							result.section_distance.push(distance);
-							result.time += time;
-							result.distance += distance;
-							time = 0;
-							distance = 0;
-							break;
-						//case 'SP': // 출발지
-						//case 'GP': // 일반 안내점
-						//default: // error
-						//	break;
-					}
-				} else {
-					// LineString
-					// push the point to the list in order
-					result.points[feature.properties.lineIndex] = feature.geometry.coordinates;
-					time += feature.properties.time ?? 0;
-					distance += feature.properties.distance ?? 0;
-				}
-			}
-
-			// delete all false-values
-			result.points = result.points.filter(Boolean).flat();
-		}, console.log)
-		.then(() => resolve(result));
-	});
-
-/*
-
-	update cache
-	TODO: save it in DB
-
-*/
-exports.nbus_info = {
-	expired: true,
-	list: [],
-	func_update: exports.load_nbus_info,
-	term_update: 200000
->>>>>>> client/merge-AR
 };
-
-update_cache = (cache, list) => {
-	// update cache
-	cache.list = list;
-	cache.expired = false;
-
-	// after 200sec, expire cache and fetch new
-	console.log(`Cache updated.`);
-	setTimeout(() => {
-		console.log(`Cache expired. Fetch new info.`);
-		cache.expired = true;
-		cache.func_update();
-	}, cache.term_update);
-};
-
-/*
-
-	Extract itemList from response json.
-
-*/
-parse_itemList = (json) =>
-	U.json.get_value(json, [], "ServiceResult", "msgBody", 0, "itemList");
 
 /*
 
@@ -648,11 +362,7 @@ parse_itemList = (json) =>
 	}
 
 */
-<<<<<<< HEAD
 exports.get_pedestrian_route = (points) =>
-=======
-requestAndParseAsJSON = (option, type = 'json') =>
->>>>>>> client/merge-AR
 	new Promise((resolve, reject) => {
 
 		let i, passList;
@@ -751,7 +461,6 @@ requestAndParseAsJSON = (option, type = 'json') =>
 				}
 			}
 
-<<<<<<< HEAD
 
 		}, U.error)
 		.then(() => resolve(result));
@@ -978,13 +687,3 @@ const requestAndParseJSON = async (option, type = 'json') => {
 		return decoded;
 	}
 };
-=======
-			// undefined type
-			return decoded;
-		})
-		.catch(err => {
-			console.log('Error on requestAndParseAsJSON: ', err);
-			resolve({});
-		});
-	});
->>>>>>> client/merge-AR

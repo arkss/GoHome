@@ -1,5 +1,4 @@
 from django.urls import path
-<<<<<<< HEAD
 from . import views
 from rest_framework_jwt.views import obtain_jwt_token, refresh_jwt_token
 
@@ -11,13 +10,4 @@ urlpatterns = [
     path('profile/', views.ProfileDetailView.as_view()),
     path('user_active/<str:uid64>/<str:token>/',
          views.user_active, name='user_active'),
-=======
-from . import  views
-from rest_framework_jwt.views import obtain_jwt_token
-
-urlpatterns = [
-    path('', views.is_login),
-    path('login/', obtain_jwt_token),
-    path('signup/', views.CreateProfileView.as_view()),
->>>>>>> client/merge-AR
 ]
