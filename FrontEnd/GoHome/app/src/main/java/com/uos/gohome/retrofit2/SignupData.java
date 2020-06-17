@@ -6,8 +6,8 @@ public class SignupData {
     @SerializedName("profile")
     private SignupProfile profile;
 
-    public SignupData(String username, String password, String email, String nickname, String address, String detail_address, double latitude, double longitude) {
-        this.profile = new SignupProfile(username, password, email, nickname, address, detail_address, latitude, longitude);
+    public SignupData(String username, String password, String email, String nickname, String address, String detail_address, double address_lat, double address_lon) {
+        this.profile = new SignupProfile(username, password, email, nickname, address, detail_address, address_lat, address_lon);
     }
 
     public SignupProfile getProfile() {
@@ -31,20 +31,20 @@ public class SignupData {
         private String address;
         @SerializedName("detail_address")
         private String detail_address;
-        @SerializedName("latitude")
-        private double latitude;
-        @SerializedName("longitude")
-        private double longitude;
+        @SerializedName("address_lat")
+        private double address_lat;
+        @SerializedName("address_lon")
+        private double address_lon;
 
-        public SignupProfile(String username, String password, String email, String nickname, String address, String detail_address, double latitude, double longitude) {
+        public SignupProfile(String username, String password, String email, String nickname, String address, String detail_address, double address_lat, double address_lon) {
             this.username = username;
             this.password = password;
             this.email = email;
             this.nickname = nickname;
             this.address = address;
             this.detail_address = detail_address;
-            this.latitude = latitude;
-            this.longitude = longitude;
+            this.address_lat = address_lat;
+            this.address_lon = address_lon;
         }
 
         public String getUsername() {
@@ -95,12 +95,20 @@ public class SignupData {
             this.detail_address = detail_address;
         }
 
-        public double getLatitude() { return latitude; }
+        public double getAddress_lat() {
+            return address_lat;
+        }
 
-        public void setLatitude(double latitude) { this.latitude = latitude; }
+        public void setAddress_lat(double address_lat) {
+            this.address_lat = address_lat;
+        }
 
-        public double getLongitude() { return longitude; }
+        public double getAddress_lon() {
+            return address_lon;
+        }
 
-        public void setLongitude(double longitude) { this.longitude = longitude; }
+        public void setAddress_lon(double address_lon) {
+            this.address_lon = address_lon;
+        }
     }
 }

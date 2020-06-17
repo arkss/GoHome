@@ -30,7 +30,7 @@ public class SignUpActivity extends AppCompatActivity {
     private static final String signupTag = "SIGNUP";
 
     final int addressRequestCode = 0;
-    double latitude, longitude;
+    double latitude = 0, longitude = 0;
 
     @Override
     protected void onCreate(Bundle saveInstanceState) {
