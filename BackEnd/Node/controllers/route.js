@@ -50,7 +50,7 @@ const MAX_BIKE_SUBROUTE_RETURN    = keys.settings.max_bike_subroute_return;
 			}
 
 */
-exports.api_get_routes = (req, res, next) => {
+exports.api_get_routes = async (req, res, next) => {
 	let lat_start = req.query.lat_start;
 	let lon_start = req.query.lon_start;
 	let lat_end = req.query.lat_end;
@@ -63,39 +63,46 @@ exports.api_get_routes = (req, res, next) => {
 
 	let start_time, end_time;
 	start_time = Date.now();
-	exports.get_routes(lat_start, lon_start, lat_end, lon_end, include_bike, include_bus)
-	.then(routes => {
-		U.response(res, true, `${routes.length} route found`, routes);
-	})
-	.catch(next)
-	.then(() => {
-		// log processing time
-		end_time = Date.now();
-		U.log(`Route Searching Time: ${end_time - start_time}ms`);
-	});
+	let routes = await exports.get_routes(lat_start, lon_start, lat_end, lon_end, include_bike, include_bus);
+	end_time = Date.now();
+
+	// response
+	U.response(res, true, `${routes.length} route found`, routes);
+	
+	// log processing time
+	U.log(`Route Searching Time: ${end_time - start_time}ms`);
 };
 
-exports.get_routes = (lat_start, lon_start, lat_end, lon_end, include_bike, include_bus) =>
-	new Promise((resolve, reject) => {
-		let o = make_o(lat_start, lon_start, lat_end, lon_end);
+exports.get_routes = async (lat_start, lon_start, lat_end, lon_end, include_bike, include_bus) => {
+	let o = make_o(lat_start, lon_start, lat_end, lon_end);
 
+	// handle exception: invalid position
+	if (!U.is_valid_positions([lat_start, lon_start], [lat_end, lon_end])) {
+		return [];
+	}
+
+	try {
 		// search all routes
-		Promise.all([
+		await Promise.all([
 			search_pedestrian_route(o),
 			(include_bike ? search_bikebus_route(o, 'bike') : Promise.resolve()),
 			(include_bus ? search_bikebus_route(o, 'bus') : Promise.resolve())
-		])
-		.then(() => {
-			// end of searching
-			// sort by total time
-			let log_str = `All routes are found. Each route's time: `;
-			o.routes.sort((a, b) => a.time - b.time);
-			for (let route of o.routes)
-				log_str += route.time + ' ';
-			U.log(log_str);
-			resolve(o.routes);
-		});
-	});
+		]);
+
+		// end of searching
+		// sort by total time
+		let log_str = `All routes are found. Each route's time: `;
+		o.routes.sort((a, b) => a.time - b.time);
+		for (let route of o.routes)
+			log_str += route.time + ' ';
+		U.log(log_str);
+
+		return o.routes;
+	} catch (err) {
+		U.error(err);
+		return [];
+	}
+};
 
 /*
 

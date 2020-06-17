@@ -545,7 +545,7 @@ exports.topis_get_nbus_routes = async (lat_start, lon_start, lat_end, lon_end, i
 	// for the route
 	summary = route.summary;
 	p.time = route.totalTime;
-	p.transit_count = route.numberOfTransit;
+	p.transit_count = route.numberOfTransit - 1;
 	p.start_id = summary[0].startArsId;
 	p.end_id = summary[summary.length - 1].endArsId;
 
