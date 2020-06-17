@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<navigation xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/nav_graph"
+    app:startDestination="@id/MapFragment">
+
+    <fragment
+        android:id="@+id/MapFragment"
+        android:name="com.uos.gohome.main.MapFragment"
+        android:label="Map Fragment"
+        tools:layout="@layout/fragment_map">
+
+        <action
+            android:id="@+id/action_MapFragment_to_SearchFragment"
+            app:destination="@id/SearchFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/SearchFragment"
+        android:name="com.uos.gohome.main.SearchFragment"
+        android:label="Search Fragment"
+        tools:layout="@layout/fragment_search">
+
+        <action
+            android:id="@+id/action_SearchFragment_to_MapFragment"
+            app:destination="@id/MapFragment" />
+        <action
+            android:id="@+id/action_SearchFragment_to_RouteFragment"
+            app:destination="@id/RouteFragment" />
+    </fragment>
+    <fragment
+        android:id="@+id/RouteFragment"
+        android:name="com.uos.gohome.main.RouteFragment"
+        android:label="Route Fragment"
+        tools:layout="@layout/fragment_route">
+
+        <action
+            android:id="@+id/action_RouteFragment_to_SearchFragment"
+            app:destination="@id/SearchFragment" />
+        <action
+            android:id="@+id/action_RouteFragment_to_MapFragment"
+            app:destination="@id/MapFragment" />
+
+    </fragment>
+</navigation>

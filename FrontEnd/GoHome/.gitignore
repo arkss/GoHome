@@ -391,6 +391,7 @@ obj/
 .idea/assetWizardSettings.xml
 .idea/
 app/.idea/
+gradle/wrapper/gradle-wrapper.properties
 
 # OS-specific files
 .DS_Store
