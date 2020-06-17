@@ -55,6 +55,26 @@ python manage.py runserver --settings=config.settings.deploy
 
 
 
+#### Refresh Token
+
+* path : refresh/
+
+* method : POST
+
+* request body
+
+  | Name  | Type   | Mandatory | Default | Example | Description         |
+  | ----- | ------ | --------- | ------- | ------- | ------------------- |
+  | token | String | Y         | -       | 토큰값  | 만료된 access token |
+
+* response field
+
+  | Name  | Type   | Mandatory | Default | Example | Description  |
+  | ----- | ------ | --------- | ------- | ------- | ------------ |
+  | token | String | Y         | -       | 토큰값  | access token |
+
+
+
 #### 회원가입
 
 * path : signup/

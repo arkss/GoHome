@@ -10,9 +10,7 @@ from .servers import route_server
 @permission_classes([AllowAny, ])
 def route_test(request):
     res = requests.get(route_server)
-
     response = res.json()
-
     return Response(response)
 
 # TODO: 이 아래 부터 permission_classes 전체적으로 변경
@@ -30,6 +28,8 @@ def bike_stops(request, lat, lon, n):
         f'{route_server}api/bikestops',
         params=params
     )
+
+    breakpoint()
 
     return Response(res.json())
 
