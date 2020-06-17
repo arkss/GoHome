@@ -310,6 +310,8 @@ const search_candidate_route = async (o, type, candidate) => {
 			bs1 = bus.get_busstop(buspath.start_id);
 		if (buspath.end_id != bs2.stationId)
 			bs2 = bus.get_busstop(buspath.end_id);
+		delete buspath.start_id;
+		delete buspath.end_id;
 
 		result.sections[0].points = buspath.points;
 		result.sections[0].time = buspath.time * 60;
