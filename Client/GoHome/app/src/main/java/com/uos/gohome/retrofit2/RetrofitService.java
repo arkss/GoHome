@@ -5,9 +5,11 @@ import com.google.gson.JsonObject;
 
 import retrofit2.Call;
 import retrofit2.http.Body;
+import retrofit2.http.Field;
 import retrofit2.http.GET;
 import retrofit2.http.Header;
 import retrofit2.http.POST;
+import retrofit2.http.Path;
 
 public interface RetrofitService {
 
@@ -17,9 +19,21 @@ public interface RetrofitService {
     @POST("login/")
     Call<JsonObject> login(@Body LoginData data);
 
+    @GET("profile/")
+    Call<JsonObject> getProfile();
+
     @POST("signup/")
     Call<JsonObject> signup(@Body SignupData data);
 
     @GET("signup/")
     Call<JsonArray> allSignup();
+
+    @POST("share/route/")
+    Call<PostRouteData> postRoute();
+
+    @GET("share/{route_id}/position/")
+    Call<JsonObject> getPosition(@Path("route_id") int routeId);
+
+    @POST("share/{route_id}/position/")
+    Call<JsonObject> postPosition(@Path("route_id") int routeId, @Field("lat") double lat, @Field("log") double log);
 }

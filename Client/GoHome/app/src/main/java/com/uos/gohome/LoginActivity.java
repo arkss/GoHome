@@ -87,7 +87,7 @@ public class LoginActivity extends AppCompatActivity {
 
                         }
                         else {
-                            Log.d(loginTag, "login-response failed");
+                            Log.d(loginTag, "login-response failed "+response.message());
                         }
                     }
 
