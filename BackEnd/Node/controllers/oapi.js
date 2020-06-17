@@ -362,221 +362,114 @@ exports.load_buspaths = async (lat_start, lon_start, lat_end, lon_end) => {
 	}
 
 */
-exports.get_pedestrian_route = (points) =>
-	new Promise((resolve, reject) => {
-
-		let i, passList;
-		let result = {
-			time: 0,
-			distance: 0,
-			sections: []
-		};
-
-		// handle exceptions
-		if (points.length < 2)
-			return reject('There should be 2 or more points.');
-		
-		passList = '';
-		for (i = 1; i < points.length - 1; i++) {
-			if (points[i].length == 2) {
-				passList += `_${points[i][1]},${points[i][0]}`;
-			}
-		}
-		passList = passList.slice(1);
-
-		U.log(`get_pedestrian_route([${points}])`);
-		let option = {
-			method: "POST",
-			uri: "https://apis.openapi.sk.com/tmap/routes/pedestrian?version=1",
-			form: {
-				appKey: keys.api_key.tmap,
-				startX: points[0][1], // lon
-				startY: points[0][0], // lat
-				endX: points[points.length - 1][1], // lon
-				endY: points[points.length - 1][0], // lat
-				passList: passList,
-				reqCoordType: "WGS84GEO", // WGS84GEO, EPSG3857
-				resCoordType: "WGS84GEO", // WGS84GEO, EPSG3857
-				startName: "출발지",
-				endName: "도착지"
-			}
-		};
-
-		// request pedestrian route
-		requestAndParseJSON(option)
-		.then(json => {
-			if (json?.type != 'FeatureCollection')
-				return;
-
-			let points, point_type, time, distance, feature, features;
-
-			time = 0;
-			distance = 0;
-			points = [];
-			features = json.features || [];
-			for (let i = 0; i < features.length; i++) {
-				feature = features[i];
-
-				// handle exception: unexpected type
-				if (feature?.type != 'Feature') continue;
-
-				// CHECK: Point와 LineString이 반드시 제 순서대로 들어와야 가능함
-				if (feature.geometry.type == 'Point') {
-					// check way point
-					point_type = feature.properties.pointType;
-					switch (point_type) {
-						case 'EP': // 도착지
-						case 'PP': // 경유지
-						case 'PP1': // 경유지1
-						case 'PP2': // 경유지2
-						case 'PP3': // 경유지3
-						case 'PP4': // 경유지4
-						case 'PP5': // 경유지5
-							points = points.filter(Boolean).flat(); // delete all false-values
-							for (let j = 0; j < points.length; j++) {
-								points[j] = [points[j][1], points[j][0]];
-							}
-							result.time += time;
-							result.distance += distance;
-							result.sections.push({
-								time: time,
-								distance: distance,
-								points: points
-							});
-							time = 0;
-							distance = 0;
-							points = [];
-							break;
-						//case 'SP': // 출발지
-						//case 'GP': // 일반 안내점
-						//default: // error
-						//	break;
-					}
-				} else {
-					// LineString
-					// push the point to the list in order
-					points[feature.properties.lineIndex] = feature.geometry.coordinates;
-					time += feature.properties.time ?? 0;
-					distance += feature.properties.distance ?? 0;
-				}
-			}
-		}, U.error)
-		.then(() => resolve(result));
-	});
-
-exports.odsay_get_nbus_info = async () => {
-	U.log(`get N-Bus info from odsay`);
-
-	let option_routelist = {
-		uri: `https://api.odsay.com/v1/api/searchBusLane`,
-		qs: {
-			apiKey: keys.api_key.odsay,
-			busNo: 'N', // N bus only
-			CID: 1000   // seoul
-		}
-	};
-};
-/*
-
-time: 예상 소요시간
-transit_count: 환승횟수
-payment: 예상요금
-station_start: 첫 정류장
-station_end: 마지막 정류장
-number_of_stations: 총 정류장 수
-sub_paths: 상세 경로 {
-	busNo: 버스 번호
-	lat_start: 탑승 정류장 위도
-	lon_start: 탑승 정류장 경도
-	lat_end: 하차 정류장 위도
-	lon_end: 하차 정류장 경도
-	station_start: 탑승 정류장 이름
-	station_end: 하차 정류장 이름
+const tmap_keys = {
+	keys: keys.api_key.tmap,
+	len: tmap_keys.length,
+	i: 0,
 }
-
-*/
-exports.odsay_get_nbus_routes = async (lat_start, lon_start, lat_end, lon_end) => {
-	U.log(`Request N-Bus routes from odsay ...`);
-
-	let option = {
-		uri: `https://api.odsay.com/v1/api/searchPubTransPathR`,
-		qs: {
-			apiKey: keys.api_key.odsay, // api key
-			output: 'json',             // output format
-			SX: lon_start,              // longitude
-			SY: lat_start,              // latitude
-			EX: lon_end,                // longitude
-			EY: lat_end,                // latitude
-			OPT: 0,                     // sort by distance
-			SearchPathType: 2           // bus only
-		}
-	};
-
-	let results = [];
-	let paths = await requestAndParseJSON(option);
-	paths = paths?.result?.path || [];
-
-	U.log(`${paths.length} paths from odsay response.`);
-	for (let path of paths) {
-		let busNos = [];
-		let info = path.info;
-		let subPaths = path.subPath;
-
-		// handle exceptions
-		if (path.pathType != 2 || !info || !subPaths) continue;
-
-		let p = {
-			time: info.totalTime,
-			transit_count: info.busTransitCount,
-			payment: info.payment,
-			station_start: info.firstStartStation,
-			station_end: info.lastEndStation,
-			number_of_stations: info.busStationCount,
-			sub_paths: [],
-			points: []
-		};
-
-		// pop subPath(bus)
-		for (let subPath of subPaths) {
-			U.unwrap_properties(subPath);
-			// take only N-bus path
-			if (subPath.trafficType != 2) continue;
-			/*if (subPath.lane.busNo[0] != 'N') {
-				p.sub_paths = [];
-				break;
-			}*/
-
-			p.sub_paths.push({
-				busNo: subPath.lane.busNo,
-				lat_start: subPath.startY,
-				lon_start: subPath.startX,
-				lat_end: subPath.endY,
-				lon_end: subPath.endX,
-				station_start: subPath.startName,
-				station_end: subPath.endName
-			});
-			p.points.push([
-				[subPath.startY, subPath.startX], // lat, lon
-				[subPath.endY, subPath.endX]      // lat, lon
-			]);
-			busNos.push(subPath.lane.busNo);
-		}
-
-		if (p.sub_paths.length == 0) continue;
-
-		// p.lat_station_start = p.sub_paths[0].lat_start;
-		// p.lon_station_start = p.sub_paths[0].lon_start;
-		// p.lat_station_end = p.sub_paths[p.sub_paths.length - 1].lat_end;
-		// p.lon_station_end = p.sub_paths[p.sub_paths.length - 1].lon_end;
-
-		U.log(`busNos: ${busNos.toString()}`);
-		results.push(p);
+exports.get_pedestrian_route = async (points) => {
+	// handle exceptions
+	if (points.length < 2) {
+		throw 'There should be 2 or more points!';
 	}
 
-	// return only one
-	U.log(`${results.length} N-Bus routes found.`);
-	results.sort((a, b) => a.time - b.time);
-	return (results.length > 0) ? results[0] : null;
+	let i, passList;
+	let result = {
+		time: 0,
+		distance: 0,
+		sections: []
+	};
+
+	passList = '';
+	for (i = 1; i < points.length - 1; i++) {
+		if (points[i].length == 2) {
+			passList += `_${points[i][1]},${points[i][0]}`;
+		}
+	}
+	passList = passList.slice(1);
+
+	U.log(`get_pedestrian_route([${points}])`);
+	let option = {
+		method: "POST",
+		uri: "https://apis.openapi.sk.com/tmap/routes/pedestrian?version=1",
+		form: {
+			appKey: tmap_keys.keys[tmap_keys.i],
+			startX: points[0][1], // lon
+			startY: points[0][0], // lat
+			endX: points[points.length - 1][1], // lon
+			endY: points[points.length - 1][0], // lat
+			passList: passList,
+			reqCoordType: "WGS84GEO", // WGS84GEO, EPSG3857
+			resCoordType: "WGS84GEO", // WGS84GEO, EPSG3857
+			startName: "출발지",
+			endName: "도착지"
+		}
+	};
+	// switch to the next key
+	tmap_keys.i = (tmap_keys.i + 1) % tmap_keys.len;
+
+	// request pedestrian route
+	try {
+		let json = await requestAndParseJSON(option);
+		if (json?.type != 'FeatureCollection')
+			return;
+
+		let points, point_type, time, distance, feature, features;
+
+		time = 0;
+		distance = 0;
+		points = [];
+		features = json.features || [];
+		for (let i = 0; i < features.length; i++) {
+			feature = features[i];
+
+			// handle exception: unexpected type
+			if (feature?.type != 'Feature') continue;
+
+			// CHECK: Point와 LineString이 반드시 제 순서대로 들어와야 가능함
+			if (feature.geometry.type == 'Point') {
+				// check way point
+				point_type = feature.properties.pointType;
+				switch (point_type) {
+					case 'EP': // 도착지
+					case 'PP': // 경유지
+					case 'PP1': // 경유지1
+					case 'PP2': // 경유지2
+					case 'PP3': // 경유지3
+					case 'PP4': // 경유지4
+					case 'PP5': // 경유지5
+						points = points.filter(Boolean).flat(); // delete all false-values
+						for (let j = 0; j < points.length; j++) {
+							points[j] = [points[j][1], points[j][0]];
+						}
+						result.time += time;
+						result.distance += distance;
+						result.sections.push({
+							time: time,
+							distance: distance,
+							points: points
+						});
+						time = 0;
+						distance = 0;
+						points = [];
+						break;
+					//case 'SP': // 출발지
+					//case 'GP': // 일반 안내점
+					//default: // error
+					//	break;
+				}
+			} else {
+				// LineString
+				// push the point to the list in order
+				points[feature.properties.lineIndex] = feature.geometry.coordinates;
+				time += feature.properties.time ?? 0;
+				distance += feature.properties.distance ?? 0;
+			}
+		}
+	} catch (err) {
+		U.error(err);
+	}
+	return result;
 };
 
 exports.topis_get_nbus_routes = async (lat_start, lon_start, lat_end, lon_end, id1, id2) => {
