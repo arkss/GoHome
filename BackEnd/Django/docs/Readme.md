@@ -20,7 +20,7 @@ python manage.py runserver --settings=config.settings.deploy
 
 * method : GET
 
-* request parameter
+* request body
 
   | Name | Type | Mandatory | Default | Example | Description |
   | ---- | ---- | --------- | ------- | ------- | ----------- |
@@ -40,7 +40,7 @@ python manage.py runserver --settings=config.settings.deploy
 
 * method : POST
 
-* request parameter
+* request body
 
   | Name     | Type   | Mandatory | Default | Example    | Description |
   | -------- | ------ | --------- | ------- | ---------- | ----------- |
@@ -61,7 +61,7 @@ python manage.py runserver --settings=config.settings.deploy
 
 * method : POST
 
-* request parameter
+* request body
 
   | Name                   | Type   | Mandatory | Default | Example                           | Description            |
   | ---------------------- | ------ | --------- | ------- | --------------------------------- | ---------------------- |
@@ -118,7 +118,7 @@ python manage.py runserver --settings=config.settings.deploy
 
 * method : POST
 
-* request parameter
+* request body
 
   | Name | Type | Mandatory | Default | Example | Description |
   | ---- | ---- | --------- | ------- | ------- | ----------- |
@@ -142,7 +142,7 @@ python manage.py runserver --settings=config.settings.deploy
 
 * method : POST
 
-* request parameter
+* request body
 
   | Name | Type  | Mandatory | Default | Example     | Description |
   | ---- | ----- | --------- | ------- | ----------- | ----------- |
