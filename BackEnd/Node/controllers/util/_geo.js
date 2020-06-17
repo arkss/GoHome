@@ -39,6 +39,22 @@ exports.approx_distance = (lat_1, lon_1, lat_2, lon_2) => {
 
 /*
 
+	Validate GPS points.path
+	Parameter should be an array of points.
+	Each point is an array. First value is for latitude, and second one is for longitude.
+
+*/
+exports.is_valid_positions = (...points) =>
+	points.every(point =>
+		Array.isArray(point) &&
+		point[0] >  32.0722 && // south bound
+		point[0] <  38.3640 && // north bound
+		point[1] < 131.5222 && // east bound
+		point[1] > 124.3636    // west bound
+	);
+
+/*
+
 	Calculate travel time(sec) between 2 GPS coordinates.
 	Walking speed: 4 km/h
 	Riding speed: 14 km/h ~

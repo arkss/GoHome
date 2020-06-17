@@ -364,7 +364,7 @@ exports.load_buspaths = async (lat_start, lon_start, lat_end, lon_end) => {
 */
 const tmap_keys = {
 	keys: keys.api_key.tmap,
-	len: tmap_keys.length,
+	len: keys.api_key.tmap.length,
 	i: 0,
 }
 exports.get_pedestrian_route = async (points) => {
@@ -447,7 +447,8 @@ exports.get_pedestrian_route = async (points) => {
 						result.sections.push({
 							time: time,
 							distance: distance,
-							points: points
+							points: points,
+							type: 1
 						});
 						time = 0;
 						distance = 0;
@@ -487,7 +488,7 @@ exports.topis_get_nbus_routes = async (lat_start, lon_start, lat_end, lon_end, i
 			prcsType: 'web',
 			routeType: 'pub',
 			routeOption: 'nbus',
-			walkDistance: '500',
+			walkDistance: '200',
 			startName: '출발지명',
 			startX: lon_start.toString(),
 			startY: lat_start.toString(),
@@ -544,7 +545,7 @@ exports.topis_get_nbus_routes = async (lat_start, lon_start, lat_end, lon_end, i
 	// for the route
 	summary = route.summary;
 	p.time = route.totalTime;
-	p.transit_count = route.numberOfTransit;
+	p.transit_count = route.numberOfTransit - 1;
 	p.start_id = summary[0].startArsId;
 	p.end_id = summary[summary.length - 1].endArsId;
 
@@ -581,10 +582,12 @@ const parse_itemList = (json) =>
 
 */
 const requestAndParseJSON = async (option, type = 'json') => {
-	let res, decoded;
+	let res, decoded, start_time, end_time;
+
 	U.log(`request:\n${JSON.stringify(option, null, 2)}`);
 
 	// request
+	start_time = Date.now();
 	try {
 		res = await request(option);
 		decoded = iconv.decode(Buffer.from(res), 'utf8');
@@ -594,7 +597,8 @@ const requestAndParseJSON = async (option, type = 'json') => {
 		return {};
 	}
 
-	// U.log(`response from ${option.uri || option.url}`);
+	end_time = Date.now();
+	U.log(`response from ${option.uri || option.url}.\ntime: ${end_time - start_time}ms`);
 
 	if (type == 'json') { // json to json
 		return JSON.parse(decoded);
@@ -602,7 +606,7 @@ const requestAndParseJSON = async (option, type = 'json') => {
 		try {
 			return await xml2js.parseStringPromise(decoded);
 		} catch (err) {
-			U.error('Error on parseStringPromise: ')
+			U.error('Error on parseStringPromise: ');
 			U.error(err);
 			return {};
 		}

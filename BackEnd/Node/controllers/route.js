@@ -50,7 +50,7 @@ const MAX_BIKE_SUBROUTE_RETURN    = keys.settings.max_bike_subroute_return;
 			}
 
 */
-exports.api_get_routes = (req, res, next) => {
+exports.api_get_routes = async (req, res, next) => {
 	let lat_start = req.query.lat_start;
 	let lon_start = req.query.lon_start;
 	let lat_end = req.query.lat_end;
@@ -60,34 +60,49 @@ exports.api_get_routes = (req, res, next) => {
 	
 	// handle exception: invalid query
 	if (U.isInvalid(res, lat_start, lon_start, lat_end, lon_end)) return;
-	exports.get_routes(lat_start, lon_start, lat_end, lon_end, include_bike, include_bus)
-	.then(routes => {
-		U.response(res, true, `${routes.length} route found`, routes);
-	})
-	.catch(next);
+
+	let start_time, end_time;
+	start_time = Date.now();
+	let routes = await exports.get_routes(lat_start, lon_start, lat_end, lon_end, include_bike, include_bus);
+	end_time = Date.now();
+
+	// response
+	U.response(res, true, `${routes.length} route found`, routes);
+	
+	// log processing time
+	U.log(`Route Searching Time: ${end_time - start_time}ms`);
 };
 
-exports.get_routes = (lat_start, lon_start, lat_end, lon_end, include_bike, include_bus) =>
-	new Promise((resolve, reject) => {
-		let o = make_o(lat_start, lon_start, lat_end, lon_end);
+exports.get_routes = async (lat_start, lon_start, lat_end, lon_end, include_bike, include_bus) => {
+	let o = make_o(lat_start, lon_start, lat_end, lon_end);
 
+	// handle exception: invalid position
+	if (!U.is_valid_positions([lat_start, lon_start], [lat_end, lon_end])) {
+		return [];
+	}
+
+	try {
 		// search all routes
-		Promise.all([
+		await Promise.all([
 			search_pedestrian_route(o),
 			(include_bike ? search_bikebus_route(o, 'bike') : Promise.resolve()),
 			(include_bus ? search_bikebus_route(o, 'bus') : Promise.resolve())
-		])
-		.then(() => {
-			// end of searching
-			U.log(`All routes are found.`);
-			// sort by total time
-			o.routes.sort((a, b) => a.time - b.time);
-			for (let route of o.routes) {
-				U.log(`time: ${route.time}`);
-			}
-			resolve(o.routes);
-		});
-	});
+		]);
+
+		// end of searching
+		// sort by total time
+		let log_str = `All routes are found. Each route's time: `;
+		o.routes.sort((a, b) => a.time - b.time);
+		for (let route of o.routes)
+			log_str += route.time + ' ';
+		U.log(log_str);
+
+		return o.routes;
+	} catch (err) {
+		U.error(err);
+		return [];
+	}
+};
 
 /*
 
@@ -157,9 +172,7 @@ const search_bikebus_route = async (o, type) => {
 	}
 
 	// after all searching
-	U.log(`end of searching (type: ${type}),
-	${searched_results.length} routes are really searched with API call.
-	time upperbound: ${o.time_upperbound_bike}, ${o.time_upperbound_bus}`);
+	U.log(`[${type}] End of searching. ${searched_results.length} routes are really searched with API call.\ntime upperbound: ${o.time_upperbound_bike}, ${o.time_upperbound_bus}.`);
 
 	// sort result out by its travel time
 	searched_results.sort((a, b) => a.time - b.time);
@@ -216,7 +229,7 @@ const find_candidate_pairs = (o, type) => {
 	}
 
 	// for test
-	U.log(`${candidate_routes.length} candidate pairs found, type: ${type}`);
+	U.log(`[${type}] ${candidate_routes.length} candidate pairs found.`);
 
 	// sort pairs out by expected travel time
 	candidate_routes.sort((a, b) => a.traveltime - b.traveltime);
@@ -240,8 +253,7 @@ const search_candidate_route = async (o, type, candidate) => {
 		return null;
 	}
 
-	U.log(`real route searched
-	expected minimum travel time: ${candidate.traveltime}, upperbound: ${time_upperbound}`);
+	U.log(`[${type}] Real route searched: expected min travel time: ${candidate.traveltime}, upperbound: ${time_upperbound}`);
 
 	let bs1 = candidate.bs[0];
 	let bs2 = candidate.bs[1];
@@ -294,14 +306,12 @@ const search_candidate_route = async (o, type, candidate) => {
 			U.error('Bus route not found!');
 			return null;
 		}
-		if (buspath.start_id != bs1.stationId) {
-			U.log('Unexpected busstop_start but keep going...');
+		if (buspath.start_id != bs1.stationId)
 			bs1 = bus.get_busstop(buspath.start_id);
-		}
-		if (buspath.end_id != bs2.stationId) {
-			U.log('Unexpected busstop_end but keep going...');
+		if (buspath.end_id != bs2.stationId)
 			bs2 = bus.get_busstop(buspath.end_id);
-		}
+		delete buspath.start_id;
+		delete buspath.end_id;
 
 		result.sections[0].points = buspath.points;
 		result.sections[0].time = buspath.time * 60;

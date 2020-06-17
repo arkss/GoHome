@@ -14,9 +14,9 @@
 
 테스트를 위해 제공됨
 
-- path: /
+- path: `/`
 
-- method: GET
+- method: `GET`
 
 - request parameter
 
@@ -34,9 +34,9 @@
 
 주변의 따릉이 대여소 정보를 반환
 
-- path: /api/bikestops
+- path: `/api/bikestops`
 
-- method: GET
+- method: `GET`
 
 - request parameter
 
@@ -68,9 +68,9 @@
 
 #### 자전거 거치 수 조회
 
-- path: /api/bikestop_parked_counts
+- path: `/api/bikestop_parked_counts`
 
-- method: GET
+- method: `GET`
 
 - request parameter
 
@@ -93,9 +93,9 @@
 
 #### 경로탐색
 
-- path: /routes
+- path: `/routes`
 
-- method: GET
+- method: `GET`
 
 - request parameter
 
@@ -111,22 +111,25 @@
 
 - response field
   
-  - | Name                              | Type   | Mandatory | Default   | Example                                         | Description                                               |
-    | --------------------------------- | ------ | --------- | --------- | ----------------------------------------------- | --------------------------------------------------------- |
-    | result                            | Number | Y         | 1         | 1                                               | 1: 정상 처리됨<br />-1: 오류                              |
-    | message                           | String | Y         | 'success' | '13 found'                                      | 요청 처리 결과                                            |
-    | data                              | Object | Y         |           |                                                 |                                                           |
-    | data.n                            | Number |           |           | 1                                               | 검색된 경로 수                                            |
-    | data.routes                       | Array  |           |           |                                                 | 검색된 경로 목록                                          |
-    | data.routes[].time                | Number |           |           | 2428                                            | 소요시간                                                  |
-    | data.routes[].distance            | Number |           |           | 9900                                            | 이동 거리                                                 |
-    | data.routes[].brief_list          | Array  |           |           | [1]                                             | 간단한 경로 내용<br />1: 도보<br />2: 자전거<br />3: 버스 |
-    | data.routes[].sections            | Array  |           |           |                                                 | 경로의 구간 목록                                          |
-    | data.routes[].sections[].time     | Array  |           |           | [641, 1341, 446]                                | 구간 별 소요시간                                          |
-    | data.routes[].sections[].distance | Array  |           |           | [857, 8441, 602]                                | 구간 별 이동 거리                                         |
-    | data.routes[].sections[].points   | Array  |           |           | [[126.99430937255515, 37.534636452132624], ...] | 경로 체크포인트(경도, 위도 순)                            |
-    | data.routes[].sections[].type     | Number |           |           | 1                                               | 구간 타입<br />1: 도보<br />2: 자전거<br />3: 버스        |
-    |                                   |        |           |           |                                                 |                                                           |
+  - | Name                                    | Type   | Mandatory | Default   | Example                                         | Description                                        |
+    | --------------------------------------- | ------ | --------- | --------- | ----------------------------------------------- | -------------------------------------------------- |
+    | result                                  | Number | Y         | 1         | 1                                               | 1: 정상 처리됨<br />-1: 오류                       |
+    | message                                 | String | Y         | 'success' | '13 found'                                      | 요청 처리 결과                                     |
+    | data                                    | Array  | Y         |           |                                                 | 검색된 경로 목록                                   |
+    | data[].buspath                          | Object |           |           |                                                 | 버스구간의 추가정보                                |
+    | data[].sections                         | Array  | Y         |           |                                                 | 경로의 구간 목록                                   |
+    | data[].buspath.time                     | Number | Y         |           | 39                                              | 소요시간(분)                                       |
+    | data[].buspath.transit_count            | Number | Y         |           | 1                                               | 버스 환승 횟수                                     |
+    | data[].buspath.routeNames               | Array  | Y         |           | ['N62', 'N13']                                  | 탑승 버스 노선번호 (탑승 순)                       |
+    | data[].sections[].time                  | Number | Y         |           | 270                                             | 구간 소요시간                                      |
+    | data[].sections[].points                | Array  | Y         |           | [[37.534636452132624, 126.99430937255515], ...] | 경로 체크포인트(위도, 경도 순)                     |
+    | data[].sections[].type                  | Number | Y         |           | 1                                               | 구간 타입<br />1: 도보<br />2: 자전거<br />3: 버스 |
+    | data[].sections[].stationNameStart      | String |           | null      | '서울중부기술교육원.블루스퀘어'                 | 버스나 자전거 구간의 탑승지 이름                   |
+    | data[].sections[].stationNameEnd        | String |           | null      | '우산빌딩앞'                                    | 버스나 자전거 구간의 하차지 이름                   |
+    | data[].sections[].stationLatitudeStart  | Number |           | null      |                                                 | 버스나 자전거 구간의 탑승지 위도                   |
+    | data[].sections[].stationLongitudeStart | Number |           | null      |                                                 | 버스나 자전거 구간의 탑승지 경도                   |
+    | data[].sections[].stationLatitudeEnd    | Number |           | null      |                                                 | 버스나 자전거 구간의 하차지 위도                   |
+    | data[].sections[].stationLongitudeEnd   | Number |           | null      |                                                 | 버스나 자전거 구간의 하차지 경도                   |
 
 
 

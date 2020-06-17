@@ -34,7 +34,7 @@ exports.log = (message, level = 'info') => {
 				format: combinedFormat
 			}),
 			new winston.transports.File({
-				filename: `${logDir}/log_${moment().format("YYYYMMDD")}.log`,
+				filename: `${logDir}/log_${moment().format("YYYYMMDD_HH")}.log`,
 				format: combinedFormat
 			})
 		]
