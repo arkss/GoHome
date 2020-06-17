@@ -2,6 +2,7 @@ package com.uos.gohome;
 
 import android.content.Intent;
 import android.graphics.BitmapFactory;
+import android.graphics.Color;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Handler;
@@ -17,14 +18,17 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 
 import com.google.gson.JsonObject;
+import com.skt.Tmap.TMapPoint;
+import com.skt.Tmap.TMapPolyLine;
 import com.skt.Tmap.TMapView;
+import com.uos.gohome.retrofit2.PositionResponseData;
 import com.uos.gohome.retrofit2.RetrofitClientInstance;
 import com.uos.gohome.retrofit2.RetrofitService;
 
 public class ShareActivity extends AppCompatActivity {
-    private static final String URI_SCHEME = "uosgohome";
-    private static final String URI_HOST = "share";
-    public static final String URI_DEFAULT = "uosgohome://share/";
+    private static final String URI_SCHEME = "http";
+    private static final String URI_HOST = "uosgohome";
+    public static final String URI_DEFAULT = "http://uosgohome/";
 
     private int routeId;
     private boolean isShared;
@@ -36,14 +40,11 @@ public class ShareActivity extends AppCompatActivity {
         setContentView(R.layout.share_activity);
 
         // find view by id
-        TextView textPram = (TextView)findViewById(R.id.url_params);
         LinearLayout tMapLayout = (LinearLayout)findViewById(R.id.tmap_share);
 
         // init tmap view
         tMapView = new TMapView(this);
         tMapView.setSKTMapApiKey("l7xx7574967eec1847a08c21f9d5c78980d4"); // 찬표 api key
-        tMapView.setIconVisibility(true);
-        tMapView.setIcon(BitmapFactory.decodeResource(getResources(), R.drawable.dot));
         tMapLayout.addView(tMapView);
 
         // get intent
@@ -55,7 +56,6 @@ public class ShareActivity extends AppCompatActivity {
             if(data.getScheme().equals(URI_SCHEME) && data.getHost().equals(URI_HOST)) {
                 routeId = Integer.parseInt(data.getQueryParameter("id"));
                 isShared = true;
-                textPram.setText(routeId);
             }
         }
 
@@ -68,22 +68,30 @@ public class ShareActivity extends AppCompatActivity {
             public void run() {
                 serviceFunction(service, routeId);
                 if(isShared) {
-                    handler.postDelayed(this, 2000);
+                    handler.postDelayed(this, MainActivity.DELAY_TIME);
                 }
             }
-        }, 1000);
+        }, MainActivity.DELAY_TIME);
 
     }
 
     public void serviceFunction(RetrofitService service, int routeId) {
-        Call<JsonObject> request = service.getPosition(routeId);
-        request.enqueue(new Callback<JsonObject>() {
+        Call<PositionResponseData> request = service.getPosition(routeId);
+        request.enqueue(new Callback<PositionResponseData>() {
             @Override
-            public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+            public void onResponse(Call<PositionResponseData> call, Response<PositionResponseData> response) {
                 if(response.isSuccessful()) {
-                    JsonObject data = response.body();
-                    String msg = data.get("response").getAsString();
-                    Log.d("TEST", "Share activity: "+ msg);
+                    Log.d("TEST", "SHARE SUCCESSFUL");
+                    PositionResponseData data = response.body();
+                    TMapPolyLine line = new TMapPolyLine();
+                    line.setLineWidth(2);
+                    line.setLineColor(Color.BLUE);
+                    line.setOutLineColor(Color.BLUE);
+                    for(PositionResponseData.RouteData e: data.getData()) {
+                        line.addLinePoint(new TMapPoint(e.getLat(), e.getLog()));
+                    }
+                    tMapView.addTMapPath(line);
+                    tMapView.setCenterPoint(data.getData().get(0).getLog(), data.getData().get(0).getLat());
                 }
                 else {
                     Log.d("TEST", "MSG: "+response.message());
@@ -91,7 +99,7 @@ public class ShareActivity extends AppCompatActivity {
             }
 
             @Override
-            public void onFailure(Call<JsonObject> call, Throwable t) {
+            public void onFailure(Call<PositionResponseData> call, Throwable t) {
                 Log.d("TEST", "failted, "+t.getMessage());
             }
         });

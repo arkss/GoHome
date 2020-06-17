@@ -2,8 +2,10 @@ package com.uos.gohome;
 
 import androidx.appcompat.app.AppCompatActivity;
 
+import android.content.Intent;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.widget.Toast;
 
@@ -17,6 +19,7 @@ import com.uos.gohome.retrofit2.DataInUserProfileData;
 import com.uos.gohome.retrofit2.Datum;
 import com.skt.Tmap.TMapPolyLine;
 import com.skt.Tmap.TMapView;
+import com.uos.gohome.retrofit2.PostRouteData;
 import com.uos.gohome.retrofit2.RetrofitClientInstance;
 import com.uos.gohome.retrofit2.RetrofitService;
 import com.uos.gohome.retrofit2.UserProfileData;
@@ -46,7 +49,10 @@ public class MainActivity extends AppCompatActivity implements OnGpsEventListene
 
     private RouteFragment routeFragment;
 
+    public static final int DELAY_TIME = 3000;
+
     public boolean goHome = false;
+    private boolean isShared = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -135,5 +141,36 @@ public class MainActivity extends AppCompatActivity implements OnGpsEventListene
 
     public void setMapFragment(MapFragment mapFragment) {
         this.mapFragment = mapFragment;
+    }
+
+    public void startShare(int routeId) {
+        isShared = true;
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                Call<JsonObject> request2 = service.postPosition(token, routeId, getLocation().getLatitude(), getLocation().getLongitude());
+
+                request2.enqueue(new Callback<JsonObject>() {
+                    @Override
+                    public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                        if (response.isSuccessful()) {
+                            Toast.makeText(MainActivity.this, "POST POSITION", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<JsonObject> call, Throwable t) {
+
+                    }
+                });
+                if (isShared) {
+                    handler.postDelayed(this, DELAY_TIME);
+                }
+            }
+        }, DELAY_TIME);
+    }
+    public void endShared() {
+        isShared = false;
     }
 }

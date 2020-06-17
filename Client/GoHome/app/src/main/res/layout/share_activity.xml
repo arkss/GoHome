@@ -13,15 +13,4 @@
         android:orientation="vertical">
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/url_params"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toBottomOf="parent"
-
-        android:gravity="center"
-        android:text="Hello world"
-        android:textSize="20sp"
-        />
 </androidx.constraintlayout.widget.ConstraintLayout>

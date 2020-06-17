@@ -68,19 +68,11 @@ public class RouteFragment extends Fragment implements View.OnClickListener {
     private FloatingActionButton shareBtn;
     private FloatingActionButton locationBtn;
 
-    private GpsTracker gpsTracker;
-
     private Datum datum;
 
-    private Handler mHandler;
-
-    private boolean isShared;
+    private RetrofitService service;
 
     private TMapPoint points[];
-
-    // TODO: Rename and change types of parameters
-    private String mParam1;
-    private String mParam2;
 
     public RouteFragment() {
         // Required empty public constructor
@@ -108,12 +100,10 @@ public class RouteFragment extends Fragment implements View.OnClickListener {
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         if (getArguments() != null) {
-            mParam1 = getArguments().getString(ARG_PARAM1);
-            mParam2 = getArguments().getString(ARG_PARAM2);
         }
 
         // init variable
-
+        service = RetrofitClientInstance.getRetrofitInstance().create(RetrofitService.class);
 
         // use onOptionsItemSelected in Fragment
 
@@ -264,7 +254,7 @@ public class RouteFragment extends Fragment implements View.OnClickListener {
             case R.id.route_share_btn:
                 Retrofit retrofit = RetrofitClientInstance.getRetrofitInstance();
                 RetrofitService service = retrofit.create(RetrofitService.class);
-                function1(service);
+                openDialog();
                 break;
 
             // current location btn clicked
@@ -289,7 +279,8 @@ public class RouteFragment extends Fragment implements View.OnClickListener {
         }
     }
 
-    public void function1(RetrofitService service) {
+    // openDialog & postRoute
+    public void openDialog() {
         Call<PostRouteData> request = service.postRoute(((MainActivity)getActivity()).token);
         request.enqueue(new Callback<PostRouteData>() {
             @Override
@@ -299,43 +290,18 @@ public class RouteFragment extends Fragment implements View.OnClickListener {
                     int routeId = data.getRoute_Id();
                     Toast.makeText(getActivity(), "route_id:"+routeId, Toast.LENGTH_SHORT).show();
 
-                    SharePositionDialog dialog = SharePositionDialog.newInstance(ShareActivity.URI_DEFAULT+routeId);
-                    dialog.show(getActivity().getSupportFragmentManager(), "share dialog");
-
-                    Handler handler = new Handler();
-                    handler.postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            MainActivity mainActivity = ((MainActivity)getActivity());
-                            Call<JsonObject> request2 = service.postPosition(mainActivity.token, routeId, mainActivity.getLocation().getLatitude(), mainActivity.getLocation().getLongitude());
-                            request2.enqueue(new Callback<JsonObject>() {
-                                @Override
-                                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
-                                    if(response.isSuccessful()) {
-                                        Toast.makeText(getActivity(), "POST POSITION", Toast.LENGTH_SHORT).show();
-                                    }
-                                }
-
-                                @Override
-                                public void onFailure(Call<JsonObject> call, Throwable t) {
-
-                                }
-                            });
-                            if(isShared) {
-                                handler.postDelayed(this, 1000);
-                            }
-                        }
-                    }, 1000);
+                    SharePositionDialog dialog = SharePositionDialog.newInstance(ShareActivity.URI_DEFAULT, routeId);
+                    dialog.show(getActivity().getSupportFragmentManager(), "tag dialog");
                 }
                 // response isn't successful
                 else {
-                    Log.d("TEST", "MSG: "+response.message());
+                    Log.d("TEST", "___MSG: "+response.message());
                 }
             }
 
             @Override
             public void onFailure(Call<PostRouteData> call, Throwable t) {
-                Log.d("Test", "postRoute falied"+t.getMessage());
+                Log.d("Test", "postRoute falied "+t.getMessage());
             }
         });
     }
@@ -344,6 +310,7 @@ public class RouteFragment extends Fragment implements View.OnClickListener {
     public void onDestroy() {
         super.onDestroy();
         mListener = null;
+        ((MainActivity)getActivity()).endShared();
     }
 
     public interface tmapSendListener {
