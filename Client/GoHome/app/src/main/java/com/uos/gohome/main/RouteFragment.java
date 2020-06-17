@@ -12,6 +12,10 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
 
 import android.os.Handler;
 import android.util.Log;
@@ -22,11 +26,16 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
+import com.google.gson.JsonObject;
 import com.uos.gohome.MainActivity;
 import com.uos.gohome.GpsTracker;
 import com.uos.gohome.R;
+import com.uos.gohome.ShareActivity;
 import com.uos.gohome.SharePositionDialog;
 import com.uos.gohome.retrofit2.Datum;
+import com.uos.gohome.retrofit2.PostRouteData;
+import com.uos.gohome.retrofit2.RetrofitClientInstance;
+import com.uos.gohome.retrofit2.RetrofitService;
 import com.uos.gohome.retrofit2.Section;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.skt.Tmap.TMapPoint;
@@ -64,7 +73,8 @@ public class RouteFragment extends Fragment implements View.OnClickListener {
     private Datum datum;
 
     private Handler mHandler;
-    private boolean flag = false;
+
+    private boolean isShared;
 
     private TMapPoint points[];
 
@@ -198,13 +208,6 @@ public class RouteFragment extends Fragment implements View.OnClickListener {
         return super.onOptionsItemSelected(item);
     }
 
-    public void setDatum(Datum datum) {
-        this.datum = datum;
-        Log.d("TEST", "datum.toString "+datum.toString());
-        flag = true;
-        Log.d("TEST", "datum received");
-    }
-
     public void drawLine() {
         List<Section> sectionList = datum.getSections();
         polyLine = new TMapPolyLine[sectionList.size()];
@@ -259,8 +262,9 @@ public class RouteFragment extends Fragment implements View.OnClickListener {
         switch (view.getId()) {
             // position share btn clicked
             case R.id.route_share_btn:
-                SharePositionDialog dialog = SharePositionDialog.newInstance("url here");
-                dialog.show(getActivity().getSupportFragmentManager(), "share dialog");
+                Retrofit retrofit = RetrofitClientInstance.getRetrofitInstance();
+                RetrofitService service = retrofit.create(RetrofitService.class);
+                function1(service);
                 break;
 
             // current location btn clicked
@@ -283,6 +287,57 @@ public class RouteFragment extends Fragment implements View.OnClickListener {
                 startActivity(intent);
                 break;
         }
+    }
+
+    public void function1(RetrofitService service) {
+        Call<PostRouteData> request = service.postRoute(((MainActivity)getActivity()).token);
+        request.enqueue(new Callback<PostRouteData>() {
+            @Override
+            public void onResponse(Call<PostRouteData> call, Response<PostRouteData> response) {
+                if(response.isSuccessful()) {
+                    PostRouteData data = response.body();
+                    int routeId = data.getRoute_Id();
+                    Toast.makeText(getActivity(), "route_id:"+routeId, Toast.LENGTH_SHORT).show();
+
+                    SharePositionDialog dialog = SharePositionDialog.newInstance(ShareActivity.URI_DEFAULT+routeId);
+                    dialog.show(getActivity().getSupportFragmentManager(), "share dialog");
+
+                    Handler handler = new Handler();
+                    handler.postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            MainActivity mainActivity = ((MainActivity)getActivity());
+                            Call<JsonObject> request2 = service.postPosition(mainActivity.token, routeId, mainActivity.getLocation().getLatitude(), mainActivity.getLocation().getLongitude());
+                            request2.enqueue(new Callback<JsonObject>() {
+                                @Override
+                                public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                                    if(response.isSuccessful()) {
+                                        Toast.makeText(getActivity(), "POST POSITION", Toast.LENGTH_SHORT).show();
+                                    }
+                                }
+
+                                @Override
+                                public void onFailure(Call<JsonObject> call, Throwable t) {
+
+                                }
+                            });
+                            if(isShared) {
+                                handler.postDelayed(this, 1000);
+                            }
+                        }
+                    }, 1000);
+                }
+                // response isn't successful
+                else {
+                    Log.d("TEST", "MSG: "+response.message());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<PostRouteData> call, Throwable t) {
+                Log.d("Test", "postRoute falied"+t.getMessage());
+            }
+        });
     }
 
     @Override

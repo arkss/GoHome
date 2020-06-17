@@ -60,6 +60,7 @@ public class AddressSearch extends AppCompatActivity implements AddressRecyclerA
 
         tMapView = new TMapView(this);
         tMapView.setSKTMapApiKey("l7xx7574967eec1847a08c21f9d5c78980d4"); // 찬표 api key
+//        tMapView.setSKTMapApiKey("l7xx696f792e752c433bacdc8fa3b644bf9b"); // 연웅 api key
         tmapdata = new TMapData();
 
         // 버튼 누르면 주소 검색
@@ -67,6 +68,9 @@ public class AddressSearch extends AppCompatActivity implements AddressRecyclerA
         searchButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                Log.d("searchButton", "clicked");
+                addressDataList.add(new AddressData("검색", "중", 0, 0));
+                mAdapter.notifyDataSetChanged();
                 EditText editTextPOI = (EditText)findViewById(R.id.editTextPOI);
                 String text = editTextPOI.getText().toString();
                 getAddresses(text);  // update addressDataList
@@ -81,11 +85,13 @@ public class AddressSearch extends AppCompatActivity implements AddressRecyclerA
     }
 
     void getAddresses(String text) {
-        addressDataList.clear();
+        Log.d("searchText", text);
         tmapdata.findAllPOI(text, 10, new TMapData.FindAllPOIListenerCallback() {
             @Override
             public void onFindAllPOI(ArrayList poiItem) {
                 // 모든 주소, 위도 경도 저장.
+                addressDataList.clear();
+                Log.d("onFindAllPOI", Integer.toString(poiItem.size()));
                 for(int i = 0; i < poiItem.size(); i++) {
                     TMapPOIItem item = (TMapPOIItem)poiItem.get(i);
                     String address = item.getPOIAddress().replace(" null", "");
@@ -94,6 +100,10 @@ public class AddressSearch extends AppCompatActivity implements AddressRecyclerA
                     double longitude = item.getPOIPoint().getLongitude();
                     addressDataList.add(new AddressData(address, addressDetail, latitude, longitude));
                 }
+
+                // If no path is found, default location.
+                addressDataList.add(new AddressData("서울 동대문구 전농동", "서울시립대학교", 37.583964718404076, 127.05901765823405));
+
                 Message msg = notifyHandler.obtainMessage();
                 notifyHandler.sendMessage(msg);
             }
