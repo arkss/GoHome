@@ -1,8 +1,10 @@
 package com.uos.gohome;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
+import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
@@ -27,6 +29,9 @@ public class SignUpActivity extends AppCompatActivity {
     private String id, pw, pw_confirm, email, name, address, addressDetail;
     private static final String signupTag = "SIGNUP";
 
+    final int addressRequestCode = 1;
+    double latitude, longitude;
+
     @Override
     protected void onCreate(Bundle saveInstanceState) {
         super.onCreate(saveInstanceState);
@@ -49,6 +54,14 @@ public class SignUpActivity extends AppCompatActivity {
         editAddressDetail = (EditText)findViewById(R.id.signup_detail_address);
         completeBtn = (Button)findViewById(R.id.signup_complete);
 
+        editAddress.setOnTouchListener(new View.OnTouchListener() {
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                startActivityForResult(new Intent(SignUpActivity.this, AddressSearch.class), addressRequestCode);
+                return false;
+            }
+        });
+
         completeBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
@@ -63,10 +76,11 @@ public class SignUpActivity extends AppCompatActivity {
                 if(!pw.equals(pw_confirm) || pw.isEmpty()) {
                     Toast.makeText(SignUpActivity.this, "비밀번호 확인이 잘못되었습니다.", Toast.LENGTH_SHORT).show();
                     // TODO: HIGHLIGHTING PASSWORD TEXT
-                }
-                else {
+                } else if(address.isEmpty()) {
+                    Toast.makeText(SignUpActivity.this, "주소가 입력되지 않았습니다.", Toast.LENGTH_SHORT).show();
+                } else {
                     // SingupData로 parsing
-                    SignupData data = new SignupData(id, pw, email, name, address, addressDetail);
+                    SignupData data = new SignupData(id, pw, email, name, address, addressDetail, latitude, longitude);
 
                     // 서버로 데이터 전송
                     Retrofit retrofit = RetrofitClientInstance.getRetrofitInstance();
@@ -121,4 +135,17 @@ public class SignUpActivity extends AppCompatActivity {
         return super.onOptionsItemSelected(item);
     }
 
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if(requestCode == addressRequestCode) {
+            if(resultCode == RESULT_OK) {
+                latitude = data.getDoubleExtra("latitude", 0);
+                longitude = data.getDoubleExtra("longitude", 0);
+                address = data.getStringExtra("address");
+
+                editAddress.setText(address);
+            }
+        }
+    }
 }

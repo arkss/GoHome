@@ -6,8 +6,8 @@ public class SignupData {
     @SerializedName("profile")
     private SignupProfile profile;
 
-    public SignupData(String username, String password, String email, String nickname, String address, String detail_address) {
-        this.profile = new SignupProfile(username, password, email, nickname, address, detail_address);
+    public SignupData(String username, String password, String email, String nickname, String address, String detail_address, double latitude, double longitude) {
+        this.profile = new SignupProfile(username, password, email, nickname, address, detail_address, latitude, longitude);
     }
 
     public SignupProfile getProfile() {
@@ -31,14 +31,20 @@ public class SignupData {
         private String address;
         @SerializedName("detail_address")
         private String detail_address;
+        @SerializedName("latitude")
+        private double latitude;
+        @SerializedName("longitude")
+        private double longitude;
 
-        public SignupProfile(String username, String password, String email, String nickname, String address, String detail_address) {
+        public SignupProfile(String username, String password, String email, String nickname, String address, String detail_address, double latitude, double longitude) {
             this.username = username;
             this.password = password;
             this.email = email;
             this.nickname = nickname;
             this.address = address;
             this.detail_address = detail_address;
+            this.latitude = latitude;
+            this.longitude = longitude;
         }
 
         public String getUsername() {
@@ -88,5 +94,13 @@ public class SignupData {
         public void setDetail_address(String detail_address) {
             this.detail_address = detail_address;
         }
+
+        public double getLatitude() { return latitude; }
+
+        public void setLatitude(double latitude) { this.latitude = latitude; }
+
+        public double getLongitude() { return longitude; }
+
+        public void setLongitude(double longitude) { this.longitude = longitude; }
     }
 }

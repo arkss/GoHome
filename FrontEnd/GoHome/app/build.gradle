@@ -52,6 +52,9 @@ dependencies {
     // implementation for ARCore
     implementation 'com.google.ar.sceneform.ux:sceneform-ux:1.15.0'
 
+    implementation 'androidx.recyclerview:recyclerview:1.1.0'
+    implementation 'androidx.recyclerview:recyclerview-selection:1.1.0-rc01'
+
     // location play services
 //    implementation 'com.google.android.gms:play-services-location:15.0.1'
 
