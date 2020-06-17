@@ -447,7 +447,8 @@ exports.get_pedestrian_route = async (points) => {
 						result.sections.push({
 							time: time,
 							distance: distance,
-							points: points
+							points: points,
+							type: 1
 						});
 						time = 0;
 						distance = 0;
