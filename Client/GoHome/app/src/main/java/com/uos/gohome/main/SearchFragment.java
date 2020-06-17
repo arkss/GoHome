@@ -68,6 +68,11 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
 
     TMapData tmapdata;
 
+    Retrofit retrofit;
+    RetrofitService2 service;
+
+    SearchRecyclerAdapter adapter;
+
     public SearchFragment() {
         // Required empty public constructor
     }
@@ -101,6 +106,10 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
         else {
             throw new RuntimeException(context.toString()+" must implement event listener");
         }
+
+        // Retrofit2 초기화
+        retrofit = RetrofitClientInstance2.getRetrofitInstance();
+        service = retrofit.create(RetrofitService2.class);
     }
 
     @Override
@@ -135,7 +144,7 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
         // add divider line
         recyclerView.addItemDecoration(new DividerItemDecoration(recyclerView.getContext(), DividerItemDecoration.VERTICAL));
 
-        SearchRecyclerAdapter adapter = new SearchRecyclerAdapter(getActivity(), searchDataList, innerDataList, this);
+        adapter = new SearchRecyclerAdapter(getActivity(), searchDataList, innerDataList, this);
         recyclerView.setAdapter(adapter);
 
         // when search button is pressed
@@ -165,6 +174,7 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
                         }
                         // get first poi item
                         TMapPOIItem item = (TMapPOIItem)poiItem.get(0);
+                        text_destination.setText(item.getPOIName());
 
                         // get departure, destination point
                         TMapPoint destination = item.getPOIPoint();
@@ -172,73 +182,20 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
                         TMapPoint departure = new TMapPoint(departure_location.getLatitude(), departure_location.getLongitude());
                         Log.d("TEST", "current latitude: "+departure.getLatitude()+", longitude: "+departure.getLongitude());
 
-                        // request routes
-                        Retrofit retrofit = RetrofitClientInstance2.getRetrofitInstance();
-                        RetrofitService2 service = retrofit.create(RetrofitService2.class);
-                        Call<RouteSearchResult> request = service.getRoutes(departure_location.getLatitude(), departure_location.getLongitude(), destination.getLatitude(), destination.getLongitude(), "Y", "Y");
-                        request.enqueue(new Callback<RouteSearchResult>() {
-                            @Override
-                            public void onResponse(Call<RouteSearchResult> call, Response<RouteSearchResult> response) {
-                                if(response.isSuccessful()) {
-                                    Log.d("TEST", "CONNECT SUCCESSFUL");
-                                    RouteSearchResult data = response.body();
-                                    int result = data.getResult();
-                                    // 정상 처리됨
-                                    if(result == 1) {
-                                        String message = data.getMessage();
-                                        datumList = data.getData();
-                                        for(Datum datum : datumList) {
-                                            Log.d("TEST", "total time: "+datum.getTime()+", total distance: "+datum.getDistance());
-                                            int minute = datum.getTime()/60;
-                                            int walkingTime = 0;
-                                            ArrayList<InnerData> in = new ArrayList<>();
-
-                                            for(Section section : datum.getSections()) {
-                                                // 도보인 경우
-                                                if(section.getType() == 1) {
-                                                    Log.d("TEST", "도보시간: "+section.getTime()+", 도보 거리: "+section.getDistance());
-                                                    walkingTime += section.getTime();
-                                                }
-                                                switch(section.getType()) {
-                                                    case 1:
-                                                        in.add(new InnerData(R.drawable.walking_icon));
-                                                        break;
-                                                    case 2:
-                                                        in.add(new InnerData(R.drawable.bicycle_icon));
-                                                        break;
-                                                    case 3:
-                                                        in.add(new InnerData(R.drawable.bus_icon));
-                                                        break;
-                                                }
-                                            }
-                                            searchDataList.add(new SearchData("총 "+minute+"분", "도보시간 "+round(walkingTime/60.0)+"분"));
-                                            innerDataList.add(in);
-                                            adapter.notifyDataSetChanged();
-                                        }
-                                    }
-                                    // 오류
-                                    else if(result == -1) {
-                                        Log.e("TEST", "result == -1, error");
-                                    }
-                                }
-                                else {
-                                    Log.d("TEST", response.toString());
-                                }
-                            }
-
-                            @Override
-                            public void onFailure(Call<RouteSearchResult> call, Throwable t) {
-                                Log.e("TEST", t.getMessage());
-                            }
-                        });
-
-
-
-//                        routeSearch(departure, destination);
+                        routeSearch(departure, destination);
                     }
                 });
             }
         });
+
+        MainActivity mainActivity = ((MainActivity)getActivity());
+        if(mainActivity.goHome) {  // 집으로 가는 버튼 바로 눌렀을 때
+            text_destination.setText(mainActivity.poiName);
+            Location departure_location = mainActivity.getLocation();
+            TMapPoint departure = new TMapPoint(departure_location.getLatitude(), departure_location.getLongitude());
+            TMapPoint destination = new TMapPoint(mainActivity.homeLat, mainActivity.homeLon);
+            routeSearch(departure, destination);
+        }
 
         // 도착 위치 엔터치면 검색
         text_destination.setOnKeyListener(new View.OnKeyListener() {
@@ -257,17 +214,63 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
     }
 
     public void routeSearch(TMapPoint dpt, TMapPoint dst) {
-        Log.d("routeSearch", Double.toString(dpt.getLatitude()) + " " + Double.toString(dpt.getLongitude()));
-        Log.d("routeSearch", Double.toString(dst.getLatitude()) + " " + Double.toString(dst.getLongitude()));
+        // request routes
+        Call<RouteSearchResult> request = service.getRoutes(dpt.getLatitude(), dpt.getLongitude(), dst.getLatitude(), dst.getLongitude(), "Y", "Y");
+        request.enqueue(new Callback<RouteSearchResult>() {
+            @Override
+            public void onResponse(Call<RouteSearchResult> call, Response<RouteSearchResult> response) {
+                if(response.isSuccessful()) {
+                    Log.d("TEST", "CONNECT SUCCESSFUL");
+                    RouteSearchResult data = response.body();
+                    int result = data.getResult();
+                    // 정상 처리됨
+                    if(result == 1) {
+                        String message = data.getMessage();
+                        datumList = data.getData();
+                        for(Datum datum : datumList) {
+                            Log.d("TEST", "total time: "+datum.getTime()+", total distance: "+datum.getDistance());
+                            int minute = datum.getTime()/60;
+                            int walkingTime = 0;
+                            ArrayList<InnerData> in = new ArrayList<>();
 
-        try {
-            TMapPolyLine polyLine = tmapdata.findPathData(dpt, dst);
-            ((MainActivity)getActivity()).setPolyLine(polyLine);
-            NavHostFragment.findNavController(SearchFragment.this)
-                    .navigate(R.id.action_SearchFragment_to_RouteFragment);
-        } catch(Exception e) {
-            Log.e("routeSearch", e.getMessage());
-        }
+                            for(Section section : datum.getSections()) {
+                                // 도보인 경우
+                                if(section.getType() == 1) {
+                                    Log.d("TEST", "도보시간: "+section.getTime()+", 도보 거리: "+section.getDistance());
+                                    walkingTime += section.getTime();
+                                }
+                                switch(section.getType()) {
+                                    case 1:
+                                        in.add(new InnerData(R.drawable.walking_icon));
+                                        break;
+                                    case 2:
+                                        in.add(new InnerData(R.drawable.bicycle_icon));
+                                        break;
+                                    case 3:
+                                        in.add(new InnerData(R.drawable.bus_icon));
+                                        break;
+                                }
+                            }
+                            searchDataList.add(new SearchData("총 "+minute+"분", "도보시간 "+round(walkingTime/60.0)+"분"));
+                            innerDataList.add(in);
+                            adapter.notifyDataSetChanged();
+                        }
+                    }
+                    // 오류
+                    else if(result == -1) {
+                        Log.e("TEST", "result == -1, error");
+                    }
+                }
+                else {
+                    Log.d("TEST", response.toString());
+                }
+            }
+
+            @Override
+            public void onFailure(Call<RouteSearchResult> call, Throwable t) {
+                Log.e("TEST", t.getMessage());
+            }
+        });
     }
 
     // recycler view에서 아이템이 선택됐을 때, recycler view에서 호출하는 메소드
@@ -300,11 +303,6 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
     public void onDestroy() {
         super.onDestroy();
         mListener = null;
-    }
-
-    // fragment간 통신을 위한 인터페이스
-    public interface OnDataSendListener {
-        void setDatum(Datum datum);
     }
 }
 

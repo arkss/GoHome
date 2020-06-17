@@ -290,7 +290,7 @@ public class RouteFragment extends Fragment implements View.OnClickListener {
     }
 
     public void function1(RetrofitService service) {
-        Call<PostRouteData> request = service.postRoute();
+        Call<PostRouteData> request = service.postRoute(((MainActivity)getActivity()).token);
         request.enqueue(new Callback<PostRouteData>() {
             @Override
             public void onResponse(Call<PostRouteData> call, Response<PostRouteData> response) {
@@ -306,7 +306,8 @@ public class RouteFragment extends Fragment implements View.OnClickListener {
                     handler.postDelayed(new Runnable() {
                         @Override
                         public void run() {
-                            Call<JsonObject> request2 = service.postPosition(routeId, ((MainActivity)getActivity()).getLocation().getLatitude(), ((MainActivity)getActivity()).getLocation().getLongitude());
+                            MainActivity mainActivity = ((MainActivity)getActivity());
+                            Call<JsonObject> request2 = service.postPosition(mainActivity.token, routeId, mainActivity.getLocation().getLatitude(), mainActivity.getLocation().getLongitude());
                             request2.enqueue(new Callback<JsonObject>() {
                                 @Override
                                 public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {

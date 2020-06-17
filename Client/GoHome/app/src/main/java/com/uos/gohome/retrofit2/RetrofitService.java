@@ -20,7 +20,7 @@ public interface RetrofitService {
     Call<JsonObject> login(@Body LoginData data);
 
     @GET("profile/")
-    Call<JsonObject> getProfile();
+    Call<UserProfileData> getProfile(@Header("Authorization") String token);
 
     @POST("signup/")
     Call<JsonObject> signup(@Body SignupData data);

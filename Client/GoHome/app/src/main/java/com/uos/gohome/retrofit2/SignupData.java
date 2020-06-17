@@ -6,8 +6,8 @@ public class SignupData {
     @SerializedName("profile")
     private SignupProfile profile;
 
-    public SignupData(String username, String password, String email, String nickname, String address, String detail_address, double address_lat, double address_lon) {
-        this.profile = new SignupProfile(username, password, email, nickname, address, detail_address, address_lat, address_lon);
+    public SignupData(String username, String password, String email, String nickname, String address, String detail_address, double address_lat, double address_log) {
+        this.profile = new SignupProfile(username, password, email, nickname, address, detail_address, address_lat, address_log);
     }
 
     public SignupProfile getProfile() {
@@ -33,10 +33,10 @@ public class SignupData {
         private String detail_address;
         @SerializedName("address_lat")
         private double address_lat;
-        @SerializedName("address_lon")
-        private double address_lon;
+        @SerializedName("address_log")
+        private double address_log;
 
-        public SignupProfile(String username, String password, String email, String nickname, String address, String detail_address, double address_lat, double address_lon) {
+        public SignupProfile(String username, String password, String email, String nickname, String address, String detail_address, double address_lat, double address_log) {
             this.username = username;
             this.password = password;
             this.email = email;
@@ -44,7 +44,7 @@ public class SignupData {
             this.address = address;
             this.detail_address = detail_address;
             this.address_lat = address_lat;
-            this.address_lon = address_lon;
+            this.address_log = address_log;
         }
 
         public String getUsername() {
@@ -103,12 +103,12 @@ public class SignupData {
             this.address_lat = address_lat;
         }
 
-        public double getAddress_lon() {
-            return address_lon;
+        public double getaddress_log() {
+            return address_log;
         }
 
-        public void setAddress_lon(double address_lon) {
-            this.address_lon = address_lon;
+        public void setaddress_log(double address_log) {
+            this.address_log = address_log;
         }
     }
 }

@@ -118,6 +118,7 @@ public class MapFragment extends Fragment implements View.OnClickListener {
         view.findViewById(R.id.searchbar_text).setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
+                ((MainActivity)getActivity()).goHome = false;
                 NavHostFragment.findNavController(MapFragment.this)
                         .navigate(R.id.action_MapFragment_to_SearchFragment);
             }
@@ -135,6 +136,18 @@ public class MapFragment extends Fragment implements View.OnClickListener {
         });
 
         ((MainActivity)getActivity()).setMapFragment(this);
+
+        // 바로 검색 버튼 누르면 집으로
+        ImageButton goHomeBtn = (ImageButton)getView().findViewById(R.id.searchbar_search);
+        goHomeBtn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                // 집으로 가즈아
+                ((MainActivity)getActivity()).goHome = true;
+                NavHostFragment.findNavController(MapFragment.this)
+                        .navigate(R.id.action_MapFragment_to_SearchFragment);
+            }
+        });
 
         // Show bike stops
         //showBikestops();
