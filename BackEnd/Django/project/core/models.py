@@ -2,42 +2,44 @@ from django.conf import settings
 from django.db import models
 from django.contrib.auth.models import AbstractBaseUser, BaseUserManager, PermissionsMixin
 
+
 class UserManager(BaseUserManager):
     user_in_migrations = True
 
-    def create_user(self, username, email, nickname, address, detail_address, password=None):
+    def create_user(self, username, email, nickname, address="", detail_address="", address_lat=0, address_log=0, password=None):
         if not email:
             raise ValueError('must have user email')
         user = self.model(
             # kwargs 처리해주면 되긴하는데 가독성 생각해서 직접 나열
-            username = username,
-            email = self.normalize_email(email),
-            nickname = nickname,
-            address = address,
-            detail_address = detail_address
+            username=username,
+            email=self.normalize_email(email),
+            nickname=nickname,
+            address=address,
+            detail_address=detail_address,
+            address_lat=address_lat,
+            address_log=address_log
         )
         user.set_password(password)
-        user.status = "0"
+        user.status = "1"
         user.role = "0"
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, username, email, nickname="", address="", detail_address="", password=None):
+    def create_superuser(self, username, email, nickname="", address="", detail_address="", address_lat=0, address_log=0, password=None):
         user = self.create_user(
             username=username,
             password=password,
             email=email,
-            nickname = nickname,
-            address = address,
-            detail_address = detail_address
+            nickname=nickname,
+            address=address,
+            detail_address=detail_address,
+            address_lat=address_lat,
+            address_log=address_log
         )
         user.status = "1"
-        user.role = "10"    
+        user.role = "10"
         user.save(using=self._db)
         return user
-
-    
-        
 
 
 class Profile(AbstractBaseUser, PermissionsMixin):
@@ -60,6 +62,8 @@ class Profile(AbstractBaseUser, PermissionsMixin):
     nickname = models.CharField(max_length=10, unique=True)
     address = models.CharField(max_length=50, blank=True)
     detail_address = models.CharField(max_length=30, blank=True)
+    address_lat = models.FloatField(blank=True)
+    address_log = models.FloatField(blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     status = models.CharField(max_length=2, choices=STATUS_CHOICES, blank=True)
@@ -73,6 +77,9 @@ class Profile(AbstractBaseUser, PermissionsMixin):
     def is_superuser(self):
         return self.role == "10"
 
+    @property
+    def is_active(self):
+        return self.status == '1'
+
     USERNAME_FIELD = "username"
     REQUIRED_FIELDS = ['email']
-
