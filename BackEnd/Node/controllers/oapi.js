@@ -488,7 +488,7 @@ exports.topis_get_nbus_routes = async (lat_start, lon_start, lat_end, lon_end, i
 			prcsType: 'web',
 			routeType: 'pub',
 			routeOption: 'nbus',
-			walkDistance: '500',
+			walkDistance: '200',
 			startName: '출발지명',
 			startX: lon_start.toString(),
 			startY: lat_start.toString(),
