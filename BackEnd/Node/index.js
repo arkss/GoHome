@@ -5,11 +5,21 @@ const express = require('express');
 const session = require('express-session');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const fs = require('fs');
+
 const router = require('./routes');
 const keys = require('./keys.json');
 const app = express();
 
-var server = require('http').createServer(app);
+var server;
+if (keys.SSL) {
+	server = require('http').createServer({
+		ca: fs.readFileSync('/etc/letsencrypt/live/gohome-node.com/fullchain.pem'),
+		key: fs.readFileSync('/etc/letsencrypt/live/gohome-node.com/privkey1.pem'),
+		requestCert: false,
+		rejectUnauthorized: false
+	}, app);
+} else server = require('http').createServer(app);
 var io = require('socket.io')(server);
 var port = process.env.PORT || keys.port;
 
