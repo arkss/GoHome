@@ -201,12 +201,12 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
         text_destination.setOnKeyListener(new View.OnKeyListener() {
             @Override
             public boolean onKey(View view, int i, KeyEvent keyEvent) {
-                switch(i) {
-                    case KeyEvent.KEYCODE_ENTER:
-//                        String text = text_destination.getText().toString();
-//                        text_destination.setText(text.subSequence(0, text.length()-1));
-                        searchButton.callOnClick();
-                        return true;
+                if(i == KeyEvent.KEYCODE_ENTER && keyEvent.getAction() == KeyEvent.ACTION_UP) {
+                    int length = text_destination.getText().length();
+                    if(length > 0)
+                        text_destination.getText().delete(length - 1, length);
+                    searchButton.callOnClick();
+                    return true;
                 }
                 return false;
             }

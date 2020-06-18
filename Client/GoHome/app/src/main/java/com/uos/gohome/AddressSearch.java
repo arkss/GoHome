@@ -10,9 +10,13 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.View;
+import android.view.inputmethod.EditorInfo;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 
 import com.skt.Tmap.TMapData;
 import com.skt.Tmap.TMapPOIItem;
@@ -30,6 +34,8 @@ public class AddressSearch extends AppCompatActivity implements AddressRecyclerA
     TMapView tMapView;
     TMapData tmapdata;
     Handler notifyHandler;
+    EditText editTextPOI;
+    InputMethodManager imm;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,11 +77,33 @@ public class AddressSearch extends AppCompatActivity implements AddressRecyclerA
                 Log.d("searchButton", "clicked");
                 addressDataList.add(new AddressData("검색", "중", 0, 0));
                 mAdapter.notifyDataSetChanged();
-                EditText editTextPOI = (EditText)findViewById(R.id.editTextPOI);
                 String text = editTextPOI.getText().toString();
                 getAddresses(text);  // update addressDataList
+                editTextPOI.clearFocus();
+                searchButton.requestFocus();
+                imm.hideSoftInputFromWindow(editTextPOI.getWindowToken(), 0);
             }
         });
+
+        // 도착 위치 엔터치면 검색
+        editTextPOI = (EditText)findViewById(R.id.editTextPOI);
+        editTextPOI.setOnKeyListener(new View.OnKeyListener() {
+            @Override
+            public boolean onKey(View v, int keyCode, KeyEvent event) {
+                if(keyCode == KeyEvent.KEYCODE_ENTER && event.getAction() == KeyEvent.ACTION_UP) {
+                    int length = editTextPOI.getText().length();
+                    if(length > 0)
+                        editTextPOI.getText().delete(length - 1, length);
+                    searchButton.callOnClick();
+                    return true;
+                }
+                return false;
+            }
+        });
+
+        // InputMethodManager
+        imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+        imm.showSoftInput(editTextPOI, 0);
 
         notifyHandler = new Handler(){
             public void handleMessage(Message msg){
