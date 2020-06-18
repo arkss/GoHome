@@ -70,6 +70,7 @@ public class LoginActivity extends AppCompatActivity {
                                             Toast.makeText(LoginActivity.this, "login success", Toast.LENGTH_SHORT).show();
 
                                             Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                                            intent.putExtra("token", token);
                                             startActivity(intent);
                                             finish();
                                         }
@@ -87,7 +88,7 @@ public class LoginActivity extends AppCompatActivity {
 
                         }
                         else {
-                            Log.d(loginTag, "login-response failed");
+                            Log.d(loginTag, "login-response failed "+response.message());
                         }
                     }
 

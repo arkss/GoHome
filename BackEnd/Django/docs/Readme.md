@@ -20,7 +20,7 @@ python manage.py runserver --settings=config.settings.deploy
 
 * method : GET
 
-* request parameter
+* request body
 
   | Name | Type | Mandatory | Default | Example | Description |
   | ---- | ---- | --------- | ------- | ------- | ----------- |
@@ -40,12 +40,32 @@ python manage.py runserver --settings=config.settings.deploy
 
 * method : POST
 
-* request parameter
+* request body
 
   | Name     | Type   | Mandatory | Default | Example    | Description |
   | -------- | ------ | --------- | ------- | ---------- | ----------- |
   | username | String | Y         | -       | rkdalstjd9 | 아이디      |
   | password | String | Y         | -       | qwe123     | 비밀번호    |
+
+* response field
+
+  | Name  | Type   | Mandatory | Default | Example | Description  |
+  | ----- | ------ | --------- | ------- | ------- | ------------ |
+  | token | String | Y         | -       | 토큰값  | access token |
+
+
+
+#### Refresh Token
+
+* path : refresh/
+
+* method : POST
+
+* request body
+
+  | Name  | Type   | Mandatory | Default | Example | Description         |
+  | ----- | ------ | --------- | ------- | ------- | ------------------- |
+  | token | String | Y         | -       | 토큰값  | 만료된 access token |
 
 * response field
 
@@ -61,7 +81,7 @@ python manage.py runserver --settings=config.settings.deploy
 
 * method : POST
 
-* request parameter
+* request body
 
   | Name                   | Type   | Mandatory | Default | Example                           | Description            |
   | ---------------------- | ------ | --------- | ------- | --------------------------------- | ---------------------- |
@@ -118,7 +138,7 @@ python manage.py runserver --settings=config.settings.deploy
 
 * method : POST
 
-* request parameter
+* request body
 
   | Name | Type | Mandatory | Default | Example | Description |
   | ---- | ---- | --------- | ------- | ------- | ----------- |
@@ -142,7 +162,7 @@ python manage.py runserver --settings=config.settings.deploy
 
 * method : POST
 
-* request parameter
+* request body
 
   | Name | Type  | Mandatory | Default | Example     | Description |
   | ---- | ----- | --------- | ------- | ----------- | ----------- |

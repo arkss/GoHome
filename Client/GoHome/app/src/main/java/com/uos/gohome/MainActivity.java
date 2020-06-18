@@ -7,15 +7,34 @@ import android.os.Bundle;
 import android.util.Log;
 import android.widget.Toast;
 
+import com.google.gson.JsonObject;
 import com.uos.gohome.main.MapFragment;
 
+import com.uos.gohome.main.OnDataSendListener;
 import com.uos.gohome.main.RouteFragment;
 import com.uos.gohome.main.SearchFragment;
+import com.uos.gohome.retrofit2.DataInUserProfileData;
 import com.uos.gohome.retrofit2.Datum;
 import com.skt.Tmap.TMapPolyLine;
 import com.skt.Tmap.TMapView;
+import com.uos.gohome.retrofit2.RetrofitClientInstance;
+import com.uos.gohome.retrofit2.RetrofitService;
+import com.uos.gohome.retrofit2.UserProfileData;
 
-public class MainActivity extends AppCompatActivity implements OnGpsEventListener, SearchFragment.OnDataSendListener, RouteFragment.tmapSendListener {
+import retrofit2.Call;
+import retrofit2.Callback;
+import retrofit2.Response;
+import retrofit2.Retrofit;
+
+public class MainActivity extends AppCompatActivity implements OnGpsEventListener, OnDataSendListener, RouteFragment.tmapSendListener {
+    Retrofit retrofit;
+    RetrofitService service;
+
+    public String token;
+
+    public double homeLat, homeLon;
+    public String poiName;
+
     MapFragment mapFragment;
 
     GpsTracker gpsTracker;
@@ -27,10 +46,43 @@ public class MainActivity extends AppCompatActivity implements OnGpsEventListene
 
     private RouteFragment routeFragment;
 
+    public boolean goHome = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.content_main);
+
+        // 로그인 할 때 전달받은 token
+        token = getIntent().getStringExtra("token");
+
+        // 사용자 정보 가져오기
+        // GET profile/
+        retrofit = RetrofitClientInstance.getRetrofitInstance();
+        service = retrofit.create(RetrofitService.class);
+        Call<UserProfileData> request = service.getProfile(token);
+        request.enqueue(new Callback<UserProfileData>() {
+            private static final String tag = "getProfile";
+
+            @Override
+            public void onResponse(Call<UserProfileData> call, Response<UserProfileData> response) {
+                if (response.isSuccessful()) {
+                    Log.d(tag, "success");
+                    UserProfileData body = response.body();
+                    homeLat = ((DataInUserProfileData)body.getData()).getAddressLat();
+                    homeLon = ((DataInUserProfileData)body.getData()).getAddressLog();
+                    poiName = ((DataInUserProfileData)body.getData()).getDetailAddress();
+                    Log.d(tag, "lat: " + Double.toString(homeLat) + ", lon: " + Double.toString(homeLon));
+                } else {
+                    Log.e(tag, "not success");
+                }
+            }
+
+            @Override
+            public void onFailure(Call<UserProfileData> call, Throwable t) {
+                Log.d(tag, "failure");
+            }
+        });
 
         routeFragment = new RouteFragment();
         gpsInit();
