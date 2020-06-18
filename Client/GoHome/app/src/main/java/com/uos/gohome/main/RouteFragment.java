@@ -167,6 +167,8 @@ public class RouteFragment extends Fragment implements View.OnClickListener {
         tMapView.setLocationPoint(myLocation.getLongitude(), myLocation.getLatitude());
         tMapView.zoomToSpan(maxLat-minLat, maxLon-minLon);
         tMapView.setCenterPoint(myLocation.getLongitude(), myLocation.getLatitude());
+
+        ((MainActivity)getActivity()).setRouteFragment(this);
     }
 
     // [minLat, minLon, maxLat, maxLon]
@@ -311,6 +313,11 @@ public class RouteFragment extends Fragment implements View.OnClickListener {
         super.onDestroy();
         mListener = null;
         ((MainActivity)getActivity()).endShared();
+    }
+
+    public void setLocationPoint(Location location) {
+        tMapView.setLocationPoint(location.getLongitude(), location.getLatitude());
+        tMapView.setCenterPoint(location.getLongitude(), location.getLatitude());
     }
 
     public interface tmapSendListener {
