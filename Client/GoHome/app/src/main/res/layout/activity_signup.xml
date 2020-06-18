@@ -2,7 +2,8 @@
 <RelativeLayout
     xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="@color/colorWhite">
 
     <androidx.appcompat.widget.Toolbar
         android:id="@+id/signup_toolbar"
@@ -44,15 +45,15 @@
                 android:hint="id"
                 android:singleLine="true"
                 android:nextFocusDown="@+id/signup_password"
-                android:background="@drawable/signup_text"
-                android:backgroundTint="@color/colorGray"
-                android:layout_marginVertical="@dimen/fab_margin"
+                android:background="@drawable/shape_edittext"
+                android:layout_marginTop="@dimen/small_margin"
+                android:layout_marginBottom="@dimen/fab_margin"
                 android:padding="@dimen/small_margin"
                 />
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="PASSWORD"
+                android:text="Password"
                 />
             <EditText
                 android:id="@+id/signup_password"
@@ -62,9 +63,9 @@
                 android:hint="password"
                 android:singleLine="true"
                 android:nextFocusDown="@+id/signup_confirm_password"
-                android:background="@drawable/signup_text"
-                android:backgroundTint="@color/colorGray"
-                android:layout_marginVertical="@dimen/fab_margin"
+                android:background="@drawable/shape_edittext"
+                android:layout_marginTop="@dimen/small_margin"
+                android:layout_marginBottom="@dimen/fab_margin"
                 android:padding="@dimen/small_margin"/>
             <TextView
                 android:layout_width="match_parent"
@@ -79,14 +80,14 @@
                 android:hint="password"
                 android:singleLine="true"
                 android:nextFocusDown="@+id/signup_email"
-                android:background="@drawable/signup_text"
-                android:backgroundTint="@color/colorGray"
-                android:layout_marginVertical="@dimen/fab_margin"
+                android:background="@drawable/shape_edittext"
+                android:layout_marginTop="@dimen/small_margin"
+                android:layout_marginBottom="@dimen/fab_margin"
                 android:padding="@dimen/small_margin"/>
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="email" />
+                android:text="Email" />
 
             <EditText
                 android:id="@+id/signup_email"
@@ -95,9 +96,9 @@
                 android:hint="email"
                 android:singleLine="true"
                 android:nextFocusDown="@+id/signup_name"
-                android:background="@drawable/signup_text"
-                android:backgroundTint="@color/colorGray"
-                android:layout_marginVertical="@dimen/fab_margin"
+                android:background="@drawable/shape_edittext"
+                android:layout_marginTop="@dimen/small_margin"
+                android:layout_marginBottom="@dimen/fab_margin"
                 android:padding="@dimen/small_margin"/>
 
             <TextView
@@ -111,9 +112,9 @@
                 android:hint="name"
                 android:singleLine="true"
                 android:nextFocusDown="@+id/signup_address"
-                android:background="@drawable/signup_text"
-                android:backgroundTint="@color/colorGray"
-                android:layout_marginVertical="@dimen/fab_margin"
+                android:background="@drawable/shape_edittext"
+                android:layout_marginTop="@dimen/small_margin"
+                android:layout_marginBottom="@dimen/fab_margin"
                 android:padding="@dimen/small_margin"/>
 
             <TextView
@@ -127,9 +128,8 @@
                 android:hint="Address"
                 android:singleLine="true"
                 android:nextFocusDown="@+id/signup_detail_address"
-                android:background="@drawable/signup_text"
-                android:backgroundTint="@color/colorGray"
-                android:layout_marginTop="@dimen/fab_margin"
+                android:background="@drawable/shape_edittext"
+                android:layout_marginTop="@dimen/small_margin"
                 android:layout_marginBottom="@dimen/small_margin"
                 android:padding="@dimen/small_margin"/>
             <EditText
@@ -139,8 +139,7 @@
                 android:hint="Detail Address"
                 android:singleLine="true"
                 android:nextFocusDown="@+id/signup_complete"
-                android:background="@drawable/signup_text"
-                android:backgroundTint="@color/colorGray"
+                android:background="@drawable/shape_edittext"
                 android:layout_marginBottom="@dimen/fab_margin"
                 android:padding="@dimen/small_margin" />
 
@@ -150,9 +149,9 @@
                 android:layout_height="wrap_content"
                 android:layout_marginTop="30dp"
                 android:layout_marginBottom="40dp"
-                android:background="@drawable/round_edittext"
-                android:backgroundTint="@color/colorGray"
+                android:background="@drawable/shape_button"
                 android:text="Sign Up"
+                android:textColor="@color/colorWhite"
                 />
         </LinearLayout>
 
