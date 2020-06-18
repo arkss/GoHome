@@ -50,8 +50,8 @@
                 <category android:name="android.intent.category.BROWSABLE" />
 
                 <data
-                    android:host="share"
-                    android:scheme="uosgohome" />
+                    android:host="uosgohome"
+                    android:scheme="http" />
             </intent-filter>
         </activity>
     </application>

@@ -32,7 +32,8 @@
                     android:text="현재 위치"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
+                    app:layout_constraintTop_toTopOf="parent"
+                    android:focusableInTouchMode="false" />
 
                 <EditText
                     android:id="@+id/editTextDestination"
@@ -43,6 +44,7 @@
                     android:layout_marginBottom="16dp"
                     android:hint="도착 위치"
                     android:singleLine="true"
+                    android:nextFocusDown="@+id/imageButtonMoreVert"
                     app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent" />

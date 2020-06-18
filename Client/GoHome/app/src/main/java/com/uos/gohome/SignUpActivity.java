@@ -54,6 +54,13 @@ public class SignUpActivity extends AppCompatActivity {
         editAddressDetail = (EditText)findViewById(R.id.signup_detail_address);
         completeBtn = (Button)findViewById(R.id.signup_complete);
 
+        editAddress.setOnFocusChangeListener(new View.OnFocusChangeListener() {
+            @Override
+            public void onFocusChange(View v, boolean hasFocus) {
+                if(hasFocus)
+                    startActivityForResult(new Intent(SignUpActivity.this, AddressSearch.class), addressRequestCode);
+            }
+        });
         editAddress.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View v, MotionEvent event) {

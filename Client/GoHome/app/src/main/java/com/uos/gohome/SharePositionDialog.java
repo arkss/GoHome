@@ -19,6 +19,7 @@ public class SharePositionDialog extends DialogFragment {
     // key로 사용
     private static final String ARG_DIALOG_STRING = "dialog_msg";
     private static final String ARG_DIALOG_LINK = "dialog_link";
+    private static final String ARG_DIALOG_ROUTEID = "dialog_routeid";
 
     // dialog에 표시되는 textview
     private TextView firstTextView;
@@ -28,13 +29,16 @@ public class SharePositionDialog extends DialogFragment {
     private String msg;
     private String link;
 
+    private int routeId;
+
     private ClipboardManager clipboard;
     private Context context;
 
-    public static SharePositionDialog newInstance(String link) {
+    public static SharePositionDialog newInstance(String link, int routeId) {
         // bundle에 전달받은 데이터를 입력
         Bundle bundle = new Bundle();
         bundle.putString(ARG_DIALOG_LINK, link);
+        bundle.putInt(ARG_DIALOG_ROUTEID, routeId);
 
         SharePositionDialog fragment = new SharePositionDialog();
         fragment.setArguments(bundle);
@@ -48,6 +52,7 @@ public class SharePositionDialog extends DialogFragment {
             // bundle에서 입력한 데이터를 얻어 초기화
             this.msg = "내 위치를 가족/친구에게 공유하세요.\n(위치정보 제3자 제공에 동의합니다.)";
             this.link = getArguments().getString(ARG_DIALOG_LINK);
+            this.routeId = getArguments().getInt(ARG_DIALOG_ROUTEID);
         }
         clipboard = (ClipboardManager)getActivity().getSystemService(Context.CLIPBOARD_SERVICE);
         context = (Context)getActivity();
@@ -71,7 +76,11 @@ public class SharePositionDialog extends DialogFragment {
                         AlertDialog.Builder builder1 = new AlertDialog.Builder(getActivity());
                         View view1 = inflater.inflate(R.layout.dialog_url, null);
                         secondTextView = view1.findViewById(R.id.dialog_link);
-                        secondTextView.setText(link);
+                        secondTextView.setText(link+"?id="+routeId);
+
+                        // 위치를 server로 전송
+                        ((MainActivity)getActivity()).startShare(routeId);
+
                         ImageButton imb = view1.findViewById(R.id.dialog_copy);
                         imb.setOnClickListener(new View.OnClickListener() {
                             @Override

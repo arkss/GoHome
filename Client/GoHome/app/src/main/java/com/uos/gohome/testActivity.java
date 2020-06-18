@@ -17,6 +17,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
@@ -80,6 +81,8 @@ public class testActivity extends AppCompatActivity  implements SensorEventListe
     private Location myLocation = new Location("myLoc");
     private Location targetLocation, lastLocation;
 
+    private int count = 0; // count 변수
+
     private boolean isGPSEnabled;
     private boolean isNetEnabled;
 
@@ -90,10 +93,7 @@ public class testActivity extends AppCompatActivity  implements SensorEventListe
             //{37.586488, 127.054158} // 전농파출소 위도, 경도
             //{ 37.583484, 127.054825 } // 정문 세븐일레븐
             {37.583634610676576, 127.05422474709316},
-            {37.583634610676576, 127.05422474709316},
-            {37.58363461307705, 127.05435806827995},
-            {37.583551295983426, 127.0547219263878},
-            {37.5834846410683, 127.05494413026098},
+            {37.583634610676576, 127.05422474709316}
     };
 
     //각도, 거리 계산 변수
@@ -242,7 +242,7 @@ public class testActivity extends AppCompatActivity  implements SensorEventListe
         currentDistance = getDistance(myLocation, getNextLocation(gpsNodePointArrayList.get(0)[0], gpsNodePointArrayList.get(0)[1]));
         lastDistance = getDistance(myLocation, lastLocation);
 
-        tv2.setText("남은 체크포인트 : "  + Integer.toString(gpsNodePointArrayList.size())+" 개 ");
+        tv2.setText("체크포인트 : "  + Integer.toString(gpsNodePointArrayList.size())+" 개");
         tv3.setText("남은 거리 : "+ Math.round(lastDistance*100)/100.0+" m");
 
         //체크포인트 표시
@@ -265,25 +265,38 @@ public class testActivity extends AppCompatActivity  implements SensorEventListe
         lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000,1, locationListener);
 
         //일정 거리 이상 가까이 오면 다음 체크포인트로
-        if(currentDistance <= 3) {
+        if(currentDistance <= 4) {
+            gpsNodePointArrayList.remove(0);
+        }
+
+        double tmp2 = getDistance(targetLocation, lastLocation);
+        if(tmp2 > lastDistance) {
             gpsNodePointArrayList.remove(0);
         }
 
         //남은 체크포인트 중 지나친 체크포인트 체크
-        if(gpsNodePointArrayList.size() > 0) {
-            for (int i = 0; i < gpsNodePointArrayList.size(); i++) {
-                double tmp = getDistance(myLocation, getNextLocation(gpsNodePointArrayList.get(i)[0], gpsNodePointArrayList.get(i)[1]));
-                //다음 점이 더 가깝고 일정 거리 이하라면
-                if (currentDistance > tmp) {
-                    for (int j = 0; j < i; j++) {
-                        gpsNodePointArrayList.remove(j);
+        try {
+
+
+            if (gpsNodePointArrayList.size() > 0) {
+                for (int i = 0; i < gpsNodePointArrayList.size(); i++) {
+                    double tmp = getDistance(myLocation, getNextLocation(gpsNodePointArrayList.get(i)[0], gpsNodePointArrayList.get(i)[1]));
+                    //다음 점이 더 가깝고 일정 거리 이하라면
+                    if (currentDistance > tmp) {
+                        for (int j = 0; j <= i; j++) {
+                            gpsNodePointArrayList.remove(j);
+                        }
+                        break;
                     }
-                    break;
                 }
+            } else {
+                Toast.makeText(this, "경로 탐색 완료!", Toast.LENGTH_SHORT).show();
+                finish();
             }
         }
-        else {
+        catch(Exception e) {
             finish();
+            Toast.makeText(this, "경로 탐색 종료", Toast.LENGTH_SHORT).show();
         }
 
         //평면 지속적으로 탐색
@@ -291,18 +304,24 @@ public class testActivity extends AppCompatActivity  implements SensorEventListe
         for (Plane plane : planes) {
             if (plane.getTrackingState() == TrackingState.TRACKING) {
                 try {
-                    //센서를 통해서 평면 위치 계산후 방위각 계산
-                    planePose = plane.getCenterPose();
-                    tmpPose = myPoseToNewPose(planePose);
+                    if(count <= 0 ) {
+                        //센서를 통해서 평면 위치 계산후 방위각 계산
+                        planePose = plane.getCenterPose();
+                        tmpPose = myPoseToNewPose(planePose);
 
-                    //평면에 내가 바라보는 방향으로 Anchor 생성
-                    Anchor anchor = plane.createAnchor(tmpPose);
-                    if (prevAnchorNode != null) {
-                        prevAnchorNode.getAnchor().detach();
+                        //평면에 내가 바라보는 방향으로 Anchor 생성
+                        Anchor anchor = plane.createAnchor(tmpPose);
+                        if (prevAnchorNode != null) {
+                            prevAnchorNode.getAnchor().detach();
+                        }
+
+                        //AnchorNode에 Model을 만듦
+                        prevAnchorNode = makeArrow(anchor, angle);
+                        count = 50;
                     }
-
-                    //AnchorNode에 Model을 만듦
-                    prevAnchorNode = makeArrow(anchor, angle);
+                    else {
+                        count -= 1;
+                    }
                 }
                 catch (Exception e) {
                     Log.e("Error is detected : ",e.getMessage());

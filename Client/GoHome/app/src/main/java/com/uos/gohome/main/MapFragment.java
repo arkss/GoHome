@@ -207,7 +207,8 @@ public class MapFragment extends Fragment implements View.OnClickListener {
         switch(view.getId()) {
             // position share btn clicked
             case R.id.position_share_btn:
-                SharePositionDialog dialog = SharePositionDialog.newInstance("url here");
+                // TODO: MODIFY
+                SharePositionDialog dialog = SharePositionDialog.newInstance("url here", 1);
                 dialog.show(getActivity().getSupportFragmentManager(), "share dialog");
                 break;
 

@@ -1,10 +1,14 @@
 package com.uos.gohome;
 
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.fragment.app.Fragment;
 
+import android.content.Intent;
 import android.location.Location;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
+import android.view.View;
 import android.widget.Toast;
 
 import com.google.gson.JsonObject;
@@ -17,6 +21,7 @@ import com.uos.gohome.retrofit2.DataInUserProfileData;
 import com.uos.gohome.retrofit2.Datum;
 import com.skt.Tmap.TMapPolyLine;
 import com.skt.Tmap.TMapView;
+import com.uos.gohome.retrofit2.PostRouteData;
 import com.uos.gohome.retrofit2.RetrofitClientInstance;
 import com.uos.gohome.retrofit2.RetrofitService;
 import com.uos.gohome.retrofit2.UserProfileData;
@@ -46,7 +51,10 @@ public class MainActivity extends AppCompatActivity implements OnGpsEventListene
 
     private RouteFragment routeFragment;
 
+    public static final int DELAY_TIME = 3000;
+
     public boolean goHome = false;
+    private boolean isShared = false;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,7 +92,6 @@ public class MainActivity extends AppCompatActivity implements OnGpsEventListene
             }
         });
 
-        routeFragment = new RouteFragment();
         gpsInit();
     }
 
@@ -98,10 +105,18 @@ public class MainActivity extends AppCompatActivity implements OnGpsEventListene
 
     @Override
     public void onGpsEvent(Location location) {
+        double lat = location.getLatitude(), lon = location.getLongitude();
+
         try {
-            double lat = location.getLatitude(), lon = location.getLongitude();
 //            Toast.makeText(this, "latitude: " + Double.toString(lat) + ", longitude: " + Double.toString(lon), Toast.LENGTH_SHORT).show();
             mapFragment.setLocationPoint(location);
+        } catch(Exception e) {
+            Log.e("onGpsEvent", e.getMessage());
+        }
+
+        try {
+//            Toast.makeText(this, "latitude: " + Double.toString(lat) + ", longitude: " + Double.toString(lon), Toast.LENGTH_SHORT).show();
+            routeFragment.setLocationPoint(location);
         } catch(Exception e) {
             Log.e("onGpsEvent", e.getMessage());
         }
@@ -135,5 +150,40 @@ public class MainActivity extends AppCompatActivity implements OnGpsEventListene
 
     public void setMapFragment(MapFragment mapFragment) {
         this.mapFragment = mapFragment;
+    }
+
+    public void setRouteFragment(RouteFragment routeFragment) {
+        this.routeFragment = routeFragment;
+    }
+
+    public void startShare(int routeId) {
+        isShared = true;
+        Handler handler = new Handler();
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                Call<JsonObject> request2 = service.postPosition(token, routeId, getLocation().getLatitude(), getLocation().getLongitude());
+
+                request2.enqueue(new Callback<JsonObject>() {
+                    @Override
+                    public void onResponse(Call<JsonObject> call, Response<JsonObject> response) {
+                        if (response.isSuccessful()) {
+                            Toast.makeText(MainActivity.this, "POST POSITION", Toast.LENGTH_SHORT).show();
+                        }
+                    }
+
+                    @Override
+                    public void onFailure(Call<JsonObject> call, Throwable t) {
+
+                    }
+                });
+                if (isShared) {
+                    handler.postDelayed(this, DELAY_TIME);
+                }
+            }
+        }, DELAY_TIME);
+    }
+    public void endShared() {
+        isShared = false;
     }
 }

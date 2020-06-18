@@ -215,7 +215,7 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
 
     public void routeSearch(TMapPoint dpt, TMapPoint dst) {
         // request routes
-        Call<RouteSearchResult> request = service.getRoutes(dpt.getLatitude(), dpt.getLongitude(), dst.getLatitude(), dst.getLongitude(), "Y", "Y");
+        Call<RouteSearchResult> request = service.getRoutes(dpt.getLatitude(), dpt.getLongitude(), dst.getLatitude(), dst.getLongitude(), "Y", "N");
         request.enqueue(new Callback<RouteSearchResult>() {
             @Override
             public void onResponse(Call<RouteSearchResult> call, Response<RouteSearchResult> response) {
