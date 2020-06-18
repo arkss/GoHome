@@ -36,7 +36,7 @@
     file: 'sampledata/arrow4.obj',
     name: 'arrow4',
     recenter: 'root',
-    scale : 4
-  },
+    scale : 2
+   },
   version: '0.54:2',
 }
