@@ -101,6 +101,7 @@ public class AddressSearch extends AppCompatActivity implements AddressRecyclerA
             }
         });
 
+        imm = (InputMethodManager)getSystemService(INPUT_METHOD_SERVICE);
         editTextPOI.requestFocus();  // focus on editText
 
         notifyHandler = new Handler(){
