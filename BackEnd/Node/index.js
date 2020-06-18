@@ -17,6 +17,7 @@ if (keys.SSL) {
 	https_server = require('https').createServer({
 		ca: fs.readFileSync('/etc/letsencrypt/live/gohome-node.com/fullchain.pem'),
 		key: fs.readFileSync('/etc/letsencrypt/live/gohome-node.com/privkey.pem'),
+		cert: fs.readFileSync('/etc/letsencrypt/live/gohome-node.com/cert.pem'),
 		requestCert: false,
 		rejectUnauthorized: false
 	}, app);
