@@ -48,6 +48,8 @@
             android:textSize="15sp"
             android:hint="id"
             android:background="@drawable/round_edittext"
+            android:singleLine="true"
+            android:nextFocusDown="@+id/login_password"
             />
 
         <EditText
@@ -60,6 +62,8 @@
             android:hint="passwaord"
             android:inputType="textPassword"
             android:background="@drawable/round_edittext"
+            android:singleLine="true"
+            android:nextFocusDown="@+id/login_signIn"
             />
 
         <LinearLayout
