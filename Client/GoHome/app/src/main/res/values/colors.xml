@@ -7,4 +7,5 @@
     <color name="colorWalking">#ffc107</color>
     <color name="colorBicycle">#00c853</color>
     <color name="colorBus">#2196f3</color>
+    <color name="colorGray">#dadada</color>
 </resources>
