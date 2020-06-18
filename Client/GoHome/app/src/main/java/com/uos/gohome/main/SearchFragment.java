@@ -8,6 +8,7 @@ import android.view.KeyEvent;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
 import android.widget.ImageButton;
 
@@ -43,6 +44,7 @@ import retrofit2.Callback;
 import retrofit2.Response;
 import retrofit2.Retrofit;
 
+import static android.content.Context.INPUT_METHOD_SERVICE;
 import static java.lang.Math.round;
 
 /**
@@ -72,6 +74,8 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
     RetrofitService2 service;
 
     SearchRecyclerAdapter adapter;
+
+    InputMethodManager imm;
 
     public SearchFragment() {
         // Required empty public constructor
@@ -156,6 +160,10 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
                 searchDataList.clear();
                 innerDataList.clear();
 
+                // 키보드 내리기 & editText focus 빼기
+                imm.hideSoftInputFromWindow(text_destination.getWindowToken(), 0);
+                text_destination.clearFocus();
+
                 // destination
                 String destinationText = text_destination.getText().toString();
 //                String destinationText = "서울시립대학교";
@@ -175,6 +183,7 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
                         // get first poi item
                         TMapPOIItem item = (TMapPOIItem)poiItem.get(0);
                         text_destination.setText(item.getPOIName());
+//                        text_destination.clearFocus();
 
                         // get departure, destination point
                         TMapPoint destination = item.getPOIPoint();
@@ -211,6 +220,10 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
                 return false;
             }
         });
+
+        text_destination.requestFocus();  // 바로 도착 위치에 키보드 올리기
+        imm = (InputMethodManager)getContext().getSystemService(INPUT_METHOD_SERVICE);
+        imm.showSoftInput(text_destination, 0);
     }
 
     public void routeSearch(TMapPoint dpt, TMapPoint dst) {

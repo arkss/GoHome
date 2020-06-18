@@ -6,6 +6,7 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
@@ -128,6 +129,8 @@ public class SignUpActivity extends AppCompatActivity {
                 }
             }
         });
+
+        editId.requestFocus();  // 키보드 focusing
     }
 
     @Override

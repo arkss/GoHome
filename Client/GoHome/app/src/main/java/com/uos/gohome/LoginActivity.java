@@ -29,9 +29,9 @@ public class LoginActivity extends AppCompatActivity {
         signInBtn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-//                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
-////                startActivity(intent);
-////                finish();
+                Intent intent = new Intent(LoginActivity.this, MainActivity.class);
+                startActivity(intent);
+                finish();
 
                 // parse LoginData
                 EditText etId = (EditText)findViewById(R.id.login_id);
