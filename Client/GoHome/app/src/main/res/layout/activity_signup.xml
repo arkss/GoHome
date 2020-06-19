@@ -97,6 +97,7 @@
                 android:singleLine="true"
                 android:nextFocusDown="@+id/signup_name"
                 android:background="@drawable/shape_edittext"
+                android:inputType="textWebEmailAddress"
                 android:layout_marginTop="@dimen/small_margin"
                 android:layout_marginBottom="@dimen/fab_margin"
                 android:padding="@dimen/small_margin"/>
@@ -148,7 +149,7 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:layout_marginTop="30dp"
-                android:layout_marginBottom="40dp"
+                android:layout_marginBottom="60dp"
                 android:background="@drawable/shape_button"
                 android:text="Sign Up"
                 android:textColor="@color/colorWhite"
