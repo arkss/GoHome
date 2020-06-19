@@ -598,7 +598,7 @@ const requestAndParseJSON = async (option, type = 'json') => {
 	}
 
 	end_time = Date.now();
-	U.log(`response from ${option.uri || option.url}.\ntime: ${end_time - start_time}ms`);
+	U.responseTime(option.uri || option.url, end_time - start_time);
 
 	if (type == 'json') { // json to json
 		return JSON.parse(decoded);
