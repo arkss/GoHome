@@ -27,14 +27,14 @@ const combinedFormat = format.combine(
 	Log the message as info-level.
 
 */
-exports.log = (message, level = 'info') => {
+const log = (message, level, pre = '') => {
 	let logger = winston.createLogger({
 		transports: [
 			new winston.transports.Console({
 				format: combinedFormat
 			}),
 			new winston.transports.File({
-				filename: `${logDir}/log_${moment().format("YYYYMMDD_HH")}.log`,
+				filename: `${logDir}/log_${pre}${moment().format("YYYYMMDD_HH")}.log`,
 				format: combinedFormat
 			})
 		]
@@ -59,5 +59,7 @@ exports.log = (message, level = 'info') => {
 	}
 }
 
-exports.error = (err) => exports.log(err.stack || err, 'error');
-exports.debug = (message) => exports.log(message, 'debug');
+exports.log = (message) => log(message, 'info');
+exports.error = (err) => log(err.stack || err, 'error');
+exports.debug = (message) => log(message, 'debug');
+exports.responseTime = (url, ms) => log(`(${ms}ms) ${url}`, 'info', 'res_time_');

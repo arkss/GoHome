@@ -70,7 +70,7 @@ exports.api_get_routes = async (req, res, next) => {
 	U.response(res, true, `${routes.length} route found`, routes);
 	
 	// log processing time
-	U.log(`Route Searching Time: ${end_time - start_time}ms`);
+	U.responseTime('to response', end_time - start_time);
 };
 
 exports.get_routes = async (lat_start, lon_start, lat_end, lon_end, include_bike, include_bus) => {
