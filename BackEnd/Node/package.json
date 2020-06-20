@@ -16,6 +16,7 @@
     "cors": "^2.8.5",
     "express": "^4.17.1",
     "express-session": "^1.17.0",
+    "fs": "0.0.1-security",
     "iconv-lite": "^0.5.1",
     "logform": "^2.1.2",
     "moment": "^2.25.3",
@@ -33,7 +34,9 @@
     "eslint": "^6.8.0"
   },
   "nodemonConfig": {
-    "ignore": [".log/*"],
+    "ignore": [
+      ".log/*"
+    ],
     "delay": "1000"
   }
 }

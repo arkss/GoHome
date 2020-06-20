@@ -6,7 +6,7 @@ from .models import Position, Route
 
 
 class ShareRouteView(APIView):
-    permission_classes = [AllowAny]
+    #permission_classes = [AllowAny]
 
     def post(self, request, *args, **kwargs):
         profile = request.user

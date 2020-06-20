@@ -1,0 +1,16 @@
+[Unit]
+Description=uWSGI service
+After=syslog.target
+
+[Service]
+ExecStart=/home/ubuntu/myvenv/bin/uwsgi -i /home/ubuntu/BackEnd/Django/project/config/wsgi/wsgi.ini
+
+
+Restart=always
+KillSignal=SIGQUIT
+Type=notify
+StandardError=syslog
+NotifyAccess=all
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,9 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.uos.gohome",
+    "sha256_cert_fingerprints":
+    ["5B:8F:48:F9:E5:08:A3:FB:AF:1E:2E:7F:08:EA:8D:0E:47:E4:06:29:DC:2E:62:E6:F5:35:EF:7B:F9:14:66:3F"]
+  }
+}]

@@ -186,7 +186,6 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
-migrations
 
 # minsung's virtual env
 myvenv

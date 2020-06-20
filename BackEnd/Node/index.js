@@ -2,27 +2,28 @@ const U = require('./controllers/util');
 const bike = require('./controllers/bike');
 const bus = require('./controllers/bus');
 const express = require('express');
-const session = require('express-session');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const fs = require('fs');
+
 const router = require('./routes');
 const keys = require('./keys.json');
 const app = express();
 
-var server = require('http').createServer(app);
-var io = require('socket.io')(server);
-var port = process.env.PORT || keys.port;
-
-// set middleware
-var sessionMiddleWare = session({
-	secret: keys.session_secret,
-	resave: false,
-	saveUninitialized: true
-});
-app.use(sessionMiddleWare);
-io.use((socket, next) => {
-	sessionMiddleWare(socket.request, socket.request.res, next);
-});
+var http_server = null;
+var https_server = null;
+http_server = require('http').createServer(app);
+if (keys.SSL) {
+	https_server = require('https').createServer({
+		ca: fs.readFileSync('/etc/letsencrypt/live/gohome-node.com/fullchain.pem'),
+		key: fs.readFileSync('/etc/letsencrypt/live/gohome-node.com/privkey.pem'),
+		cert: fs.readFileSync('/etc/letsencrypt/live/gohome-node.com/cert.pem'),
+		requestCert: false,
+		rejectUnauthorized: false
+	}, app);
+}
+var http_port = keys.http_port;
+var https_port = keys.https_port;
 
 // automatically allow cross-origin requests
 app.use(cors({ origin: true }));
@@ -82,8 +83,11 @@ mongoose.connect(keys.url_mongodb, {
 	await bus.load_cache_from_db();
 	U.log(`Succeessfully load biekstop cache.`);
 
-	server.listen(port, () => {
-		U.log(`Server listen now with ${port} port.`);
+	http_server.listen(http_port, () => {
+		U.log(`Server listen now with ${http_port} port.`);
+	});
+	https_server?.listen(https_port, () => {
+		U.log(`Server listen now with ${https_port} port.`);
 	});
 })
 .catch(U.error);

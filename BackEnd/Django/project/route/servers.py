@@ -1,1 +1,1 @@
-route_server = 'http://15.164.105.118/'
+route_server = 'http://15.164.105.118/api'
