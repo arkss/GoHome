@@ -8,7 +8,6 @@ import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
-import android.hardware.camera2.CameraManager;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -42,37 +41,33 @@ import com.google.ar.sceneform.ux.ArFragment;
 import com.google.ar.sceneform.ux.TransformableNode;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 
-public class testActivity extends AppCompatActivity  implements SensorEventListener {
+public class testActivity extends AppCompatActivity implements SensorEventListener {
 
     //UI 변수
-    private CameraManager cameraManager;
     private TextView tv1, tv2, tv3;
 
     //센서 변수
     private SensorManager mSensorManager;
     private Sensor mAccelerometer;
     private Sensor mMagnetometer;
-    private Sensor mGyro;
     private float azimuthinDegress; // y축 각도
-    private float[] noAccel = {0,3,3};
-    private float[] mLastAccelerometer = new float[3];
+    private float[] noAccel = {0, 3, 3};
     private float[] mLastMagnetometer = new float[3];
     private boolean mLastAccelerometerSet = false;
     private boolean mLastMagnetometerSet = false;
     private float[] mR = new float[9];
     private float[] mOrientation = new float[3];
-    private float mCurrentDegree = 0f;
 
     //AR 변수
     private ModelRenderable arrowRenderable;
     private ArFragment arFragment;
     private ArSceneView arSceneView;
     private AnchorNode prevAnchorNode;
-    private Pose myPose, tmpPose, planePose, dPose;
     private Node node = new Node();
 
     //GPS 변수
@@ -82,9 +77,6 @@ public class testActivity extends AppCompatActivity  implements SensorEventListe
     private Location targetLocation, lastLocation;
 
     private int count = 0; // count 변수
-
-    private boolean isGPSEnabled;
-    private boolean isNetEnabled;
 
     //위도 경도 형식으로 받아오는 배열값
 
@@ -96,26 +88,23 @@ public class testActivity extends AppCompatActivity  implements SensorEventListe
             {37.583634610676576, 127.05422474709316}
     };
 
-    //각도, 거리 계산 변수
-    private float angle;
-    private double currentDistance, lastDistance;
-
     //권한 체크
     private void checkPermission() {
         try {
             //권한 얻기 - GPS
-            if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) !=
+            if (ContextCompat.checkSelfPermission(
+                    this, Manifest.permission.ACCESS_FINE_LOCATION) !=
                     PackageManager.PERMISSION_GRANTED) {
-                if(ActivityCompat.shouldShowRequestPermissionRationale(this,
+                if (!ActivityCompat.shouldShowRequestPermissionRationale(this,
                         Manifest.permission.ACCESS_FINE_LOCATION)) {
-                }
-                else {
-                    ActivityCompat.requestPermissions(this, new String[] {Manifest.permission.ACCESS_FINE_LOCATION},
-                            MY_PERMISSIONS_REQUEST_READ_CONTACTS);
+                    ActivityCompat.requestPermissions(
+                            this,
+                            new String[]{Manifest.permission.ACCESS_FINE_LOCATION},
+                            MY_PERMISSIONS_REQUEST_READ_CONTACTS
+                    );
                 }
             }
-        }
-        catch(Exception e) {
+        } catch (Exception e) {
             Log.e("PERMISSION DENIED", e.getMessage());
         }
     }
@@ -124,14 +113,9 @@ public class testActivity extends AppCompatActivity  implements SensorEventListe
     private LocationListener locationListener = new LocationListener() {
         @Override
         public void onLocationChanged(Location location) {
-
-            LocationManager locationManager = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
-
-            isGPSEnabled = locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-            isNetEnabled = locationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-
             myLocation = location;
         }
+
         @Override
         public void onStatusChanged(String provider, int status, Bundle extras) {
         }
@@ -150,36 +134,30 @@ public class testActivity extends AppCompatActivity  implements SensorEventListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-
         //텍스트뷰 초기화
         tv1 = (TextView) findViewById(R.id.myPose);
         tv2 = (TextView) findViewById(R.id.anchorPose);
         tv3 = (TextView) findViewById(R.id.text3);
-        cameraManager = (CameraManager) getSystemService(CAMERA_SERVICE);
 
         //Intent 값 받아오기
         Intent intent = getIntent();
         ArrayList<double[]> gpsNodePointArrayList2 = (ArrayList<double[]>) intent.getSerializableExtra("points");
 
         //GPS 정보 초기화
-        if(gpsNodePointArrayList2 != null) {
+        if (gpsNodePointArrayList2 != null) {
             //intent 잘 받아오면 넣기
             tv1.setText("AR 경로 안내");
             gpsNodePointArrayList = gpsNodePointArrayList2;
-        }
-        else {
+        } else {
             //아닐 경우 기본 값으로 설정
             tv1.setText("AR 경로 탐색");
-            for(int i = 0; i< gpsNodePoint.length;i++) {
-                gpsNodePointArrayList.add(gpsNodePoint[i]);
-            }
+            gpsNodePointArrayList.addAll(Arrays.asList(gpsNodePoint));
         }
 
         //센서 초기화
-        mSensorManager = (SensorManager)getSystemService(SENSOR_SERVICE);
+        mSensorManager = (SensorManager) getSystemService(SENSOR_SERVICE);
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mMagnetometer = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
-        mGyro = mSensorManager.getDefaultSensor(Sensor.TYPE_GYROSCOPE);
 
         //체크포인트 AR 이미지 초기화
         CompletableFuture<ModelRenderable> goal = ModelRenderable.builder()
@@ -187,20 +165,21 @@ public class testActivity extends AppCompatActivity  implements SensorEventListe
                 .build();
 
         CompletableFuture.allOf(goal)
-                .handle((notUsed, throwable) -> {
-                    if(throwable != null) {
+                .handle((notUsed, throwable) ->
+                {
+                    if (throwable != null) {
                         return null;
                     }
                     try {
                         arrowRenderable = goal.get();
-                    } catch(InterruptedException | ExecutionException e) {
+                    } catch (InterruptedException | ExecutionException e) {
                         e.getStackTrace();
                     }
                     return null;
                 });
 
         //AR 화면 실행
-        arFragment = (ArFragment)getSupportFragmentManager().findFragmentById(R.id.arFragment);
+        arFragment = (ArFragment) getSupportFragmentManager().findFragmentById(R.id.arFragment);
         arFragment.getArSceneView().getScene().addOnUpdateListener(this::onUpdate);
     }
 
@@ -208,19 +187,17 @@ public class testActivity extends AppCompatActivity  implements SensorEventListe
     @Override
     public void onSensorChanged(SensorEvent event) {
         //두 센서값을 다 받아왔을 때 값 계산
-        if(event.sensor == mAccelerometer) {
-            System.arraycopy(event.values, 0, mLastAccelerometer, 0, event.values.length);
+        if (event.sensor == mAccelerometer) {
             mLastAccelerometerSet = true;
-        } else if(event.sensor == mMagnetometer) {
+        } else if (event.sensor == mMagnetometer) {
             System.arraycopy(event.values, 0, mLastMagnetometer, 0, event.values.length);
             mLastMagnetometerSet = true;
         }
 
-        if(mLastAccelerometerSet && mLastMagnetometerSet) {
+        if (mLastAccelerometerSet && mLastMagnetometerSet) {
             SensorManager.getRotationMatrix(mR, null, noAccel, mLastMagnetometer);
             //azimuth 가 너무 갑자기 변하면
             azimuthinDegress = (int) (Math.toDegrees(SensorManager.getOrientation(mR, mOrientation)[0]) + 360) % 360;
-            mCurrentDegree = -azimuthinDegress;
         }
     }
 
@@ -235,49 +212,46 @@ public class testActivity extends AppCompatActivity  implements SensorEventListe
 
         //target 위치에 모델 세우기
         targetLocation = getNextLocation(gpsNodePointArrayList.get(0)[0], gpsNodePointArrayList.get(0)[1]);
-        lastLocation = getNextLocation(gpsNodePointArrayList.get(gpsNodePointArrayList.size()-1)[0],gpsNodePointArrayList.get(gpsNodePointArrayList.size()-1)[1]);
+        lastLocation = getNextLocation(gpsNodePointArrayList.get(gpsNodePointArrayList.size() - 1)[0], gpsNodePointArrayList.get(gpsNodePointArrayList.size() - 1)[1]);
 
         //target 위치와 현재 위치 간 각도 및 거리 계산
-        angle = (float) gpsToDegree(myLocation, targetLocation);
-        currentDistance = getDistance(myLocation, getNextLocation(gpsNodePointArrayList.get(0)[0], gpsNodePointArrayList.get(0)[1]));
-        lastDistance = getDistance(myLocation, lastLocation);
+        float angle = (float) gpsToDegree(myLocation, targetLocation);
+        double currentDistance = getDistance(myLocation, getNextLocation(gpsNodePointArrayList.get(0)[0], gpsNodePointArrayList.get(0)[1]));
+        double lastDistance = getDistance(myLocation, lastLocation);
 
-        tv2.setText("체크포인트 : "  + Integer.toString(gpsNodePointArrayList.size())+" 개");
-        tv3.setText("남은 거리 : "+ Math.round(lastDistance*100)/100.0+" m");
+        tv2.setText("체크포인트 : " + gpsNodePointArrayList.size() + " 개");
+        tv3.setText("남은 거리 : " + Math.round(lastDistance * 100) / 100.0 + " m");
 
         //체크포인트 표시
-        if(Math.abs(angle - azimuthinDegress) <= 10 && currentDistance <= 5) {
+        if (Math.abs(angle - azimuthinDegress) <= 10 && currentDistance <= 5) {
             node.setParent(arSceneView.getScene());
             node.setRenderable(arrowRenderable);
-            Ray ray = camera.screenPointToRay(1000/2f , 500);
+            Ray ray = camera.screenPointToRay(1000 / 2f, 500);
 
-            Vector3 newPosition = ray.getPoint((float)(currentDistance/5));
+            Vector3 newPosition = ray.getPoint((float) (currentDistance / 5));
             node.setLocalPosition(newPosition);
-        }
-        else {
+        } else {
             node.setRenderable(null);
         }
 
         //내 현재 위치 myLocation 구하기
-        LocationManager lm = (LocationManager)getSystemService(Context.LOCATION_SERVICE);
+        LocationManager lm = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
         checkPermission();
-        lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000,1, locationListener);
-        lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000,1, locationListener);
+        lm.requestLocationUpdates(LocationManager.GPS_PROVIDER, 1000, 1, locationListener);
+        lm.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, 1000, 1, locationListener);
 
         //일정 거리 이상 가까이 오면 다음 체크포인트로
-        if(currentDistance <= 4) {
+        if (currentDistance <= 4) {
             gpsNodePointArrayList.remove(0);
         }
 
         double tmp2 = getDistance(targetLocation, lastLocation);
-        if(tmp2 > lastDistance) {
+        if (tmp2 > lastDistance) {
             gpsNodePointArrayList.remove(0);
         }
 
         //남은 체크포인트 중 지나친 체크포인트 체크
         try {
-
-
             if (gpsNodePointArrayList.size() > 0) {
                 for (int i = 0; i < gpsNodePointArrayList.size(); i++) {
                     double tmp = getDistance(myLocation, getNextLocation(gpsNodePointArrayList.get(i)[0], gpsNodePointArrayList.get(i)[1]));
@@ -293,18 +267,18 @@ public class testActivity extends AppCompatActivity  implements SensorEventListe
                 Toast.makeText(this, "경로 탐색 완료!", Toast.LENGTH_SHORT).show();
                 finish();
             }
-        }
-        catch(Exception e) {
+        } catch (Exception e) {
             finish();
             Toast.makeText(this, "경로 탐색 종료", Toast.LENGTH_SHORT).show();
         }
 
         //평면 지속적으로 탐색
         Collection<Plane> planes = frame.getUpdatedTrackables(Plane.class);
-        for (Plane plane : planes) {
-            if (plane.getTrackingState() == TrackingState.TRACKING) {
-                try {
-                    if(count <= 0 ) {
+        Pose planePose, tmpPose;
+        try {
+            for (Plane plane : planes) {
+                if (plane.getTrackingState() == TrackingState.TRACKING) {
+                    if (count-- <= 0) {
                         //센서를 통해서 평면 위치 계산후 방위각 계산
                         planePose = plane.getCenterPose();
                         tmpPose = myPoseToNewPose(planePose);
@@ -319,21 +293,15 @@ public class testActivity extends AppCompatActivity  implements SensorEventListe
                         prevAnchorNode = makeArrow(anchor, angle);
                         count = 50;
                     }
-                    else {
-                        count -= 1;
-                    }
-                }
-                catch (Exception e) {
-                    Log.e("Error is detected : ",e.getMessage());
-                    break;
                 }
             }
+        } catch (Exception e) {
+            Log.e("Error is detected : ", e.getMessage());
         }
     }
 
     //돌아가기 버튼
-    public void onClick2(View view)
-    {
+    public void onClick2(View view) {
         finish();
     }
 
@@ -359,40 +327,32 @@ public class testActivity extends AppCompatActivity  implements SensorEventListe
         double targetLng = targetLocation.getLongitude() * (3.141592 / 180);
 
         //라디안 거리 계산
-        double radian_distance = 0;
-        radian_distance = Math.acos(
+        double radian_distance = Math.acos(
                 Math.sin(myLat) * Math.sin(targetLat)
                         + Math.cos(myLat) * Math.cos(targetLat) * Math.cos(myLng - targetLng));
 
-        //라디안 거리 => 라디안 각 변환
-        double radian_bearing = Math.acos((Math.sin(targetLat) - Math.sin(myLat) * Math.cos(radian_distance)) / (0.00001+ (Math.cos(myLat) * Math.sin(radian_distance))));
-        double true_bearing = 0;
-
-        //라디안 각 => 각도로 변환
-        if(Math.sin(targetLng - myLng) < 0) {
-            true_bearing = radian_bearing * (180 / 3.141592);
+        //라디안 거리 => 라디안 각 => 각도 변환
+        double radian_bearing = Math.acos((Math.sin(targetLat) - Math.sin(myLat) * Math.cos(radian_distance)) / (0.00001 + (Math.cos(myLat) * Math.sin(radian_distance))));
+        double true_bearing = radian_bearing * (180 / 3.141592);
+        if (Math.sin(targetLng - myLng) < 0) {
             true_bearing = 360 - true_bearing;
         }
-        else {
-            true_bearing = radian_bearing * (180 / 3.141592);
-        }
+
         return true_bearing;
     }
 
     //내 위치를 화살표가 잘보이는 위치로 변경
     private Pose myPoseToNewPose(Pose planePose) {
         //안드로이드 화면이 바라보는 방향의 Pose 추출
-        dPose = arFragment.getArSceneView().getArFrame().getCamera().getDisplayOrientedPose();
+        Pose dPose = arFragment.getArSceneView().getArFrame().getCamera().getDisplayOrientedPose();
 
         //평면의 Pose와 화면 계산
         float[] tmpVec = {dPose.tx(), planePose.ty(), dPose.tz()};
-        Pose pose = Pose.makeTranslation(tmpVec);
-
-        return pose;
+        return Pose.makeTranslation(tmpVec);
     }
 
     //두 위도 경도 주어지면 거리로 변환
-    private double getDistance(Location myLocation, Location targetLocation){
+    private double getDistance(Location myLocation, Location targetLocation) {
         //위도 추출
         double lat1 = myLocation.getLatitude();
         double lat2 = targetLocation.getLatitude();
@@ -424,7 +384,8 @@ public class testActivity extends AppCompatActivity  implements SensorEventListe
                 .setSource(this, Uri.parse("arrow4.sfb"))
                 .build()
                 .thenAccept(modelRenderable -> addToModelScene(anchor, anchorNode, modelRenderable, angle))
-                .exceptionally(throwable -> {
+                .exceptionally(throwable ->
+                {
                     AlertDialog.Builder builder = new AlertDialog.Builder(this);
                     builder.setMessage(throwable.getMessage())
                             .show();
@@ -436,11 +397,11 @@ public class testActivity extends AppCompatActivity  implements SensorEventListe
     //찾은 앵커에 3D 모델을 만듦
     private void addToModelScene(Anchor anchor, AnchorNode anchorNode, ModelRenderable modelRenderable, float angle) {
         TransformableNode transformableNode = new TransformableNode(arFragment.getTransformationSystem());
-        float rotateAngle = (-azimuthinDegress+angle)%360;
+        float rotateAngle = (-azimuthinDegress + angle) % 360;
 
         //tv2.setText(Float.toString(angle)+ " and "+Float.toString(azimuthinDegress)+" and "+Float.toString(rotateAngle));
 
-        Quaternion quaternion1 = Quaternion.axisAngle(new Vector3(0,-1,0),rotateAngle);
+        Quaternion quaternion1 = Quaternion.axisAngle(new Vector3(0, -1, 0), rotateAngle);
         transformableNode.setWorldRotation(quaternion1);
 
         transformableNode.setParent(anchorNode);
