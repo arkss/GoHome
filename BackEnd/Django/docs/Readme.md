@@ -10,6 +10,8 @@ python manage.py runserver --settings=config.settings.debug
 python manage.py runserver --settings=config.settings.deploy
 ```
 
+> 현재는 uWSGI와 Nginx로 배포
+
 
 
 ### API 문서
@@ -208,22 +210,6 @@ python manage.py runserver --settings=config.settings.deploy
 
 
 
-
-
-### API 문서 (구) - 추후 삭제 예정
-
-| URL                             | Method | URL Params        | body                                                         | success response                                             | error response                                               |
-| ------------------------------- | ------ | ----------------- | ------------------------------------------------------------ | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| /                               | GET    | -                 | -                                                            | {<br />   'message': '로그인 성공'<br />}                    | {     <br />    "detail": "Authentication credentials were not provided."<br /> } |
-| login/                          | POST   | -                 | {<br/>    "username": "아이디",<br/> "password": "비밀번호"<br/>} | {     <br />"token": "토큰값"<br /> }                        | {    <br /> "non_field_errors": [         "Unable to log in with provided credentials."     ]<br /> } |
-| signup/                         | GET    | -                 | -                                                            | [     <br />{        <br />"username": "root",         "email": "rkdalstjd0@namver.com",         "nickname": "",         "address": "",         "detail_address": ""     },<br />{        <br /> "username": "rkdalstjd9",         "email": "rkdalstjd9@naver.com",         "nickname": "arkss",         "address": "",         "detail_address": ""     <br />},<br />] | -                                                            |
-| signup/                         | POST   | -                 | {<br/>	"profile":{<br/>		"username": "rkdalstjd9",<br/>		"password": "qwe123",<br/>		"email": "rkdalstjd9@naver.com",<br/>		"nickname": "arkss9",<br/>        "address": "서울특별시 동대문구 전농동 103-45",<br/>        "detail_address": "주영리빙텔 108호"<br/>	}<br/>} | {<br />"response": "success", "message": "profile이 성공적으로 생성되었습니다."<br />} | {<br />"response": "error",<br />"message": "상황에 맞는 에러 메세지"<br />} |
-| share/route/                    | POST   | -                 | -                                                            | {<br />"response": "success",<br />message: "route가 성공적으로 생성되었습니다.",<br />"data":{<br />"profile": 5,<br />"route_id": 2<br />}<br />} | {<br />"response": "error",<br />"message": "상황에 맞는 에러메세지"<br />} |
-| share/\<int:route_id>/position/ | POST   | route_id: integer | {<br />"lat": 37.56442135,<br />"log": 127.0016985<br />}    | -                                                            |                                                              |
-| share/\<int:route_id>/position/ | GET    | route_id: integer | -                                                            | {<br />"response": "success",<br />"data": [<br />{<br />"route": 3,<br />"lat": 37.5642135,<br />"log": 127.0016985<br />},<br />{<br />"route": 3,<br />"lat": 37.5642136,<br />"log": 127.0016986<br />}<br />]<br />} |                                                              |
-
-
-
 ### 로그인 하는 법
 
 위에서 설명한대로 login/ 로 요청 시 token 값을 받음.
@@ -240,3 +226,32 @@ python manage.py runserver --settings=config.settings.deploy
 
 
 
+### 시간 측정
+
+`calculate_response_time.py` 를 통해서 각 API의 시간을 측정하였다.
+
+각 요청은 1000회씩 수행하였으며 평균을 측정하였다.
+
+값은 소수점 둘째자리까지 구한다.
+
+* 로그인 여부 테스트
+  * path : /
+  * 0.41
+* 로그인
+  * path : login/
+  * 0.64
+* 회원가입
+  * path : signup/
+  * 0.67
+* 유저 상세 정보
+  * path : profile/
+  * 0.55
+* 공유 경로 생성
+  * path : share/route/
+  * 0.43
+* 공유 경로에 위치 좌표 생성
+  * path : share/\<int:route_id>/position/
+  * 0.56
+* 공유 경로에 위치 좌표 조회
+  * path : share/\<int:route_id>/position/
+  * 0.69
