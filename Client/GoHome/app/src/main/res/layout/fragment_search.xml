@@ -67,8 +67,8 @@
                     android:background="@null"
                     android:tint="#ffffff"
                     app:layout_constraintStart_toEndOf="@+id/editTextDeparture"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:srcCompat="@drawable/swap_vert" />
+                    app:layout_constraintTop_toTopOf="parent" />
+<!--                    app:srcCompat="@drawable/swap_vert"-->
 
                 <ImageButton
                     android:id="@+id/imageButtonMoreVert"

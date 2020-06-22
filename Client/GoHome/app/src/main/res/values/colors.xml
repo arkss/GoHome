@@ -4,7 +4,11 @@
     <color name="colorPrimaryDark">#3700B3</color>
     <color name="colorAccent">#03DAC5</color>
 
+    <color name="colorGreen">#49D107</color>
+
     <color name="colorWalking">#ffc107</color>
     <color name="colorBicycle">#00c853</color>
     <color name="colorBus">#2196f3</color>
+    <color name="colorWhite">#fafafa</color>
+    <color name="colorLightGray">#d9d9d9</color>
 </resources>

@@ -9,6 +9,7 @@ import retrofit2.converter.gson.GsonConverterFactory;
 public class RetrofitClientInstance {
     private static Retrofit retrofit;
     private static final String BASE_URL = "http://ec2-52-78-218-95.ap-northeast-2.compute.amazonaws.com:8000/";
+//    private static final String BASE_URL = "http://gohome-django.com/";
 
     public static Retrofit getRetrofitInstance() {
         if(retrofit == null) {
