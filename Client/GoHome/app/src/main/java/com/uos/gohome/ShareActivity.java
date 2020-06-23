@@ -26,9 +26,10 @@ import com.uos.gohome.retrofit2.RetrofitClientInstance;
 import com.uos.gohome.retrofit2.RetrofitService;
 
 public class ShareActivity extends AppCompatActivity {
-    private static final String URI_SCHEME = "http";
-    private static final String URI_HOST = "uosgohome";
-    public static final String URI_DEFAULT = "http://uosgohome/";
+    private static final String URI_SCHEME = "https";
+    private static final String URI_HOST = "gohome-node.com";
+    private static final String URI_PATH = "share";
+    public static final String URI_DEFAULT = URI_SCHEME+"://"+URI_HOST+"/"+URI_PATH;
 
     private int routeId;
     private boolean isShared;
@@ -40,7 +41,7 @@ public class ShareActivity extends AppCompatActivity {
         setContentView(R.layout.share_activity);
 
         // find view by id
-        LinearLayout tMapLayout = (LinearLayout)findViewById(R.id.tmap_share);
+        LinearLayout tMapLayout = (LinearLayout) findViewById(R.id.tmap_share);
 
         // init tmap view
         tMapView = new TMapView(this);
@@ -52,10 +53,12 @@ public class ShareActivity extends AppCompatActivity {
         Uri data = intent.getData();
 
         // get params
-        if(data != null) {
-            if(data.getScheme().equals(URI_SCHEME) && data.getHost().equals(URI_HOST)) {
-                routeId = Integer.parseInt(data.getQueryParameter("id"));
-                isShared = true;
+        if (data != null) {
+            if (data.getScheme().equals(URI_SCHEME) && data.getHost().equals(URI_HOST)) {
+                if(data.getQueryParameter("id") != null) {
+                    routeId = Integer.parseInt(data.getQueryParameter("id"));
+                    isShared = true;
+                }
             }
         }
 
@@ -67,13 +70,14 @@ public class ShareActivity extends AppCompatActivity {
             @Override
             public void run() {
                 serviceFunction(service, routeId);
-                if(isShared) {
+                if (isShared) {
                     handler.postDelayed(this, MainActivity.DELAY_TIME);
                 }
             }
         }, MainActivity.DELAY_TIME);
 
     }
+
 
     public void serviceFunction(RetrofitService service, int routeId) {
         Call<PositionResponseData> request = service.getPosition(routeId);

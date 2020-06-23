@@ -140,6 +140,7 @@ public class RouteFragment extends Fragment implements View.OnClickListener {
         tMapView = new TMapView(getContext());
         tMapView.setIcon(BitmapFactory.decodeResource(getResources(), R.drawable.dot));
         tMapView.setIconVisibility(true);
+        tMapView.setTrackingMode(true);
         LinearLayout tMapLayout = (LinearLayout)view.findViewById(R.id.route_tmap);
         tMapLayout.addView(tMapView);
 
@@ -169,6 +170,25 @@ public class RouteFragment extends Fragment implements View.OnClickListener {
         tMapView.setCenterPoint(myLocation.getLongitude(), myLocation.getLatitude());
 
         ((MainActivity)getActivity()).setRouteFragment(this);
+    }
+
+    // TODO: 함수 작성
+    public void routePath() {
+        List<Section> sectionList = datum.getSections();
+        for(Section section : sectionList) {
+            switch(section.getType()) {
+                case 1: // 도보
+                    break;
+                case 2: // 자전거
+                    // stationNameStart = 도보 아이콘과 함께 add
+                    // stationNameEnd = 자전거 아콘과 함께 add
+                    break;
+                case 3: // 버스
+                    // stationNameStart = ???
+                    // stationNameEnd = 버스 아이콘과 함께 add
+                    break;
+            }
+        }
     }
 
     // [minLat, minLon, maxLat, maxLon]
