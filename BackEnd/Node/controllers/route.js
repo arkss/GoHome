@@ -61,16 +61,10 @@ exports.api_get_routes = async (req, res, next) => {
 	// handle exception: invalid query
 	if (U.isInvalid(res, lat_start, lon_start, lat_end, lon_end)) return;
 
-	let start_time, end_time;
-	start_time = Date.now();
 	let routes = await exports.get_routes(lat_start, lon_start, lat_end, lon_end, include_bike, include_bus);
-	end_time = Date.now();
 
 	// response
 	U.response(res, true, `${routes.length} route found`, routes);
-	
-	// log processing time
-	U.responseTime('to response', end_time - start_time);
 };
 
 exports.get_routes = async (lat_start, lon_start, lat_end, lon_end, include_bike, include_bus) => {
