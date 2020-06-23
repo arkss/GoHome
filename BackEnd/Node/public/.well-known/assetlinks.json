@@ -6,4 +6,20 @@
     "sha256_cert_fingerprints":
     ["8E:D8:E7:6E:DD:CB:F3:AA:77:E9:2B:A7:9C:84:1F:5D:B9:3E:5F:1A:01:B6:86:19:3F:E0:9A:2C:19:78:3F:97"]
   }
+},
+{
+  "relation": ["delegate_permission/common.get_login_creds"],
+  "target": {
+    "namespace": "web",
+    "site": "https://gohome-node.com"
+  }
+},
+{
+  "relation": ["delegate_permission/common.get_login_creds"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.uos.gohome",
+    "sha256_cert_fingerprints":
+    ["8E:D8:E7:6E:DD:CB:F3:AA:77:E9:2B:A7:9C:84:1F:5D:B9:3E:5F:1A:01:B6:86:19:3F:E0:9A:2C:19:78:3F:97"]
+  }
 }]
