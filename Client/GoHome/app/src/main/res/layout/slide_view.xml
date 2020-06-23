@@ -12,10 +12,9 @@
         android:src="@drawable/up_arrow"
         />
 
-    <TextView
+
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/route_recycler"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="View"
-        android:textSize="50sp"
-        />
+        android:layout_height="wrap_content" />
 </LinearLayout>

@@ -12,6 +12,9 @@ import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.fragment.app.Fragment;
 import androidx.navigation.fragment.NavHostFragment;
+import androidx.recyclerview.widget.DividerItemDecoration;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 import retrofit2.Call;
 import retrofit2.Callback;
 import retrofit2.Response;
@@ -30,6 +33,8 @@ import com.google.gson.JsonObject;
 import com.uos.gohome.MainActivity;
 import com.uos.gohome.GpsTracker;
 import com.uos.gohome.R;
+import com.uos.gohome.RouteRecycler.RouteData;
+import com.uos.gohome.RouteRecycler.RouteRecyclerAdapter;
 import com.uos.gohome.ShareActivity;
 import com.uos.gohome.SharePositionDialog;
 import com.uos.gohome.retrofit2.Datum;
@@ -63,16 +68,19 @@ public class RouteFragment extends Fragment implements View.OnClickListener {
 
     private TMapView tMapView;
     private TMapPolyLine polyLine[];
+    private TMapPoint points[];
 
     private FloatingActionButton cameraBtn;
     private FloatingActionButton shareBtn;
     private FloatingActionButton locationBtn;
 
+    private RecyclerView recyclerView;
+
     private Datum datum;
 
     private RetrofitService service;
 
-    private TMapPoint points[];
+    private ArrayList<RouteData> mList;
 
     public RouteFragment() {
         // Required empty public constructor
@@ -148,10 +156,24 @@ public class RouteFragment extends Fragment implements View.OnClickListener {
         cameraBtn = (FloatingActionButton) view.findViewById(R.id.route_camera_btn);
         shareBtn = (FloatingActionButton) view.findViewById(R.id.route_share_btn);
         locationBtn = (FloatingActionButton) view.findViewById(R.id.route_location_btn);
+        recyclerView = (RecyclerView)view.findViewById(R.id.route_recycler);
 
         // draw line
         this.datum = ((MainActivity)getActivity()).getDatum();
         drawLine();
+
+        // sliding view recycler view
+        initRouteList(datum);
+        recyclerView.setLayoutManager(new LinearLayoutManager(getActivity()));
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run() {
+                recyclerView.addItemDecoration(new DividerItemDecoration(recyclerView.getContext(), DividerItemDecoration.VERTICAL));
+                RouteRecyclerAdapter adapter = new RouteRecyclerAdapter(mList);
+                recyclerView.setAdapter(adapter);
+            }
+        }, 1000);
+
 
         // onClick Listener
         cameraBtn.setOnClickListener(this);
@@ -186,6 +208,24 @@ public class RouteFragment extends Fragment implements View.OnClickListener {
                 case 3: // 버스
                     // stationNameStart = ???
                     // stationNameEnd = 버스 아이콘과 함께 add
+                    break;
+            }
+        }
+    }
+
+    private void initRouteList(Datum datum) {
+        mList = new ArrayList<>();
+        for(Section section : datum.getSections()) {
+            switch(section.getType()) {
+                case 1: // walking
+                    break;
+                case 2: // bicycle
+                    mList.add(new RouteData(R.drawable.bicycle_icon, section.getStationNameStart()));
+                    mList.add(new RouteData(R.drawable.bicycle_icon, section.getStationNameEnd()));
+                    break;
+                case 3: // bus
+                    mList.add(new RouteData(R.drawable.bus_icon, section.getStationNameStart()));
+                    mList.add(new RouteData(R.drawable.bus_icon, section.getStationNameEnd()));
                     break;
             }
         }

@@ -94,7 +94,8 @@ public class ShareActivity extends AppCompatActivity {
                     for(PositionResponseData.RouteData e: data.getData()) {
                         line.addLinePoint(new TMapPoint(e.getLat(), e.getLog()));
                     }
-                    tMapView.addTMapPath(line);
+//                    tMapView.addTMapPath(line);
+                    tMapView.addTMapPolyLine("lineId", line);
                     tMapView.setCenterPoint(data.getData().get(0).getLog(), data.getData().get(0).getLat());
                 }
                 else {
