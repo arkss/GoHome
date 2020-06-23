@@ -235,23 +235,57 @@ python manage.py runserver --settings=config.settings.deploy
 값은 소수점 둘째자리까지 구한다.
 
 * 로그인 여부 테스트
+
   * path : /
-  * 0.41
+  * 전체응답시간 : 41ms
+
 * 로그인
+
   * path : login/
-  * 0.64
+  * 전체응답시간 : 64ms
+
 * 회원가입
+
   * path : signup/
-  * 0.67
+  * 전체응답시간 : 67ms
+
 * 유저 상세 정보
+
   * path : profile/
-  * 0.55
+  * 전체응답시간 : 55ms
+
 * 공유 경로 생성
+
   * path : share/route/
-  * 0.43
+  * 전체응답시간 : 43ms
+
 * 공유 경로에 위치 좌표 생성
+
   * path : share/\<int:route_id>/position/
-  * 0.56
+  * 전체응답시간 : 56ms
+
 * 공유 경로에 위치 좌표 조회
+
   * path : share/\<int:route_id>/position/
-  * 0.69
+  * 전체응답시간 : 69ms
+
+* 자전거 대여소 목록 조회
+
+  * path : /api/bikestops/
+  * 전체응답시간 : 41ms
+  * Client-APIgateway : 29ms
+  * APIgateway-Node : 12ms
+
+* 자전거 거치 수 조회
+
+  * path: /api/bikestop_parked_counts/
+  * 전체응답시간 : 73ms
+  * Client-APIgateway : 62ms
+  * APIgateway-Node : 11ms
+
+* 경로탐색
+
+  * path : api/routes/
+  * 전체응답시간 : 2848ms
+  * Client-APIgateway : 123ms
+  * APIgateway-Node : 2625ms (max : 3749ms)
