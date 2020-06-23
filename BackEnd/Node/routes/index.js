@@ -29,7 +29,7 @@ router.get('/api/:model', async (req, res, next) => {
 	let end_time = Date.now();
 
 	// log processing time
-	U.responseTime(`[${req.params.model}] res ${end_time - start_time}ms`);
+	U.responseTime(req.params.model, end_time - start_time);
 });
 
 module.exports = router;
