@@ -2,11 +2,13 @@ package com.uos.gohome.RouteRecycler;
 
 public class RouteData {
     private int img;
-    private String station;
+    private String stationStart;
+    private String stationEnd;
 
-    public RouteData(int img, String station) {
+    public RouteData(int img, String stationStart, String stationEnd) {
         this.img = img;
-        this.station = station;
+        this.stationStart = stationStart;
+        this.stationEnd = stationEnd;
     }
 
     public int getImg() {
@@ -16,12 +18,19 @@ public class RouteData {
     public void setImg(int img) {
         this.img = img;
     }
-
-    public String getStation() {
-        return station;
+    public String getStationStart() {
+        return stationStart;
     }
 
-    public void setStation(String station) {
-        this.station = station;
+    public void setStationStart(String stationStart) {
+        this.stationStart = stationStart;
+    }
+
+    public String getStationEnd() {
+        return stationEnd;
+    }
+
+    public void setStationEnd(String stationEnd) {
+        this.stationEnd = stationEnd;
     }
 }

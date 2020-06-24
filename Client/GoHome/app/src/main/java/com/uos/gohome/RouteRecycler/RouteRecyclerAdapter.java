@@ -10,6 +10,8 @@ import android.widget.TextView;
 
 import com.uos.gohome.R;
 
+import org.w3c.dom.Text;
+
 import java.util.ArrayList;
 
 import androidx.annotation.NonNull;
@@ -24,12 +26,15 @@ public class RouteRecyclerAdapter extends RecyclerView.Adapter<RouteRecyclerAdap
     // you provide access to all the views for a data item in a view holder
     public class RViewHolder extends RecyclerView.ViewHolder {
         ImageView imageView;
-        TextView textView;
+        TextView textStationStart;
+        TextView textStationEnd;
+
         public RViewHolder(View item) {
             super(item);
 
             imageView = item.findViewById(R.id.route_img);
-            textView = item.findViewById(R.id.route_station);
+            textStationStart = item.findViewById(R.id.route_station_start);
+            textStationEnd = item.findViewById(R.id.route_station_end);
         }
     }
 
@@ -53,12 +58,14 @@ public class RouteRecyclerAdapter extends RecyclerView.Adapter<RouteRecyclerAdap
     public void onBindViewHolder(@NonNull RViewHolder holder, int position) {
         // - get element from your dataset at this position
         int img = mData.get(position).getImg();
-        String station = mData.get(position).getStation();
+        String stationStart = mData.get(position).getStationStart();
+        String stationEnd = mData.get(position).getStationEnd();
 
         // - replace the contents of the view with that element
         Log.d("TEST", "img = "+img);
         holder.imageView.setImageResource(img);
-        holder.textView.setText(station);
+        holder.textStationStart.setText(stationStart);
+        holder.textStationEnd.setText(stationEnd);
     }
 
     // Return the size of your dataset (invoked by the layout manager)

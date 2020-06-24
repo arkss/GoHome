@@ -30,6 +30,7 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.google.gson.JsonObject;
+import com.skt.Tmap.TMapMarkerItem;
 import com.uos.gohome.MainActivity;
 import com.uos.gohome.GpsTracker;
 import com.uos.gohome.R;
@@ -158,9 +159,10 @@ public class RouteFragment extends Fragment implements View.OnClickListener {
         locationBtn = (FloatingActionButton) view.findViewById(R.id.route_location_btn);
         recyclerView = (RecyclerView)view.findViewById(R.id.route_recycler);
 
-        // draw line
+        // draw path line
         this.datum = ((MainActivity)getActivity()).getDatum();
         drawLine();
+        setStationMarker(datum);
 
         // sliding view recycler view
         initRouteList(datum);
@@ -172,7 +174,7 @@ public class RouteFragment extends Fragment implements View.OnClickListener {
                 RouteRecyclerAdapter adapter = new RouteRecyclerAdapter(mList);
                 recyclerView.setAdapter(adapter);
             }
-        }, 1000);
+        }, 3000);
 
 
         // onClick Listener
@@ -194,25 +196,6 @@ public class RouteFragment extends Fragment implements View.OnClickListener {
         ((MainActivity)getActivity()).setRouteFragment(this);
     }
 
-    // TODO: 함수 작성
-    public void routePath() {
-        List<Section> sectionList = datum.getSections();
-        for(Section section : sectionList) {
-            switch(section.getType()) {
-                case 1: // 도보
-                    break;
-                case 2: // 자전거
-                    // stationNameStart = 도보 아이콘과 함께 add
-                    // stationNameEnd = 자전거 아콘과 함께 add
-                    break;
-                case 3: // 버스
-                    // stationNameStart = ???
-                    // stationNameEnd = 버스 아이콘과 함께 add
-                    break;
-            }
-        }
-    }
-
     private void initRouteList(Datum datum) {
         mList = new ArrayList<>();
         for(Section section : datum.getSections()) {
@@ -220,12 +203,47 @@ public class RouteFragment extends Fragment implements View.OnClickListener {
                 case 1: // walking
                     break;
                 case 2: // bicycle
-                    mList.add(new RouteData(R.drawable.bicycle_icon, section.getStationNameStart()));
-                    mList.add(new RouteData(R.drawable.bicycle_icon, section.getStationNameEnd()));
+                    mList.add(new RouteData(R.drawable.bicycle_icon, section.getStationNameStart(), section.getStationNameEnd()));
                     break;
                 case 3: // bus
-                    mList.add(new RouteData(R.drawable.bus_icon, section.getStationNameStart()));
-                    mList.add(new RouteData(R.drawable.bus_icon, section.getStationNameEnd()));
+                    mList.add(new RouteData(R.drawable.bus_icon, section.getStationNameStart(), section.getStationNameEnd()));
+                    break;
+            }
+        }
+    }
+
+    private void setStationMarker(Datum datum) {
+        for(Section section : datum.getSections()) {
+            TMapMarkerItem markerStart;
+            TMapMarkerItem markerEnd;
+            switch(section.getType()) {
+                case 1: // walking
+                    break;
+                case 2: // bicycle
+                    markerStart = new TMapMarkerItem();
+                    markerEnd = new TMapMarkerItem();
+
+                    markerStart.setTMapPoint(new TMapPoint(section.getStationLatitudeStart(), section.getStationLongitudeStart()));
+                    markerEnd.setTMapPoint(new TMapPoint(section.getStationLatitudeEnd(), section.getStationLongitudeEnd()));
+                    markerStart.setVisible(TMapMarkerItem.VISIBLE);
+                    markerEnd.setVisible(TMapMarkerItem.VISIBLE);
+                    // marker.setPosition(0.5, 1.0);
+
+                    tMapView.addMarkerItem("bicycle marker start", markerStart);
+                    tMapView.addMarkerItem("bicycle marker end", markerEnd);
+                    break;
+                case 3: // bus
+                    markerStart = new TMapMarkerItem();
+                    markerEnd = new TMapMarkerItem();
+
+                    markerStart.setTMapPoint(new TMapPoint(section.getStationLatitudeStart(), section.getStationLongitudeStart()));
+                    markerEnd.setTMapPoint(new TMapPoint(section.getStationLatitudeEnd(), section.getStationLongitudeEnd()));
+                    markerStart.setVisible(TMapMarkerItem.VISIBLE);
+                    markerEnd.setVisible(TMapMarkerItem.VISIBLE);
+                    // marker.setPosition(0.5, 1.0);
+
+                    tMapView.addMarkerItem("bus marker start", markerStart);
+                    tMapView.addMarkerItem("bus marker end", markerEnd);
                     break;
             }
         }

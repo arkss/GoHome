@@ -18,6 +18,7 @@ import retrofit2.Response;
 import retrofit2.Retrofit;
 
 import com.google.gson.JsonObject;
+import com.skt.Tmap.TMapMarkerItem;
 import com.skt.Tmap.TMapPoint;
 import com.skt.Tmap.TMapPolyLine;
 import com.skt.Tmap.TMapView;
@@ -86,6 +87,8 @@ public class ShareActivity extends AppCompatActivity {
             public void onResponse(Call<PositionResponseData> call, Response<PositionResponseData> response) {
                 if(response.isSuccessful()) {
                     Log.d("TEST", "SHARE SUCCESSFUL");
+                    double currentLat = 0.0, currentLong = 0.0;
+
                     PositionResponseData data = response.body();
                     TMapPolyLine line = new TMapPolyLine();
                     line.setLineWidth(2);
@@ -93,10 +96,18 @@ public class ShareActivity extends AppCompatActivity {
                     line.setOutLineColor(Color.BLUE);
                     for(PositionResponseData.RouteData e: data.getData()) {
                         line.addLinePoint(new TMapPoint(e.getLat(), e.getLog()));
+                        currentLat = e.getLat();
+                        currentLong = e.getLog();
                     }
-//                    tMapView.addTMapPath(line);
+
+                    // 현재 위치를 표시하는 마커
+                    TMapMarkerItem marker = new TMapMarkerItem();
+                    marker.setTMapPoint(new TMapPoint(currentLat, currentLong));
+                    marker.setVisible(TMapMarkerItem.VISIBLE);
+
                     tMapView.addTMapPolyLine("lineId", line);
-                    tMapView.setCenterPoint(data.getData().get(0).getLog(), data.getData().get(0).getLat());
+                    tMapView.addMarkerItem("current position", marker);
+                    tMapView.setCenterPoint(currentLong, currentLat);
                 }
                 else {
                     Log.d("TEST", "MSG: "+response.message());

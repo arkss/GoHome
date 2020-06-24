@@ -182,7 +182,8 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
                         }
                         // get first poi item
                         TMapPOIItem item = (TMapPOIItem)poiItem.get(0);
-                        text_destination.setText(item.getPOIName());
+                        // error 발생
+//                        text_destination.setText(item.getPOIName());
 //                        text_destination.clearFocus();
 
                         // get departure, destination point
@@ -228,7 +229,7 @@ public class SearchFragment extends Fragment implements View.OnClickListener {
 
     public void routeSearch(TMapPoint dpt, TMapPoint dst) {
         // request routes
-        Call<RouteSearchResult> request = service.getRoutes(dpt.getLatitude(), dpt.getLongitude(), dst.getLatitude(), dst.getLongitude(), "Y", "N");
+        Call<RouteSearchResult> request = service.getRoutes(dpt.getLatitude(), dpt.getLongitude(), dst.getLatitude(), dst.getLongitude(), "Y", "Y");
         request.enqueue(new Callback<RouteSearchResult>() {
             @Override
             public void onResponse(Call<RouteSearchResult> call, Response<RouteSearchResult> response) {
