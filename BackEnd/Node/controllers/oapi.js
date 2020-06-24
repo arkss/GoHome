@@ -365,8 +365,10 @@ exports.load_buspaths = async (lat_start, lon_start, lat_end, lon_end) => {
 const tmap_keys = {
 	keys: keys.api_key.tmap,
 	len: keys.api_key.tmap.length,
+	last_call: Array(keys.api_key.tmap.length).fill(0),
+	n_wait: Array(keys.api_key.tmap.length).fill(0),
 	i: 0,
-}
+};
 exports.get_pedestrian_route = async (points) => {
 	// handle exceptions
 	if (points.length < 2) {
@@ -389,11 +391,12 @@ exports.get_pedestrian_route = async (points) => {
 	passList = passList.slice(1);
 
 	U.log(`get_pedestrian_route([${points}])`);
+	i = tmap_keys.i;
 	let option = {
 		method: "POST",
 		uri: "https://apis.openapi.sk.com/tmap/routes/pedestrian?version=1",
 		form: {
-			appKey: tmap_keys.keys[tmap_keys.i],
+			appKey: tmap_keys.keys[i],
 			startX: points[0][1], // lon
 			startY: points[0][0], // lat
 			endX: points[points.length - 1][1], // lon
@@ -406,7 +409,20 @@ exports.get_pedestrian_route = async (points) => {
 		}
 	};
 	// switch to the next key
-	tmap_keys.i = (tmap_keys.i + 1) % tmap_keys.len;
+	tmap_keys.i = (i + 1) % tmap_keys.len;
+
+	// wait
+	tmap_keys.n_wait[i]++;
+	let waiting_gap, waiting_time, now;
+	do {
+		waiting_gap = Math.max(505 - (Date.now() - tmap_keys.last_call[i]), 0);
+		waiting_time = (tmap_keys.n_wait[i] - 1) * 510 + waiting_gap;
+		U.log(`(wait ${waiting_time}ms ...)`);
+		await (async () => new Promise(resolve => setTimeout(resolve, waiting_time)))();
+		now = Date.now();
+	} while (now - tmap_keys.last_call[i] < 500);
+	tmap_keys.last_call[i] = now;
+	tmap_keys.n_wait[i]--;
 
 	// request pedestrian route
 	try {
