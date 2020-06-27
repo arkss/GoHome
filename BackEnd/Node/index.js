@@ -12,6 +12,9 @@ const app = express();
 
 var http_server = null;
 var https_server = null;
+var http_port = keys.http_port;
+var https_port = keys.https_port;
+
 http_server = require('http').createServer(app);
 if (keys.SSL) {
 	https_server = require('https').createServer({
@@ -22,8 +25,6 @@ if (keys.SSL) {
 		rejectUnauthorized: false
 	}, app);
 }
-var http_port = keys.http_port;
-var https_port = keys.https_port;
 
 // automatically allow cross-origin requests
 app.use(cors({ origin: true }));

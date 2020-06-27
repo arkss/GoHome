@@ -20,7 +20,6 @@ router.get('/api/:model', async (req, res, next) => {
 		//case 'nbus_info':            await bus.api_get_nbus_info(req, res, next);               break;
 		case 'nbus_routes':            await bus.api_get_nbus_routes(req, res, next);             break;
 		case 'nbus_near_stations':     await bus.api_get_near_stations(req, res, next);           break;
-		
 		case 'routes':                 await route.api_get_routes(req, res, next);                break;
 		default:                       await U.status(res, 404);                                  break;
 	}
